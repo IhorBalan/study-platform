@@ -1,5 +1,7 @@
 # Session handoff: Backend self-study platform
 
+> **Update 2026-11-18:** Phase 1 research is done. See [`stack-decisions.md`](./stack-decisions.md), [`technical-spec.md`](./technical-spec.md) and the decision log in [`decisions.md`](./decisions.md). The "stop and wait for approval" rule below no longer applies: Ihor asked for the build to proceed with decisions logged. The rest of this file is kept as the record of the earlier session.
+
 **Status as of 2026-11-18:** The clarification Q&A is finished and every decision is recorded below. **Phase 1 research had not started yet**: the research subagents were cancelled before they ran, so no findings exist. The repo is empty except for this file.
 
 **What the next session should do:** run Phase 1 research (section 4) using the original brief (section 5) **as amended by the decisions in section 2**. Deliver the output to `docs/` in this repo, then **stop and wait for approval** before Phase 2 (build).

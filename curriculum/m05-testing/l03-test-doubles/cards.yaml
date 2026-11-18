@@ -1,0 +1,66 @@
+- id: doubles-interview
+  type: concept
+  front: "Interview: what is the difference between a stub, a spy, a mock and a fake?"
+  back: |-
+    Stub: canned answers. Spy: records calls. Mock: expects certain calls and is verified on them.
+    Fake: a working simplified implementation, such as an in-memory repository.
+  skills: [test-doubles]
+- id: stub-term
+  type: term
+  front: Stub
+  back: |-
+    A double that returns canned answers and records nothing.
+    Example: `const clock = { now: () => new Date('2026-01-01T09:00:00Z') }`.
+  skills: [test-doubles]
+- id: fake-term
+  type: term
+  front: Fake
+  back: |-
+    A working, simplified implementation that keeps state like the real one.
+    Example: a `UserStore` backed by a `Map`.
+  skills: [test-doubles]
+- id: state-vs-behaviour
+  type: comparison
+  front: State verification vs behaviour verification
+  back: State verification checks the outcome (return value, stored data) and survives refactoring. Behaviour verification checks which calls were made and breaks when the call pattern changes.
+  skills: [test-doubles]
+- id: when-fake-beats-mock
+  type: concept
+  front: When does a fake beat a mock?
+  back: When the dependency has state the code reads back, such as a repository, cache or clock. The fake is reused by every test and lets them check outcomes.
+  skills: [test-doubles]
+- id: when-spy-fits
+  type: concept
+  front: When is asserting on a call (spy or mock) the right check?
+  back: When the interaction is the outcome and leaves no state to inspect, such as sending an email or publishing an event.
+  skills: [test-doubles]
+- id: over-mocking-cost
+  type: concept
+  front: Name two costs of over-mocking.
+  back: Tests break on refactors that keep behaviour, and they keep passing when the real dependency changes, because a mock returns whatever it was told to.
+  skills: [test-doubles]
+- id: contract-test
+  type: concept
+  front: How do you keep a fake from drifting away from the real implementation?
+  back: Write one contract test suite and run it against both the fake and the real implementation.
+  skills: [test-doubles]
+- id: dont-mock-what-you-dont-own
+  type: concept
+  front: Why avoid mocking a third-party SDK such as Stripe's directly?
+  back: You copy its API into your tests and will copy it wrong. Wrap it in your own small interface, fake that, and test the adapter against the real service's test mode.
+  skills: [test-doubles]
+- id: injection-vs-module-mock
+  type: comparison
+  front: Constructor injection vs `vi.mock()` for getting a double in
+  back: "Injection makes the dependency visible and swappable without touching imports. `vi.mock` works on code not designed for tests but couples the test to file paths."
+  skills: [test-doubles]
+- id: spy-snippet
+  type: snippet
+  front: "Vitest: spy on `mailer.send` without replacing it, then restore it."
+  back: |-
+    ```ts
+    const send = vi.spyOn(mailer, 'send');
+    // ... act, then expect(send).toHaveBeenCalledOnce()
+    send.mockRestore();
+    ```
+  skills: [test-doubles]

@@ -1,0 +1,59 @@
+- id: levels-by-what-is-real
+  type: concept
+  front: "What is the difference between a unit, an integration and an end-to-end test on a backend?"
+  back: |-
+    What runs for real. Unit: one function, no I/O. Integration: your code plus a real dependency such as Postgres.
+    End-to-end: the whole app over HTTP with its real database.
+  skills: [test-strategy]
+- id: what-belongs-at-unit
+  type: concept
+  front: What belongs in a unit test on a backend?
+  back: "Pure logic with branches: calculations, parsing, policies, state machines, edge cases and boundaries."
+  skills: [test-strategy]
+- id: what-belongs-at-integration
+  type: concept
+  front: What belongs in an integration test on a backend?
+  back: "Anything whose correctness depends on the database: SQL, constraints, transactions, locking and mapping rows to objects."
+  skills: [test-strategy]
+- id: what-belongs-at-http
+  type: concept
+  front: What can only an HTTP-level test catch in a Nest API?
+  back: "The contract the client sees: routing, guards, validation pipes, status codes, headers and the error format from filters."
+  skills: [test-strategy]
+- id: mocked-driver-gap
+  type: concept
+  front: A repository is unit-tested with a mocked `pg` client. Name a bug those tests cannot catch.
+  back: "Invalid SQL, a misspelt column, a missing constraint, or a transaction that does not lock what it should. The SQL never runs."
+  skills: [test-strategy]
+- id: cheapest-failing-test
+  type: concept
+  front: How do you decide at which level to test a given rule?
+  back: Pick the cheapest test that would fail if that rule broke. Push logic down to unit tests; keep what needs the database or the lifecycle at those levels.
+  skills: [test-strategy]
+- id: backend-suite-shape
+  type: concept
+  front: Why does a CRUD-heavy API usually want more integration tests than the classic pyramid suggests?
+  back: Most of its code moves data in and out of the database, so most of its bugs are in SQL and mapping, which only a real database exposes.
+  skills: [test-strategy]
+- id: what-would-you-test-endpoint
+  type: concept
+  front: "Interview: \"What would you test in this endpoint?\" How do you structure the answer?"
+  back: |-
+    Unit: the extracted rules and their boundaries. Integration: queries, constraints, transactions.
+    HTTP: auth, validation, status codes, response shape. Then one smoke flow, and what you would not test.
+  skills: [test-strategy]
+- id: behaviour-not-implementation
+  type: comparison
+  front: Testing behaviour vs testing implementation
+  back: A behaviour test checks what the code promises and survives refactoring. An implementation test checks how it works and breaks on every refactor without catching bugs.
+  skills: [test-strategy]
+- id: one-reason-to-fail
+  type: concept
+  front: Why should a test fail for exactly one reason?
+  back: Its name then tells you what broke without reading the body, and fixing one rule never breaks an unrelated test.
+  skills: [test-strategy]
+- id: dont-test-framework
+  type: concept
+  front: Give an example of a test that only tests the framework.
+  back: "Checking that zod rejects a number for a `z.string()` field, or that Nest routes `GET /notes` to its handler. Test your rules, not theirs."
+  skills: [test-strategy]

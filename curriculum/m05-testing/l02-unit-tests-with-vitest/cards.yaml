@@ -1,0 +1,69 @@
+- id: arrange-act-assert
+  type: term
+  front: Arrange, act, assert
+  back: |-
+    The three parts of a test: set up the inputs, call the code once, check the result.
+    Example: `const t = 'Hi'; const s = slugify(t); expect(s).toBe('hi')`.
+  skills: [unit-testing]
+- id: toequal-vs-tostrictequal
+  type: comparison
+  front: "`toEqual` vs `toStrictEqual`"
+  back: "`toEqual` ignores properties that are `undefined` and class types. `toStrictEqual` compares both, so `{ a: 1, b: undefined }` no longer equals `{ a: 1 }`."
+  skills: [unit-testing]
+- id: tomatchobject-use
+  type: concept
+  front: When is `toMatchObject` the right matcher?
+  back: "When only some fields matter, for example a created row whose `id` and `createdAt` you cannot predict."
+  skills: [unit-testing]
+- id: await-rejects
+  type: concept
+  front: "A test does `expect(promise).rejects.toThrow()` without `await`. What happens?"
+  back: The test ends before the promise settles, so it passes whatever the promise does.
+  skills: [unit-testing]
+- id: rejects-snippet
+  type: snippet
+  front: "In Vitest, assert that `users.findOrFail('x')` rejects with `NotFoundError`."
+  back: |-
+    ```ts
+    await expect(users.findOrFail('x')).rejects.toThrow(NotFoundError);
+    ```
+  skills: [unit-testing]
+- id: it-each-why
+  type: concept
+  front: Why prefer `it.each` over a loop of `expect` calls inside one test?
+  back: Each row becomes its own named test, so a failure names the input and does not hide the rows after it.
+  skills: [unit-testing]
+- id: fake-timers-async
+  type: concept
+  front: Why use `vi.advanceTimersByTimeAsync` rather than `advanceTimersByTime` for retry code?
+  back: The async variant lets pending promise callbacks run between timers, so code that awaits and then sets the next timer keeps moving.
+  skills: [unit-testing]
+- id: attach-rejects-first
+  type: concept
+  front: With fake timers, why attach the `rejects` assertion before advancing time?
+  back: The promise rejects during the advance. If nothing is listening yet, the runner reports an unhandled rejection.
+  skills: [unit-testing]
+- id: vitest-jest-mock-fn
+  type: cloze
+  front: "Vitest `vi.fn()` is `{{jest.fn()}}` in Jest and `mock.fn()` in `node:test`."
+  back: "`jest.fn()`"
+  skills: [unit-testing]
+- id: vitest-jest-differences
+  type: comparison
+  front: Vitest vs Jest for a TypeScript ESM backend
+  back: "Same `describe`/`it`/`expect` API. Vitest runs TypeScript and ESM out of the box; Jest needs a transformer and extra ESM set-up."
+  skills: [unit-testing]
+- id: mock-hoisting
+  type: concept
+  front: "Why can a `vi.mock()` factory not use a `const` declared in the test file?"
+  back: "`vi.mock` (like `jest.mock`) is hoisted above the imports, so the variable does not exist yet. Wrap it in `vi.hoisted()`."
+  skills: [unit-testing]
+- id: node-test-timers-snippet
+  type: snippet
+  front: "With `node:test`, fake `Date` and `setTimeout` starting at 0 and move time on by 5 seconds."
+  back: |-
+    ```ts
+    mock.timers.enable({ apis: ['Date', 'setTimeout'], now: 0 });
+    mock.timers.tick(5000);
+    ```
+  skills: [unit-testing]

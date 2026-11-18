@@ -1,0 +1,67 @@
+- id: db-mocks-vs-real-interview
+  type: concept
+  front: "Interview: how do you test code that uses a database? Mocks or a real database?"
+  back: |-
+    A real database of the same engine and version, started per run (for example with Testcontainers), with each test isolated.
+    Mocks never run the SQL; keep them for logic that does not touch storage.
+  skills: [db-integration-testing]
+- id: sqlite-substitute
+  type: concept
+  front: Why not run Postgres-backed integration tests on SQLite to save time?
+  back: "It runs a different SQL dialect. `RETURNING`, `ON CONFLICT`, `jsonb`, `timestamptz` and isolation levels behave differently or not at all."
+  skills: [db-integration-testing]
+- id: testcontainers-term
+  type: term
+  front: Testcontainers
+  back: |-
+    A library that starts a throwaway container from test code and removes it afterwards.
+    Example: `await new PostgreSqlContainer('postgres:18-alpine').start()`.
+  skills: [db-integration-testing]
+- id: one-container-per-run
+  type: concept
+  front: How many Postgres containers should a test run start?
+  back: One for the whole run, started in global set-up and migrated once. Starting one per test or per file wastes seconds each time.
+  skills: [db-integration-testing]
+- id: isolation-strategies
+  type: concept
+  front: Name three ways to isolate database tests from each other.
+  back: A transaction per test rolled back afterwards, truncating tables before each test, or a database per worker cloned from a template.
+  skills: [db-integration-testing]
+- id: rollback-limits
+  type: concept
+  front: Name two things a transaction-per-test set-up cannot test.
+  back: Code that commits its own transaction or uses another connection, and anything that happens only at commit, such as two concurrent transactions racing.
+  skills: [db-integration-testing]
+- id: now-in-transaction
+  type: concept
+  front: "In a transaction-per-test set-up, three notes created in one test have the same `created_at`. Why?"
+  back: "`now()` returns the start time of the current transaction, so it is constant for the whole test."
+  skills: [db-integration-testing]
+- id: truncate-before-not-after
+  type: concept
+  front: Why truncate before each test rather than after?
+  back: A run that crashes mid-test never reaches the after hook. Cleaning first means no earlier run can leave dirt behind.
+  skills: [db-integration-testing]
+- id: truncate-snippet
+  type: snippet
+  front: Empty the `notes` and `tags` tables, reset their sequences and clear rows that reference them.
+  back: |-
+    ```sql
+    TRUNCATE notes, tags RESTART IDENTITY CASCADE;
+    ```
+  skills: [db-integration-testing]
+- id: template-database
+  type: concept
+  front: Why clone worker databases from a template instead of migrating each one?
+  back: "`CREATE DATABASE ... TEMPLATE` copies files, which is much faster than replaying every migration."
+  skills: [db-integration-testing]
+- id: no-assert-on-ids
+  type: concept
+  front: Why should a database test never assert that a new row's id is `1`?
+  back: Sequences are not rolled back with the transaction and keep counting across tests and runs.
+  skills: [db-integration-testing]
+- id: second-row-catches
+  type: concept
+  front: Why create a second row when testing `rename()` or `delete()`?
+  back: An `UPDATE` or `DELETE` without the right `WHERE` looks correct with one row. Only an untouched second row shows the bug.
+  skills: [db-integration-testing]

@@ -1,0 +1,16 @@
+title: What would you test in this endpoint?
+type: text
+skills: [test-strategy, test-doubles, db-integration-testing]
+hints:
+  - "For every rule, ask what the cheapest test is that would fail if the rule broke. Pure logic belongs in unit tests; anything that depends on SQL, constraints or transactions needs the database."
+  - "Boundaries again: 49, 50 and 51 pending invites. An invite that expired yesterday: is it still pending?"
+  - "Two admins invite the same email at the same moment. Which level of test can show what happens?"
+  - "The handler and the email provider never meet: the outbox sits between them. What does that mean for where the email is tested?"
+rubric:
+  - { id: unit-cases, title: "Names at least three unit-level cases for pure logic (for example email normalisation, the expiry computation with an injected clock, the role check) including at least one edge case such as mixed-case or padded emails", skill: test-strategy, max: 3 }
+  - { id: integration-cases, title: "Puts the database-dependent rules at integration level (the 50-invite limit at 49/50/51, replace-instead-of-duplicate, the 409 for existing members, invite and outbox row written together or not at all) and names a concrete isolation strategy", skill: db-integration-testing, max: 4 }
+  - { id: http-cases, title: "Lists HTTP-level cases for 401, 403, 400 and the 201 shape (Location header, no token in the body), states that guards, pipes and filters stay real, and names what is replaced (for example the clock or token generator)", skill: test-strategy, max: 3 }
+  - { id: e2e-judgement, title: "Gives a reasoned answer on end-to-end tests: at most one or two happy-path flows through API, outbox and worker, with the cost (speed, flakiness) stated", skill: test-strategy, max: 2 }
+  - { id: doubles, title: "Chooses a double for each of clock, token generator, email provider and database, and justifies each (for example a fake clock, a real database rather than a mocked repository, a stub or fake HTTP server for the provider in worker tests only)", skill: test-doubles, max: 4 }
+  - { id: concurrency, title: "Notices at least one concurrency or transactional risk (two parallel invites to the same email, or the limit being exceeded under concurrent requests) and says at which level it can be tested", skill: db-integration-testing, max: 2 }
+  - { id: not-tested, title: "Names at least one thing deliberately not tested, such as zod's own email parsing or Nest's routing, with a reason", skill: test-strategy, max: 2 }

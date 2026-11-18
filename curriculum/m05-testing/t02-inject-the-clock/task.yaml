@@ -1,0 +1,27 @@
+title: Inject the clock and test with a fake
+type: repo
+skills: [test-doubles, unit-testing, test-reliability]
+services: []
+runner: node
+hints:
+  - "Turn the module-level Maps into variables inside createResetTokens(). Each call then gets its own state, and every test can start clean."
+  - "A fake clock is a few lines: an object with now() and advance(ms). It needs no library."
+  - "Start your fake clock at a fixed instant, such as Date.UTC(2026, 0, 1). A fake that starts at Date.now() cannot tell the injected clock from the real one."
+  - "Boundaries again: test 1 ms before expiry, and exactly at expiry. Do the same for the 60-minute window."
+  - "A fake id generator that returns tok-1, tok-2, ... lets you assert on exact tokens."
+criteria:
+  - { id: exports-factory, title: "createResetTokens() returns independent instances" }
+  - { id: uses-injected-clock, title: Expiry follows the clock passed in deps }
+  - { id: uses-injected-random, title: Tokens come from the randomId passed in deps }
+  - { id: single-use, title: A token works once and unknown tokens are refused }
+  - { id: rate-limit, title: 3 tokens per user in any 60-minute window }
+  - { id: default-deps, title: Without deps it uses the real clock and random ids }
+  - { id: tests-pass, title: "Your tests pass, quickly, against your code and the reference implementation" }
+  - { id: catches-expiry-bugs, title: "Your tests catch broken expiry, single use and dependency handling" }
+  - { id: catches-rate-limit-bugs, title: Your tests catch a broken rate limit }
+rubric:
+  - { id: seam, title: "Time and randomness enter only through deps; nothing in the module calls Date.now(), new Date() or randomUUID() except the defaults", skill: test-doubles, max: 4 }
+  - { id: fake-not-mock, title: "Tests use a small hand-written fake clock (state plus advance) rather than mocking globals or asserting on how many times now() was called", skill: test-doubles, max: 4 }
+  - { id: isolation, title: "Each test builds its own instance and fake clock, so tests pass in any order and alone", skill: test-reliability, max: 3 }
+  - { id: readme, title: "README explains in two to four sentences why the refactor made the code testable and what the production caller now passes", max: 2 }
+limits: { timeoutSeconds: 120 }

@@ -1,0 +1,25 @@
+title: Test a pure module until bugs cannot hide
+type: repo
+skills: [unit-testing, test-strategy]
+services: []
+runner: node
+hints:
+  - "Read the rules in the brief as a list of boundaries. For every number in it, test the value itself and its neighbours on both sides."
+  - "\"Absent\" has two spellings in a query string: the key is missing, or it is present with an empty value. Test both."
+  - "parseInt('10abc', 10) is 10 and Number(' 5') is 5. A good test suite has an opinion about both."
+  - "assert.throws(fn, RangeError) checks the type only. Pass a validation function or an object such as { name: 'RangeError', message: /limit/ } to check the message too."
+  - "A table of inputs in a for loop around test() gives one named test per case, like it.each in Vitest."
+criteria:
+  - { id: tests-pass, title: Your tests pass against the correct implementation }
+  - { id: catches-defaults, title: Your tests catch wrong defaults }
+  - { id: catches-limit-bounds, title: Your tests catch mistakes at the limit boundaries }
+  - { id: catches-offset-bounds, title: Your tests catch mistakes at the offset boundaries }
+  - { id: catches-malformed-input, title: Your tests catch malformed numbers being accepted }
+  - { id: catches-sort, title: Your tests catch mistakes in sort parsing }
+  - { id: catches-error-shape, title: Your tests check the error type and message }
+rubric:
+  - { id: names-as-spec, title: "Test names read as statements of behaviour (\"clamps limits above 100\"), so a failing test name alone tells you what broke", skill: unit-testing, max: 3 }
+  - { id: boundaries, title: "Every numeric rule is tested at the boundary value and at the first value on each side of it", skill: unit-testing, max: 4 }
+  - { id: table-driven, title: "Repetitive cases are expressed as a data table or loop rather than copied test bodies, and each case still produces its own named test", skill: unit-testing, max: 3 }
+  - { id: one-reason, title: "Each test fails for one reason; no test mixes unrelated rules such as limit parsing and sort parsing in one body", skill: test-strategy, max: 3 }
+limits: { timeoutSeconds: 120 }

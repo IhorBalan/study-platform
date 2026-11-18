@@ -1,0 +1,14 @@
+title: Testing backend code
+summary: >-
+  You can decide what to test at which level, write unit tests with Vitest (or Jest, or node:test),
+  choose the right test double, run integration tests against a real PostgreSQL with proper isolation,
+  test a NestJS app over HTTP, and keep a suite fast, deterministic and trusted in CI.
+kind: core
+effort: M
+services: [postgres]
+skills:
+  - { id: test-strategy, title: "Test levels and what to test where" }
+  - { id: unit-testing, title: "Unit tests, assertions and fake timers" }
+  - { id: test-doubles, title: "Test doubles: stubs, spies, mocks and fakes" }
+  - { id: db-integration-testing, title: Integration tests against a real database }
+  - { id: test-reliability, title: "Fast, deterministic and trustworthy test suites" }

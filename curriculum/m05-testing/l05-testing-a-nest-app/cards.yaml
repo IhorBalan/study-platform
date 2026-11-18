@@ -1,0 +1,58 @@
+- id: provider-unit-test
+  type: concept
+  front: Do you need `Test.createTestingModule()` to unit-test a Nest service?
+  back: "No. A provider is a class: construct it with `new` and pass fakes or stubs. Use the testing module when the wiring itself is what you want to prove."
+  skills: [nest-testing]
+- id: supertest-snippet
+  type: snippet
+  front: "With Supertest, post `{ title: 'x' }` to `/notes` on a Nest app and expect `201`."
+  back: |-
+    ```ts
+    await request(app.getHttpServer()).post('/notes').send({ title: 'x' }).expect(201);
+    ```
+  skills: [nest-testing]
+- id: supertest-init-not-listen
+  type: concept
+  front: Why does a Supertest-based Nest test call `app.init()` rather than `app.listen()`?
+  back: Supertest takes the HTTP server object and binds a free port itself, so the app only needs to be initialised.
+  skills: [nest-testing]
+- id: override-at-edges
+  type: concept
+  front: Which providers should an HTTP-level Nest test override?
+  back: Only the edges that are slow, non-deterministic or external, such as the clock, token generators and outgoing HTTP clients. Keep the service and the database real.
+  skills: [nest-testing, test-doubles]
+- id: override-db-pool
+  type: snippet
+  front: Build the app from `AppModule` with the `DATABASE_POOL` provider replaced by a test pool.
+  back: |-
+    ```ts
+    await Test.createTestingModule({ imports: [AppModule] })
+      .overrideProvider(DATABASE_POOL).useValue(testPool)
+      .compile();
+    ```
+  skills: [nest-testing]
+- id: use-mocker-risk
+  type: concept
+  front: What is the risk of `useMocker()` for controller tests?
+  back: Every dependency becomes a mock, so the test checks that one method calls another instead of the status codes, validation and response a client sees.
+  skills: [nest-testing, test-doubles]
+- id: real-guard-for-auth
+  type: concept
+  front: "Why keep the real auth guard in a protected endpoint's `401` and `403` tests, instead of `overrideGuard`?"
+  back: An overridden guard proves nothing about whether the real guard is attached to that route or rejects the right callers.
+  skills: [nest-testing]
+- id: seed-through-helpers
+  type: concept
+  front: Why seed HTTP tests by inserting rows directly rather than by calling other endpoints?
+  back: A bug in the seeding endpoint would otherwise fail every test that depends on it, and the failures would point at the wrong place.
+  skills: [nest-testing]
+- id: vitest-swc-metadata
+  type: concept
+  front: Injected services are `undefined` in Vitest but fine in production. Likely cause?
+  back: "The test transform does not emit decorator metadata (`design:paramtypes`). Nest projects add `unplugin-swc` to the Vitest config for this."
+  skills: [nest-testing]
+- id: http-tests-per-endpoint
+  type: concept
+  front: What is a typical set of HTTP-level tests for one endpoint?
+  back: The happy path with the full response, no or bad auth, a forbidden caller, one or two invalid bodies, and each business-rule error it can return.
+  skills: [nest-testing]

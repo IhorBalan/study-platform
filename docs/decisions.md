@@ -415,6 +415,10 @@ Decisions made while building are appended below.
 - **Why:** the run row is saved before the job is sent. When sending failed, the request answered 500 but the run stayed `queued` with no job behind it. Found by the code review (R2b).
 - **Alternatives:** sending the job inside the same transaction through pg-boss's `db` option. It needs an adapter between pg-boss and the Drizzle transaction, which is more code than this failure deserves.
 
+### D-120 · A pasted review reply is stored once — 2026-11-18
+- **What:** storing a review result now claims the run in the same statement (`status <> 'passed'`), inside the transaction. A second reply for the same review gets 409. `rubric_scores` has a unique index on run and rubric item, and the migration removes duplicates that already exist.
+- **Why:** two replies arriving together (a double click, two tabs) both passed the "already has a result" check and stored the scores and the suggested cards twice. Found by the code review (R3) and the backend tester (BE-3).
+
 ---
 
 ## Agreed before this log

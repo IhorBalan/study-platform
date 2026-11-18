@@ -15,12 +15,14 @@ import {
   type ReviewDto,
   type RunReviewRequest,
 } from '@study/shared';
-import { and, asc, count, desc, eq, inArray } from 'drizzle-orm';
+import { and, asc, count, desc, eq, inArray, ne } from 'drizzle-orm';
 import { ENV, type Env } from '../config/env.js';
 import { CurriculumService } from '../curriculum/curriculum.service.js';
 import { InjectDb, type Database } from '../database/database.module.js';
 import { SettingsService } from '../settings/settings.service.js';
 import { buildReviewPrompt, extractJson } from './prompt.js';
+
+const ALREADY_HAS_RESULT = 'This review already has a result. Start a new review instead.';
 
 const {
   submissions,
@@ -226,7 +228,7 @@ export class SubmissionReviewService implements OnModuleInit {
       throw new ConflictException('This review runs through the bridge and takes no pasted reply.');
     }
     if (row.run.status === 'passed') {
-      throw new ConflictException('This review already has a result. Start a new review instead.');
+      throw new ConflictException(ALREADY_HAS_RESULT);
     }
     const task = this.curriculum.task(row.taskId);
 
@@ -301,7 +303,9 @@ export class SubmissionReviewService implements OnModuleInit {
     const valid = result;
     const knownSkills = new Set(this.curriculum.skillIds());
     await this.db.transaction(async (tx) => {
-      await tx
+      // Claim the run in the same statement that stores the result. Of two replies
+      // arriving together (a double click, two tabs), only one finds it unclaimed.
+      const claimed = await tx
         .update(verificationRuns)
         .set({
           status: 'passed',
@@ -313,7 +317,9 @@ export class SubmissionReviewService implements OnModuleInit {
           durationMs: meta.durationMs ?? null,
           finishedAt: new Date(),
         })
-        .where(eq(verificationRuns.id, runId));
+        .where(and(eq(verificationRuns.id, runId), ne(verificationRuns.status, 'passed')))
+        .returning({ id: verificationRuns.id });
+      if (claimed.length === 0) throw new ConflictException(ALREADY_HAS_RESULT);
       await tx.insert(rubricScores).values(
         task.rubric.map((item) => {
           const score = valid.scores.find((s) => s.rubricId === item.id)!;

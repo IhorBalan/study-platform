@@ -12,6 +12,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { JSON_BODY_LIMIT } from '../src/common/body-limit.js';
 import { QueueService } from '../src/queue/queue.service.js';
+import { WeakSkillsService } from '../src/stats/weak-skills.service.js';
 import { DB, type Database } from '../src/database/database.module.js';
 
 describe('API (e2e, real Postgres)', () => {
@@ -595,14 +596,38 @@ describe('API (e2e, real Postgres)', () => {
       ]);
       expect([first.status, second.status].toSorted()).toEqual([200, 409]);
 
+      // The grade is saved before the weak-skill list is updated. If that update
+      // fails, the grade still counts and the request still succeeds.
       await makeDue(reviewed.id);
+      const evaluate = vi
+        .spyOn(app.get(WeakSkillsService), 'evaluate')
+        .mockRejectedValueOnce(new Error('evaluation failed'));
       const res = await http()
         .post(`/api/review/${reviewed.id}`)
         .send({ grade: 'again' })
         .expect(200);
+      expect(evaluate).toHaveBeenCalledOnce();
+      evaluate.mockRestore();
       expect(['learning', 'relearning', 'review']).toContain(res.body.state);
       const again = await http().get('/api/cards').expect(200);
       expect(again.body.cards.find((c: { id: string }) => c.id === reviewed.id).reps).toBe(3);
+    });
+
+    it('allows one open refresh per skill', async () => {
+      const db = app.get<Database>(DB);
+      const [skill] = await db.select().from(schema.skills).limit(1);
+      const row = { skillId: skill!.id, reason: 'test' };
+      const [first] = await db.insert(schema.reviewTasks).values(row).returning();
+      await expect(db.insert(schema.reviewTasks).values(row)).rejects.toMatchObject({
+        cause: { constraint: 'review_tasks_open_skill_idx' },
+      });
+      const ignored = await db
+        .insert(schema.reviewTasks)
+        .values(row)
+        .onConflictDoNothing()
+        .returning();
+      expect(ignored).toHaveLength(0);
+      await db.delete(schema.reviewTasks).where(eq(schema.reviewTasks.id, first!.id));
     });
 
     it('respects the daily limit for new cards', async () => {

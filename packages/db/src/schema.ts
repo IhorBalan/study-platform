@@ -328,7 +328,13 @@ export const reviewTasks = pgTable(
     createdAt,
     closedAt: timestamp('closed_at', { withTimezone: true }),
   },
-  (t) => [index('review_tasks_skill_idx').on(t.skillId, t.status)],
+  (t) => [
+    index('review_tasks_skill_idx').on(t.skillId, t.status),
+    // At most one open refresh per skill, also when two evaluations run at once.
+    uniqueIndex('review_tasks_open_skill_idx')
+      .on(t.skillId)
+      .where(sql`${t.status} = 'open'`),
+  ],
 );
 
 // ---------------------------------------------------------------------------

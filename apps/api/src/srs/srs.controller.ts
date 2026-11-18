@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   HttpCode,
+  Logger,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -30,6 +31,8 @@ type ListQuery = z.infer<typeof ListQuery>;
 
 @Controller()
 export class SrsController {
+  private readonly logger = new Logger(SrsController.name);
+
   constructor(
     private readonly cards: CardsService,
     private readonly review: ReviewService,
@@ -73,7 +76,13 @@ export class SrsController {
   ): Promise<SubmitReviewResponse> {
     const result = await this.review.submit(cardId, body);
     // A lapse can push a skill below the threshold, and a success can lift it back.
-    await this.weakSkills.evaluate();
+    // The grade is already saved, so a failure here must not fail the request:
+    // a retry would be refused because the card is no longer due.
+    try {
+      await this.weakSkills.evaluate();
+    } catch (error) {
+      this.logger.error('Could not update the weak-skill refresh list', error);
+    }
     return result;
   }
 }

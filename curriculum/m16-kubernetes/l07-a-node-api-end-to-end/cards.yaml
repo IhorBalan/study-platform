@@ -40,8 +40,8 @@
   skills: [k8s-delivery]
 - id: run-as-non-root
   type: concept
-  front: "What must the image do for `runAsNonRoot: true` to work?"
-  back: "Run as a non-root user, for example `USER node` in the Dockerfile. Otherwise the kubelet refuses to start the container."
+  front: "What user setting does `runAsNonRoot: true` need for the container to start?"
+  back: "Run as a numeric non-root UID: `runAsUser: 1000`, or `USER 1000` in the Dockerfile. A named user such as `USER node` cannot be verified, so the kubelet refuses to start it."
   skills: [k8s-delivery]
 - id: kind
   type: term

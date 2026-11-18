@@ -38,6 +38,8 @@ spec:
       terminationGracePeriodSeconds: 40     # preStop 10 s + drain up to 25 s + margin
       securityContext:
         runAsNonRoot: true
+        runAsUser: 1000                     # numeric: the kubelet cannot check a named user
+        runAsGroup: 1000
         seccompProfile:
           type: RuntimeDefault
       topologySpreadConstraints:
@@ -100,7 +102,7 @@ spec:
               drop: ["ALL"]
 ```
 
-`runAsNonRoot` requires the image to run as a non-root user, for example `USER node` in the Dockerfile from module 1. `readOnlyRootFilesystem` means the app cannot write to its own disk; if it needs scratch space, mount an `emptyDir` volume at `/tmp`. The `app.kubernetes.io/name` label is a widely used convention; any consistent label works.
+`runAsNonRoot` requires a numeric non-root user ID, set in the Pod with `runAsUser` or in the image with `USER 1000`. The Dockerfile from module 1 ends with `USER node`, a name the kubelet cannot verify, so without `runAsUser` the Pod fails with `CreateContainerConfigError` ("image has non-numeric user"). In the official Node images, `node` is UID 1000. `readOnlyRootFilesystem` means the app cannot write to its own disk; if it needs scratch space, mount an `emptyDir` volume at `/tmp`. The `app.kubernetes.io/name` label is a widely used convention; any consistent label works.
 
 ### Service, route, autoscaler and disruption budget
 

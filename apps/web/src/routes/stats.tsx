@@ -108,6 +108,8 @@ function StatsPage() {
         <Tile label="Suspended" value={String(memory.cardsByState.suspended)} />
       </dl>
 
+      <ForecastChart days={memory.dueByDay} />
+
       {memory.weakestSkills.length > 0 ? (
         <Table
           caption="Weakest skills by recall, last 30 days"
@@ -165,6 +167,49 @@ function DailyChart({ days }: { days: StatsResponse['learning']['secondsByDay'] 
       <div className="mt-1 flex justify-between text-xs text-zinc-500 dark:text-zinc-400">
         <span>{days[0]?.day}</span>
         <span>Today</span>
+      </div>
+    </figure>
+  );
+}
+
+/** Cards coming due per day. A forecast of work, not a deadline. */
+function ForecastChart({ days }: { days: StatsResponse['memory']['dueByDay'] }) {
+  const max = Math.max(...days.map((d) => d.cards), 1);
+  const total = days.reduce((sum, d) => sum + d.cards, 0);
+  const label = (d: { day: string; cards: number }, i: number) =>
+    `${i === 0 ? 'Today' : d.day}: ${d.cards} ${d.cards === 1 ? 'card' : 'cards'}`;
+  return (
+    <figure className="mt-6">
+      <figcaption className="text-sm font-medium">
+        Cards coming due, next {days.length} days
+        <span className="ml-2 font-normal text-zinc-500 dark:text-zinc-400">
+          {total} in total, not counting new cards
+        </span>
+      </figcaption>
+      <ol className="mt-2 flex h-28 items-end gap-[3px]" aria-label="Cards coming due per day">
+        {days.map((d, i) => (
+          <li
+            key={d.day}
+            className="relative flex h-full flex-1 flex-col items-center justify-end"
+            title={label(d, i)}
+          >
+            <span className="sr-only">{label(d, i)}</span>
+            {d.cards > 0 && (
+              <span aria-hidden="true" className="text-[10px] text-zinc-500 dark:text-zinc-400">
+                {d.cards}
+              </span>
+            )}
+            <span
+              aria-hidden="true"
+              className={`w-full rounded-t ${d.cards > 0 ? 'bg-sky-600 dark:bg-sky-500' : 'bg-zinc-200 dark:bg-zinc-800'}`}
+              style={{ height: d.cards > 0 ? `${Math.max(6, (d.cards / max) * 80)}%` : '2px' }}
+            />
+          </li>
+        ))}
+      </ol>
+      <div className="mt-1 flex justify-between text-xs text-zinc-500 dark:text-zinc-400">
+        <span>Today</span>
+        <span>{days.at(-1)?.day}</span>
       </div>
     </figure>
   );

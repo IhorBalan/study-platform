@@ -6,7 +6,7 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { schema } from '@study/db';
-import { eq } from 'drizzle-orm';
+import { and, eq, ne } from 'drizzle-orm';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { AppModule } from '../src/app.module.js';
@@ -778,6 +778,19 @@ describe('API (e2e, real Postgres)', () => {
       ]);
       expect(memory.reviewStreakDays).toBe(1);
       expect(memory.desiredRetention).toBe(0.9);
+      // Fourteen days, today first, and today's count is the "due today" number.
+      expect(memory.dueByDay).toHaveLength(14);
+      expect(memory.dueByDay[0].cards).toBe(memory.dueToday);
+      const seen = await app
+        .get<Database>(DB)
+        .select({ due: schema.cardSchedules.due })
+        .from(schema.cardSchedules)
+        .innerJoin(schema.cards, eq(schema.cards.id, schema.cardSchedules.cardId))
+        .where(and(eq(schema.cards.status, 'active'), ne(schema.cardSchedules.state, 'new')));
+      const inWindow = seen.filter((r) => r.due.getTime() < Date.now() + 13 * 86_400_000).length;
+      const forecast = (memory.dueByDay as { cards: number }[]).reduce((a, d) => a + d.cards, 0);
+      expect(forecast).toBeGreaterThanOrEqual(inWindow);
+      expect(forecast).toBeLessThanOrEqual(seen.length);
       const total = Object.values(memory.cardsByState as Record<string, number>).reduce(
         (a, b) => a + b,
         0,

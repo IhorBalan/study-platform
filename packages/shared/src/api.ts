@@ -510,6 +510,11 @@ export const StatsResponse = z.object({
   }),
   memory: z.object({
     dueToday: z.number().int(),
+    /**
+     * Cards already seen that come due on each of the next 14 local days, today first.
+     * Today includes overdue cards. Reviews done in between will move later days.
+     */
+    dueByDay: z.array(z.object({ day: z.string(), cards: z.number().int() })),
     reviewStreakDays: z.number().int(),
     /** Reviews of cards in the Review state not graded Again, over the last 30 days. */
     retention: z.number().nullable(),

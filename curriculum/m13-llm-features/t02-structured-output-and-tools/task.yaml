@@ -1,0 +1,32 @@
+title: Structured output and a guarded tool loop
+type: repo
+skills: [llm-structured-output, llm-security, llm-evaluation]
+services: []
+runner: nest
+hints:
+  - "`NoObjectGeneratedError.isInstance(error)` tells invalid output apart from other failures. Its `text` property holds what the model actually wrote."
+  - "To name the fields at fault, parse `error.text` yourself and run `TriageSchema.safeParse()`: each issue has a `path` and a `message`."
+  - "A repair call is the original messages, then an assistant message with the invalid answer, then a user message that lists the problems."
+  - "Without `stopWhen`, generateText stops after the first tool call. `isStepCount(n)` allows up to n model calls."
+  - "When the step cap is hit, the result's `finishReason` is still 'tool-calls'."
+  - "The customer id comes from `deps`, never from the model's tool arguments. Check ownership inside each tool's `execute`."
+  - "Return `{ error: '...' }` from a tool to refuse. Throwing ends the loop with no answer."
+criteria:
+  - { id: compiles, title: The project compiles with tsc }
+  - { id: triage-valid, title: "Valid output is returned after one call, with the ticket only in a user message" }
+  - { id: triage-schema, title: "The schema rejects unknown values, unknown keys and malformed order ids" }
+  - { id: triage-repair, title: Invalid output gets exactly one repair call that shows the model its answer and the field at fault }
+  - { id: triage-gives-up, title: "A second invalid answer throws TriageFailedError, and API errors are not retried" }
+  - { id: tool-loop, title: "A tool call runs, its result goes back to the model, and the final text is returned" }
+  - { id: tool-input-validation, title: "Malformed tool input never reaches your code, and the loop continues" }
+  - { id: step-cap, title: The loop stops after maxSteps model calls and rejects with StepLimitError }
+  - { id: other-customers, title: Orders of other customers are invisible to the model }
+  - { id: refund-gate, title: "Refunds run only for own, delivered orders, within the total, once per run, whatever the prompt says" }
+  - { id: own-tests, title: Your tests pass and catch a triageTicket that never repairs and an agent that refunds any order }
+rubric:
+  - { id: schema-design, title: "One zod schema is the single source of truth for the triage shape: enums for fields the code branches on, nullable where the input may not say, no unknown keys", skill: llm-structured-output, max: 3 }
+  - { id: repair-design, title: "The repair is bounded to one attempt, runs only on output errors, and its prompt names the failing fields; the final failure is a domain error that keeps the cause", skill: llm-structured-output, max: 4 }
+  - { id: authorisation, title: "Every rule that protects money or data (ownership, status, amount, one refund) is enforced inside the tools from deps, and tool results return only the fields the model needs", skill: llm-security, max: 4 }
+  - { id: test-quality, title: "The learner's tests script the model with MockLanguageModelV4, cover a repair and a refused refund, and assert on what was sent to the model, not only on return values", skill: llm-evaluation, max: 3 }
+  - { id: readme-injection, title: "README gives a concrete manipulative ticket and explains which part of the code limits the damage, and why the instructions alone would not", skill: llm-security, max: 2 }
+limits: { timeoutSeconds: 120 }

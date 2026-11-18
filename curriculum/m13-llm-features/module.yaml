@@ -1,0 +1,19 @@
+title: LLM features in a backend
+summary: >-
+  You can call a language model from a NestJS backend through a provider SDK or the Vercel AI SDK,
+  stream its answer to the browser over SSE, get validated structured output and run a bounded
+  tool loop, build retrieval with pgvector, control cost and rate limits, test and evaluate output
+  with a fake model, defend against prompt injection and data leakage, and expose your own tools
+  to AI hosts with a small MCP server. Everything runs offline against a fake or local model.
+kind: core
+effort: M
+services: [postgres]
+skills:
+  - { id: llm-api-basics, title: Calling a language model from a backend }
+  - { id: llm-streaming, title: Streaming model output to the browser }
+  - { id: llm-structured-output, title: Structured output and tool calling }
+  - { id: llm-rag, title: Embeddings and retrieval with pgvector }
+  - { id: llm-production, title: "Cost, rate limits and caching for LLM calls" }
+  - { id: llm-evaluation, title: Evaluating and testing LLM output }
+  - { id: llm-security, title: "Prompt injection, data leakage and the OWASP LLM Top 10" }
+  - { id: mcp-servers, title: Building MCP servers }

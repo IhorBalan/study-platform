@@ -1,0 +1,27 @@
+title: Stream a chat answer over SSE
+type: repo
+skills: [llm-streaming, llm-api-basics]
+services: []
+runner: nest
+hints:
+  - "`@Sse('stream', { method: RequestMethod.POST })` gives you SSE framing on a POST route. Add `@HttpCode(200)`, or Nest answers 201."
+  - "`@SseSignal()` injects an AbortSignal that fires when the stream ends for any reason, including a client that disconnects."
+  - "Combine signals with `AbortSignal.any([signal, AbortSignal.timeout(ms)])` and pass the result to streamText as `abortSignal`."
+  - "streamText does not throw on provider errors. Look for parts of type `error` and `abort` in `result.stream`, and pass `onError` so nothing is printed to the console."
+  - "`APICallError.isInstance(error) && error.statusCode === 429` recognises a rate limit."
+  - "When the stream ends with an `abort` part, check which signal fired: a timeout needs an error event, a client who left needs nothing."
+criteria:
+  - { id: compiles, title: The project compiles with tsc }
+  - { id: streams-deltas, title: "Each text delta is forwarded as a \"delta\" event, then one \"done\" event with usage" }
+  - { id: incremental, title: The first delta reaches the client before the model has finished }
+  - { id: upstream-request, title: "The model gets the configured model id, a system instruction, the user message and an output cap" }
+  - { id: validates-input, title: "A missing, empty, non-string or too long message gets 400 and never reaches the model" }
+  - { id: maps-errors, title: "Upstream failures end the stream at once with an \"error\" event carrying only a code" }
+  - { id: cancels-upstream, title: "When the client disconnects, the request to the model is aborted" }
+  - { id: timeout, title: "A model that stops sending ends with an \"error\" event with code \"timeout\" after LLM_TIMEOUT_MS" }
+rubric:
+  - { id: abort-chain, title: "One AbortSignal that combines the client disconnect and the timeout reaches the model call, and cleanup runs on every exit path (completion, error, disconnect)", skill: llm-streaming, max: 4 }
+  - { id: event-contract, title: "Events are built in one place from typed stream parts, every stream ends with exactly one done or error event, and provider error details are logged on the server but never sent to the client", skill: llm-streaming, max: 4 }
+  - { id: configuration, title: "Base URL, model id, key and timeout come from configuration read in one place, and nothing outside that place depends on the provider", skill: llm-api-basics, max: 3 }
+  - { id: readme-retries, title: "README explains why the endpoint does not retry and names a place where retries with backoff do belong", skill: llm-streaming, max: 2 }
+limits: { timeoutSeconds: 120 }

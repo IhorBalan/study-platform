@@ -16,6 +16,7 @@ const settings = {
   reviewsPerDay: 100,
   desiredRetention: 0.9,
   labRepoPath: null,
+  editor: 'vscode',
 };
 
 describe('api client', () => {

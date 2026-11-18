@@ -5,6 +5,7 @@ import { Command } from '../../components/CopyButton';
 import { Markdown } from '../../components/Markdown';
 import { SubmitPanel } from '../../components/SubmitPanel';
 import { api } from '../../lib/api';
+import { editorLink, taskFolder } from '../../lib/editorLink';
 import { useStudySession } from '../../lib/useStudySession';
 
 const taskQuery = (id: string) =>
@@ -38,6 +39,16 @@ function TaskPage() {
   const { moduleId, taskSlug } = Route.useParams();
   const { data: task } = useSuspenseQuery(taskQuery(`${moduleId}/${taskSlug}`));
   useStudySession('task', task.id);
+
+  // The folder on this computer, once the lab repository path is known.
+  const settings = useQuery({
+    queryKey: ['settings'],
+    queryFn: api.settings,
+    enabled: task.type === 'repo',
+  });
+  const labRepoPath = settings.data?.labRepoPath;
+  const folder = labRepoPath ? taskFolder(labRepoPath, task.labFolder) : null;
+  const link = folder && settings.data ? editorLink(settings.data.editor, folder) : null;
 
   // The plan knows this task's status and its neighbours in the module.
   const queryClient = useQueryClient();
@@ -92,6 +103,16 @@ function TaskPage() {
           Run <Command>{`pnpm lab start ${task.id}`}</Command> to copy the starter files, then work
           in <code className="font-mono">{task.labFolder}</code> inside your lab repository.
           {task.services.length > 0 && <> Needs: {task.services.join(', ')}.</>}
+          {folder && (
+            <span className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+              <Command>{folder}</Command>
+              {link && (
+                <a href={link.href} className="font-medium underline">
+                  {link.label}
+                </a>
+              )}
+            </span>
+          )}
         </p>
       )}
 

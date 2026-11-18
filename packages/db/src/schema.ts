@@ -348,5 +348,7 @@ export const settings = pgTable('settings', {
   reviewsPerDay: integer('reviews_per_day').notNull().default(100),
   desiredRetention: doublePrecision('desired_retention').notNull().default(0.9),
   labRepoPath: text('lab_repo_path'),
+  /** Which editor the "Open in …" link on task pages targets: vscode, cursor or none. */
+  editor: text('editor').notNull().default('vscode'),
   updatedAt,
 });

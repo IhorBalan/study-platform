@@ -490,6 +490,10 @@ Builds the first half of D-201. `pnpm backup` runs `pg_dump --format=custom` ins
 
 The plan response carries `continueWith`: the lesson or task of the newest study session that has an item, when that item is not done and is not already the next lesson. No new table: sessions already record what was opened. It is the first row of "Next up". Remembering the scroll position inside a lesson is left for a separate change.
 
+### D-133 · Task pages link to the task folder in the learner's editor — 2026-11-18
+
+Code task pages show the task's full folder path with a copy button and an "Open in VS Code" or "Open in Cursor" link (`<scheme>://file/<path>`), once the lab repository path is set. The editor is a new setting (VS Code by default, Cursor, or no link), stored as text in the settings row. JetBrains editors are left out because their link format could not be confirmed here. The link does not check that the folder exists; before `pnpm lab start` the editor reports a missing folder itself.
+
 ---
 
 ## Product direction

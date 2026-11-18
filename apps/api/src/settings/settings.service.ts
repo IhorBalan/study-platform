@@ -1,0 +1,33 @@
+import { Injectable } from '@nestjs/common';
+import { schema } from '@study/db';
+import type { SettingsDto, UpdateSettings } from '@study/shared';
+import { eq } from 'drizzle-orm';
+import { InjectDb, type Database } from '../database/database.module.js';
+
+@Injectable()
+export class SettingsService {
+  constructor(@InjectDb() private readonly db: Database) {}
+
+  /** The settings table has exactly one row; it is created on first read. */
+  async get(): Promise<SettingsDto> {
+    const { settings } = schema;
+    await this.db.insert(settings).values({ id: 1 }).onConflictDoNothing();
+    const [row] = await this.db.select().from(settings).where(eq(settings.id, 1));
+    if (!row) throw new Error('settings row is missing');
+    return {
+      reviewMode: row.reviewMode,
+      newCardsPerDay: row.newCardsPerDay,
+      reviewsPerDay: row.reviewsPerDay,
+      desiredRetention: row.desiredRetention,
+      labRepoPath: row.labRepoPath,
+    };
+  }
+
+  async update(patch: UpdateSettings): Promise<SettingsDto> {
+    await this.get();
+    if (Object.keys(patch).length > 0) {
+      await this.db.update(schema.settings).set(patch).where(eq(schema.settings.id, 1));
+    }
+    return this.get();
+  }
+}

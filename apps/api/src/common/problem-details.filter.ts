@@ -23,6 +23,7 @@ export class ProblemDetailsFilter implements ExceptionFilter {
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let title = 'Internal Server Error';
     let detail: string | undefined;
+    let errors: ProblemDetails['errors'];
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
@@ -33,13 +34,16 @@ export class ProblemDetailsFilter implements ExceptionFilter {
       else if (typeof body === 'object' && body !== null && 'message' in body) {
         const message = (body as { message: unknown }).message;
         detail = Array.isArray(message) ? message.join('; ') : String(message);
+        if ('errors' in body && Array.isArray(body.errors)) {
+          errors = body.errors as ProblemDetails['errors'];
+        }
       }
     } else {
       // Unknown errors are logged in full but never echoed to the client.
       this.logger.error(exception instanceof Error ? exception.stack : String(exception));
     }
 
-    const problem: ProblemDetails = { type: 'about:blank', title, status, detail };
+    const problem: ProblemDetails = { type: 'about:blank', title, status, detail, errors };
     res.status(status).type('application/problem+json').json(problem);
   }
 }

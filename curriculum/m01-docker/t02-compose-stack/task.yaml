@@ -1,0 +1,25 @@
+title: Describe an API, a database and an optional admin tool in Compose
+type: repo
+skills: [compose, docker-networking, docker-storage, container-config]
+services: []
+runner: node
+hints:
+  - A service can be attached to more than one network, and only the networks it shares with another service let the two talk.
+  - A port published on a service that sits only on an internal network does not work. How else can you get a psql prompt?
+  - '`${NAME:?message}` refuses to start without a value. `${NAME:-default}` falls back to a default.'
+  - In a healthcheck command, write `$$` when the shell inside the container should expand the variable rather than Compose.
+  - Regenerate compose.json after every change to compose.yaml. The checks read only the JSON.
+criteria:
+  - { id: compose-json, title: 'compose.json exists, is valid JSON and defines the api, db and adminer services' }
+  - { id: named-volume, title: The database stores its data in a named volume }
+  - { id: db-healthcheck, title: The database has a healthcheck }
+  - { id: waits-for-healthy-db, title: The API starts only after the database is healthy }
+  - { id: loopback-ports, title: Every published port is bound to 127.0.0.1 }
+  - { id: internal-network, title: The database is only on an internal network that the API shares }
+  - { id: admin-profile, title: The admin tool is behind the admin profile and the core services are not }
+  - { id: no-hardcoded-secrets, title: No password is written in the Compose file }
+rubric:
+  - { id: network-design, title: 'Networks give each service only the reachability it needs, and NOTES.md states correctly which containers can and cannot reach the database and why', skill: docker-networking, max: 4 }
+  - { id: secret-handling, title: 'A new clone cannot start with a missing or silently defaulted password, .env.example documents the variables, and NOTES.md describes the steps', skill: container-config, max: 4 }
+  - { id: data-lifecycle, title: 'The volume is mounted at the path the PostgreSQL 18 image uses, and NOTES.md names the command that keeps the data and the one that deletes it', skill: docker-storage, max: 3 }
+  - { id: healthcheck-quality, title: 'The healthcheck tests readiness of the actual database (user and database name match the configuration) with timings suited to local start-up', skill: compose, max: 3 }

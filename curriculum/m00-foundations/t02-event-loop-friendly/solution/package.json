@@ -1,0 +1,8 @@
+{
+  "name": "event-loop-friendly",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node start.mjs"
+  }
+}

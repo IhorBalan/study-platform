@@ -1,5 +1,23 @@
-import { HealthResponse, PlanResponse, ProblemDetails } from '@study/shared';
-import type { z } from 'zod';
+import {
+  HealthResponse,
+  LessonDetail,
+  LessonProgressResponse,
+  PlanResponse,
+  ProblemDetails,
+  CardDto,
+  CardListResponse,
+  ReviewQueueResponse,
+  SettingsDto,
+  SubmitReviewResponse,
+  TaskDetail,
+  type CardStatus,
+  type CreateCard,
+  type Grade,
+  type ProgressStatus,
+  type UpdateCard,
+  type UpdateSettings,
+} from '@study/shared';
+import { z } from 'zod';
 
 export class ApiError extends Error {
   constructor(
@@ -11,8 +29,20 @@ export class ApiError extends Error {
 }
 
 /** Fetches JSON and validates it, so a drifting API fails here and not deep in a component. */
-async function get<T extends z.ZodType>(path: string, schema: T): Promise<z.infer<T>> {
-  const res = await fetch(`/api${path}`, { headers: { accept: 'application/json' } });
+async function request<T extends z.ZodType>(
+  path: string,
+  schema: T,
+  init?: { method: string; body: unknown },
+): Promise<z.infer<T>> {
+  const res = await fetch(`/api${path}`, {
+    method: init?.method ?? 'GET',
+    headers: {
+      accept: 'application/json',
+      ...(init ? { 'content-type': 'application/json' } : {}),
+    },
+    body: init ? JSON.stringify(init.body) : undefined,
+  });
+  if (res.status === 204) return schema.parse(undefined);
   const body: unknown = await res.json().catch(() => null);
   if (!res.ok) {
     const problem = ProblemDetails.safeParse(body);
@@ -22,6 +52,30 @@ async function get<T extends z.ZodType>(path: string, schema: T): Promise<z.infe
 }
 
 export const api = {
-  health: () => get('/health', HealthResponse),
-  plan: () => get('/plan', PlanResponse),
+  health: () => request('/health', HealthResponse),
+  plan: () => request('/plan', PlanResponse),
+  /** Ids are "<module>/<slug>", which is also the URL path. */
+  lesson: (id: string) => request(`/lessons/${id}`, LessonDetail),
+  setLessonProgress: (id: string, status: ProgressStatus) =>
+    request(`/lessons/${id}/progress`, LessonProgressResponse, { method: 'PUT', body: { status } }),
+  task: (id: string) => request(`/tasks/${id}`, TaskDetail),
+
+  reviewQueue: () => request('/review/queue', ReviewQueueResponse),
+  submitReview: (cardId: string, grade: Grade, answerMs: number) =>
+    request(`/review/${cardId}`, SubmitReviewResponse, {
+      method: 'POST',
+      body: { grade, answerMs },
+    }),
+
+  cards: (status?: CardStatus) =>
+    request(`/cards${status ? `?status=${status}` : ''}`, CardListResponse),
+  createCard: (card: CreateCard) => request('/cards', CardDto, { method: 'POST', body: card }),
+  updateCard: (id: string, patch: UpdateCard) =>
+    request(`/cards/${id}`, CardDto, { method: 'PATCH', body: patch }),
+  deleteCard: (id: string) =>
+    request(`/cards/${id}`, z.undefined(), { method: 'DELETE', body: {} }),
+
+  settings: () => request('/settings', SettingsDto),
+  updateSettings: (patch: UpdateSettings) =>
+    request('/settings', SettingsDto, { method: 'PATCH', body: patch }),
 };

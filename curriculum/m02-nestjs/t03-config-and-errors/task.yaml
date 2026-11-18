@@ -1,0 +1,31 @@
+title: Typed configuration and problem details
+type: repo
+skills: [nest-config, nest-errors]
+services: []
+runner: nest
+hints:
+  - Environment variables are strings. Coerce PORT and MAX_NOTES to numbers first, then check that they are integers in range.
+  - "Provide the parsed config with `{ provide: ENV, useFactory: () => loadEnv(process.env) }`. Nest runs the factory while it builds the container, so a thrown error stops the app before it listens."
+  - Collect every problem before throwing, and build the message from variable names and rule descriptions only. Never interpolate a received value.
+  - "A filter decorated with @Catch() and no arguments receives everything: HttpException subclasses, your domain errors and plain bugs. Branch with instanceof."
+  - "HttpException.getResponse() returns a string or an object. For validation errors the object's `message` is an array."
+  - "Register the filter as `{ provide: APP_FILTER, useClass: ... }` in AppModule. app.useGlobalFilters() in main.ts is invisible to the checks."
+criteria:
+  - { id: compiles, title: The project compiles with tsc }
+  - { id: env-defaults, title: The app starts when only ADMIN_TOKEN is set }
+  - { id: env-fails-fast, title: Invalid configuration stops the app from being created and names the variable }
+  - { id: env-reports-all, title: One start-up error names every invalid variable }
+  - { id: env-secret-hidden, title: Start-up errors never print the value of ADMIN_TOKEN }
+  - { id: health-environment, title: GET /health reports the configured environment }
+  - { id: problem-not-found, title: 404 responses are problem documents }
+  - { id: problem-validation, title: 400 responses are problem documents that name the field }
+  - { id: problem-unexpected, title: An unexpected error becomes a 500 problem that leaks nothing }
+  - { id: notes-limit, title: A full store answers 409 with a problem document }
+  - { id: success-unchanged, title: Successful responses keep their shape and content type }
+rubric:
+  - { id: config-single-source, title: "process.env is read in one place only, and the health controller, notes service and main.ts get their values from the injected typed config", skill: nest-config, max: 4 }
+  - { id: config-validation, title: "One schema or function defines types, defaults and ranges for all four variables, and the Env type cannot drift from it", skill: nest-config, max: 3 }
+  - { id: domain-error-mapping, title: "The notes service throws a domain error with no HTTP imports, and the translation to 409 happens in one place (the filter or a mapping it uses)", skill: nest-errors, max: 4 }
+  - { id: filter-structure, title: "The filter handles HttpException, domain errors and unknown errors as three explicit cases and builds every response through one code path", skill: nest-errors, max: 4 }
+  - { id: logging, title: "Unexpected errors are logged on the server with their stack, client errors are not logged as errors, and no log line contains ADMIN_TOKEN", skill: nest-errors, max: 3 }
+limits: { timeoutSeconds: 180 }

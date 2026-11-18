@@ -1,0 +1,28 @@
+title: A JSON API on node:http alone
+type: repo
+skills: [node-http-server, http-semantics]
+services: []
+runner: node
+hints:
+  - Decide on the path before the method. An unknown path is 404; a known path with an unsupported method is 405.
+  - Count body bytes as the chunks arrive. A client can leave out Content-Length.
+  - If you stop reading the request stream early, Node may close the socket before your 413 reaches the client. Keep consuming the chunks without storing them.
+  - Write one helper that sends a problem document and use it for every error.
+criteria:
+  - { id: create-note, title: POST /notes creates a note and returns 201 with a Location header }
+  - { id: read-note, title: GET /notes and GET /notes/:id return the stored notes }
+  - { id: delete-note, title: DELETE /notes/:id removes the note and returns 204 }
+  - { id: invalid-json, title: A body that is not valid JSON gets 400 }
+  - { id: invalid-shape, title: Valid JSON with the wrong shape gets 422 }
+  - { id: wrong-media-type, title: A POST without a JSON Content-Type gets 415 }
+  - { id: body-limit, title: A body over 1024 bytes gets 413 }
+  - { id: not-found, title: Unknown paths and unknown note ids get 404 }
+  - { id: method-not-allowed, title: Unsupported methods get 405 with an Allow header }
+  - { id: problem-json, title: Every error response is an RFC 9457 problem document }
+  - { id: isolated-state, title: Each createServer() call has its own empty store }
+rubric:
+  - { id: routing-structure, title: Routing separates path matching from method handling and is easy to extend with a new route, skill: node-http-server, max: 4 }
+  - { id: body-handling, title: Body reading enforces the limit by counting bytes and separates syntax errors from shape errors, skill: node-http-server, max: 4 }
+  - { id: error-handling, title: One code path builds all error responses and unexpected exceptions become a 500 problem document without leaking internals, skill: http-semantics, max: 4 }
+  - { id: readability, title: Handlers are short and named for what they do and there is no dead or duplicated code, max: 3 }
+limits: { timeoutSeconds: 60 }

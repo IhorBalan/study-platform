@@ -1,0 +1,62 @@
+- id: depends-on-short-form
+  type: concept
+  front: "What does short-form `depends_on: [db]` wait for before starting the dependent service?"
+  back: Only for the `db` container to be started. It does not wait for the database to accept connections.
+  skills: [compose]
+
+- id: depends-on-healthy
+  type: snippet
+  front: In a Compose service, wait for `db` to pass its healthcheck before starting.
+  back: |
+    depends_on:
+      db:
+        condition: service_healthy
+  skills: [compose]
+
+- id: up-wait
+  type: concept
+  front: What does `--wait` add to `docker compose up -d`?
+  back: The command returns only when every service is running or healthy, and exits non-zero if one fails.
+  skills: [compose]
+
+- id: profiles
+  type: term
+  front: Compose profile
+  back: "A label that makes a service opt-in. Example: a service with `profiles: [admin]` starts only with `docker compose --profile admin up`."
+  skills: [compose]
+
+- id: substitution-default
+  type: cloze
+  front: "In a Compose file, `${API_PORT{{...}}3000}` uses 3000 when `API_PORT` is unset or empty."
+  back: "`:-`"
+  skills: [compose, container-config]
+
+- id: substitution-required
+  type: concept
+  front: "What does `${DB_PASSWORD:?set it in .env}` do when `DB_PASSWORD` is not set?"
+  back: Compose stops with that error message instead of starting with an empty value.
+  skills: [compose, container-config]
+
+- id: dotenv-vs-env-file
+  type: comparison
+  front: "The project `.env` file vs a service's `env_file:`"
+  back: "`.env` feeds `${…}` substitution while Compose reads the file. `env_file:` puts variables into the container's environment."
+  skills: [compose, container-config]
+
+- id: service-to-service-port
+  type: concept
+  front: "`db` publishes `127.0.0.1:54320:5432`. Which address does the `api` service use to reach it?"
+  back: "`db:5432`. Services talk over the project network on the container port. The published port is only for the host."
+  skills: [compose, docker-networking]
+
+- id: exec-vs-run
+  type: comparison
+  front: "`docker compose exec api …` vs `docker compose run --rm api …`"
+  back: "`exec` runs a command inside the already running `api` container. `run` starts a new one-off container from the service's definition."
+  skills: [compose]
+
+- id: compose-config
+  type: concept
+  front: How do you see a Compose file after variable substitution, without starting anything?
+  back: "`docker compose config` prints the resolved configuration (add `--format json` for JSON)."
+  skills: [compose]

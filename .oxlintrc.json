@@ -6,5 +6,5 @@
     "react/react-in-jsx-scope": "off",
     "typescript/no-extraneous-class": ["warn", { "allowWithDecorator": true }]
   },
-  "ignorePatterns": ["dist", "packages/db/drizzle", "**/routeTree.gen.ts"]
+  "ignorePatterns": ["dist", "packages/db/drizzle", "**/routeTree.gen.ts", "curriculum"]
 }

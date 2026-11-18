@@ -200,3 +200,33 @@ Decisions made while building are appended below.
 
 ### D-076 · Build scripts are allow-listed in `pnpm-workspace.yaml` — Accepted, 2026-11-18
 - **Why:** pnpm 11 blocks dependency install scripts unless listed. `@swc/core` and `esbuild` are allowed; the optional native speed-ups that Testcontainers pulls in (`ssh2`, `cpu-features`, `protobufjs`) are explicitly declined.
+
+### D-077 · A lesson's cards join the review queue when the lesson is marked done — Accepted, 2026-11-18
+- **Why:** loading every deck at start-up would fill the queue with hundreds of cards about material not yet read.
+- **Alternatives:** import all decks up front and rely on the new-cards-per-day limit (cards would arrive in file order, ahead of the reading); add cards when a lesson is opened (too early).
+- **Detail:** cards are keyed by `<lesson>#<card id>`, so completing a lesson twice never duplicates cards or resets their schedule.
+
+### D-078 · FSRS-7 through `ts-fsrs` 6, with the library's default scheduler — Accepted, 2026-11-18
+- **Why:** `ts-fsrs` 6 defaults to FSRS-7, and the benchmark author describes it as the final version of the algorithm. The handoff asked for "standard FSRS", and this is the current standard.
+- **Alternatives:** pin `version: 'FSRS-6'` (the version the published benchmark numbers are for).
+- **Safeguard:** each review row stores the model name, the desired retention and the library's raw review log, so schedules can be recomputed under another version.
+- **Observed behaviour worth knowing:** with the defaults, grading a new card "Good" sends it straight to review in about 4.8 days, with no same-day learning step.
+- **Revisit if:** you prefer short same-day learning steps for new cards; the scheduler accepts `learningSteps`.
+
+### D-079 · Task checks are Node test files; every code task ships a reference solution — Accepted, 2026-11-18
+- **Chosen:** `checks/*.test.mjs` run with `node --test`, using Node built-ins only. Each top-level test is one criterion and its name starts with the criterion id. Each code task has a hidden `solution/` folder, and the checks must pass against it and fail against `starter/`.
+- **Why:** no custom check framework to learn or maintain, and the reference solution proves that a check can actually be satisfied before a learner meets it.
+- **Alternatives:** a bespoke check DSL in YAML (less flexible); Vitest inside the sandbox (needs packages the sandbox cannot download).
+
+### D-080 · Sandbox runner images carry the dependencies — Accepted, 2026-11-18
+- **Why:** the sandbox has no internet, so a NestJS submission cannot run `npm install` there.
+- **Chosen:** each task names a runner (`node` or `nest` so far). The `nest` image has the packages in `infra/docker/runner-nest/package.json` pre-installed, and the sandbox links them into the submission.
+- **Consequence:** tasks can only use packages their runner provides. The task brief lists them.
+- **Alternatives:** allow internet during an install phase (breaks the isolation rule); ask learners to commit `node_modules` (no).
+
+### D-081 · Request validation uses Nest's `StandardSchemaValidationPipe`, registered globally — Accepted, 2026-11-18
+- **Found while building:** in NestJS 12, `@Body({ schema })` only attaches the schema. Nothing is validated until the pipe is registered. A test caught invalid input reaching the database.
+- **Chosen:** register the pipe once with `APP_PIPE`, and map its issues into the `errors` array of the problem-details response.
+
+### D-082 · "Today" for review limits is the machine's local day — Accepted, 2026-11-18
+- **Why:** the platform runs on the learner's own computer, so local midnight is the natural boundary. UTC would move the boundary to mid-evening or mid-morning.

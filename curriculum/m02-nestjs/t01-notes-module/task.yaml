@@ -1,0 +1,25 @@
+title: Build a notes module
+type: repo
+skills: [nest-di, nest-request-lifecycle]
+services: []
+runner: nest
+hints:
+  - "A feature is three files: a service marked @Injectable(), a controller that receives it in its constructor, and a module that lists both. AppModule imports the module."
+  - Import the service into the controller as a value (not with `import type`), or Nest cannot see which class to inject.
+  - "@Post() already answers 201. @Delete() answers 200 unless you add @HttpCode(204)."
+  - Throw NotFoundException from the controller and let Nest build the 404 response. Do not write to the response object yourself.
+  - If Nest reports that it cannot resolve a dependency, check that the service is in the `providers` of the module that declares the controller.
+criteria:
+  - { id: compiles, title: The project compiles with tsc }
+  - { id: create-note, title: POST /notes stores a note and answers 201 with it }
+  - { id: list-notes, title: GET /notes returns every note in creation order }
+  - { id: get-note, title: "GET /notes/:id returns the note" }
+  - { id: get-missing-404, title: "GET /notes/:id answers 404 for an unknown id" }
+  - { id: delete-note, title: "DELETE /notes/:id answers 204 and removes the note" }
+  - { id: delete-missing-404, title: "DELETE /notes/:id answers 404 for an unknown id" }
+rubric:
+  - { id: module-boundaries, title: "The feature lives in its own NotesModule that declares the controller and service, and AppModule only imports it", skill: nest-di, max: 4 }
+  - { id: injection, title: "The controller receives the service through its constructor and nothing is created with `new` or shared through module-level variables", skill: nest-di, max: 4 }
+  - { id: thin-controller, title: "The controller only translates between HTTP and the service (decorators, status codes, NotFoundException) and the service has no HTTP imports", skill: nest-request-lifecycle, max: 4 }
+  - { id: readability, title: "Names say what things do, the note type is declared once and there is no dead code", max: 3 }
+limits: { timeoutSeconds: 120 }

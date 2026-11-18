@@ -1,0 +1,6 @@
+title: Demo module
+summary: Fixture used by the API tests.
+kind: core
+effort: S
+skills:
+  - { id: http-basics, title: HTTP basics }

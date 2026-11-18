@@ -1,0 +1,63 @@
+- id: handler-timing
+  type: concept
+  front: 'When Node calls your `createServer` handler, how much of the request has arrived?'
+  back: 'The request line and headers. The body has not been read yet; it is a stream on `req`.'
+  skills: [node-http-server]
+
+- id: parse-req-url
+  type: snippet
+  front: 'Get the path and query parameters from `req.url` in a `node:http` handler.'
+  back: |
+    ```ts
+    const { pathname, searchParams } =
+      new URL(req.url ?? '/', 'http://localhost');
+    ```
+  skills: [node-http-server]
+
+- id: route-404-vs-405
+  type: comparison
+  front: "`404` vs `405` when routing by hand"
+  back: "`404`: no route matches the path. `405`: the path exists but not with this method; send `Allow` with the supported ones."
+  skills: [node-http-server, http-semantics]
+
+- id: body-limit-why
+  type: concept
+  front: 'Why must a server cap the size of a request body while reading it?'
+  back: 'Otherwise a single client can make the process buffer data until it runs out of memory.'
+  skills: [node-http-server]
+
+- id: count-bytes-not-header
+  type: concept
+  front: 'Why is checking `Content-Length` not enough to enforce a body size limit?'
+  back: 'The header can be absent (chunked bodies) or wrong. Count the bytes as the chunks arrive.'
+  skills: [node-http-server]
+
+- id: status-413
+  type: cloze
+  front: "A request body larger than the server's limit is answered with status `{{...}}`."
+  back: "`413 Content Too Large`"
+  skills: [http-semantics]
+
+- id: problem-json-media-type
+  type: cloze
+  front: "RFC 9457 error bodies are served with `Content-Type: {{...}}`."
+  back: "`application/problem+json`"
+  skills: [node-http-server]
+
+- id: problem-title-vs-detail
+  type: comparison
+  front: "`title` vs `detail` in a problem-details body"
+  back: "`title` is a short summary that is the same for every occurrence of the problem type. `detail` explains this particular occurrence."
+  skills: [node-http-server]
+
+- id: server-close
+  type: concept
+  front: 'What does `server.close(callback)` do to requests that are already in progress?'
+  back: 'It lets them finish. It only stops accepting new connections, and calls back once the active ones are done.'
+  skills: [graceful-shutdown]
+
+- id: shutdown-deadline
+  type: concept
+  front: 'Why does a `SIGTERM` handler set its own exit timer in addition to calling `server.close()`?'
+  back: 'A hung request would keep the process alive until the orchestrator sends `SIGKILL`. The timer forces a clean, logged exit before that.'
+  skills: [graceful-shutdown]

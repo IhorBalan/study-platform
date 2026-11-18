@@ -1,0 +1,52 @@
+name: orders
+
+services:
+  api:
+    build: ./api
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgres://${POSTGRES_USER:-orders}:${POSTGRES_PASSWORD:?copy .env.example to .env and set POSTGRES_PASSWORD}@db:5432/orders
+    ports:
+      - '127.0.0.1:${API_PORT:-3000}:3000'
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [edge, data]
+
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-orders}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?copy .env.example to .env and set POSTGRES_PASSWORD}
+      POSTGRES_DB: orders
+    volumes:
+      # PostgreSQL 18 images keep their data under /var/lib/postgresql/<major>/docker.
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      # $$ leaves the variable for the shell inside the container to expand.
+      test: ['CMD-SHELL', 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    # No ports: use `docker compose exec db psql -U orders orders`, or the admin profile.
+    networks: [data]
+
+  adminer:
+    image: adminer:5
+    profiles: [admin]
+    ports:
+      - '127.0.0.1:${ADMINER_PORT:-8080}:8080'
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [edge, data]
+
+networks:
+  # Normal bridge network: needed by every service that publishes a port.
+  edge:
+  # No route in or out. Only services attached to it can reach the database.
+  data:
+    internal: true
+
+volumes:
+  db-data:

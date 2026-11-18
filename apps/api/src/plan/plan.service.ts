@@ -51,7 +51,12 @@ export class PlanService {
         })),
       tasks: taskRows
         .filter((t) => t.moduleId === m.id)
-        .map((t) => ({ id: t.id, title: t.title, position: t.position })),
+        .map((t) => ({
+          id: t.id,
+          title: t.title,
+          position: t.position,
+          type: t.submissionType,
+        })),
     }));
 
     return { modules: result };

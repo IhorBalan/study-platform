@@ -1,0 +1,59 @@
+- id: lockfile-before-source
+  type: concept
+  front: Why copy `package.json` and the lockfile, install, and only then copy the source code?
+  back: The install layer stays cached until the manifest or lockfile changes. A source edit then rebuilds only the cheap steps after it.
+  skills: [dockerfile]
+
+- id: multi-stage-build
+  type: term
+  front: Multi-stage build
+  back: "A Dockerfile with several `FROM` stages where only the last becomes the image. Example: compile in `build`, then `COPY --from=build /app/dist ./dist`."
+  skills: [dockerfile]
+
+- id: dockerignore-purpose
+  type: concept
+  front: What does `.dockerignore` control?
+  back: Which files are sent to the builder as the build context. Excluded files cannot be copied into the image, even by `COPY . .`.
+  skills: [dockerfile]
+
+- id: exec-vs-shell-form
+  type: comparison
+  front: "`CMD [\"node\", \"dist/main.js\"]` vs `CMD node dist/main.js`"
+  back: Exec form runs `node` directly as PID 1, so it receives SIGTERM. Shell form runs `/bin/sh -c`, and the shell is PID 1 instead.
+  skills: [dockerfile]
+
+- id: entrypoint-vs-cmd
+  type: comparison
+  front: "`ENTRYPOINT` vs `CMD`"
+  back: "`ENTRYPOINT` is the executable and survives `docker run image args`. `CMD` supplies default arguments (or the whole command) and is replaced by those args."
+  skills: [dockerfile]
+
+- id: pid1-sigterm
+  type: concept
+  front: A Node process runs as PID 1 and has no SIGTERM handler. What does `docker stop` do to it?
+  back: Nothing for 10 seconds, then SIGKILL. The kernel does not apply default signal actions to PID 1.
+  skills: [dockerfile]
+
+- id: non-root-user
+  type: snippet
+  front: Make the final stage of an official Node image run as an unprivileged user.
+  back: "`USER node` (placed after the `COPY` and `RUN` steps that need root)"
+  skills: [dockerfile, container-hardening]
+
+- id: frozen-lockfile
+  type: cloze
+  front: "`pnpm install {{...}}` fails the build when the lockfile does not match `package.json`, instead of resolving new versions."
+  back: "`--frozen-lockfile`"
+  skills: [dockerfile]
+
+- id: build-secret-not-arg
+  type: concept
+  front: Why should a registry token not be passed to a build with `ARG` or `ENV`?
+  back: Both are recorded in the image's metadata and history, so anyone with the image can read them. Use `RUN --mount=type=secret`.
+  skills: [dockerfile, container-config]
+
+- id: healthcheck-exit-code
+  type: concept
+  front: How does Docker decide the result of a `HEALTHCHECK` command?
+  back: By its exit code. 0 is healthy, 1 is unhealthy. After the configured number of consecutive failures the container is marked `unhealthy`.
+  skills: [dockerfile]

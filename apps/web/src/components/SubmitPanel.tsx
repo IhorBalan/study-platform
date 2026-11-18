@@ -167,7 +167,11 @@ function SubmissionCard({ submission, open }: { submission: SubmissionDto; open:
               {run.checks.length > 0 && ` · ${passed} of ${run.checks.length} checks`}
             </span>
           ) : (
-            <span className="text-zinc-500">Saved</span>
+            <span className="text-zinc-500">
+              {submission.review?.status === 'passed'
+                ? 'Saved'
+                : 'Saved · counts as done after a Claude review'}
+            </span>
           )}
           {submission.review?.status === 'passed' && (
             <span className="font-medium text-violet-600 dark:text-violet-400">

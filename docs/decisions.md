@@ -418,6 +418,9 @@ Decisions made while building are appended below.
 ### D-120 · A pasted review reply is stored once — 2026-11-18
 - **What:** storing a review result now claims the run in the same statement (`status <> 'passed'`), inside the transaction. A second reply for the same review gets 409. `rubric_scores` has a unique index on run and rubric item, and the migration removes duplicates that already exist.
 - **Why:** two replies arriving together (a double click, two tabs) both passed the "already has a result" check and stored the scores and the suggested cards twice. Found by the code review (R3) and the backend tester (BE-3).
+### D-121 · The bridge keeps only the tail of a program's output while it runs — 2026-11-18
+- **What:** `exec()` drops old output chunks as new ones arrive and never holds more than the output limit plus one chunk per stream.
+- **Why:** it used to keep every chunk and trim at the end. A submission printing in a loop grew the bridge from 98 MB to 12.7 GB in a minute until the kernel killed it, which also failed every queued run. Found by the backend tester (BE-1).
 
 ---
 

@@ -19,9 +19,29 @@ export interface ExecOptions {
   onTimeout?: () => void | Promise<void>;
 }
 
-function tail(buffer: Buffer[], limit: number): string {
-  const all = Buffer.concat(buffer);
-  return (all.length > limit ? all.subarray(all.length - limit) : all).toString('utf8');
+/**
+ * Keeps the last `limit` bytes of a stream. Older chunks are dropped as new ones
+ * arrive, so a program that prints without end cannot fill the bridge's memory.
+ */
+export class TailBuffer {
+  private chunks: Buffer[] = [];
+  private size = 0;
+
+  constructor(private readonly limit: number) {}
+
+  push(chunk: Buffer): void {
+    this.chunks.push(chunk);
+    this.size += chunk.length;
+    // Drop whole chunks from the front while what remains still covers the limit.
+    while (this.chunks.length > 1 && this.size - this.chunks[0]!.length >= this.limit) {
+      this.size -= this.chunks.shift()!.length;
+    }
+  }
+
+  toString(): string {
+    const all = Buffer.concat(this.chunks);
+    return (all.length > this.limit ? all.subarray(all.length - this.limit) : all).toString('utf8');
+  }
 }
 
 /**
@@ -40,8 +60,8 @@ export function exec(file: string, args: string[], options: ExecOptions = {}): P
       child.stdin.on('error', () => undefined);
       child.stdin.end(options.input);
     }
-    const out: Buffer[] = [];
-    const err: Buffer[] = [];
+    const out = new TailBuffer(limit);
+    const err = new TailBuffer(limit);
     let timedOut = false;
     let spawnError: Error | null = null;
 
@@ -62,8 +82,8 @@ export function exec(file: string, args: string[], options: ExecOptions = {}): P
       if (timer) clearTimeout(timer);
       resolve({
         code: spawnError ? null : code,
-        stdout: tail(out, limit),
-        stderr: spawnError ? spawnError.message : tail(err, limit),
+        stdout: out.toString(),
+        stderr: spawnError ? spawnError.message : err.toString(),
         timedOut,
       });
     });

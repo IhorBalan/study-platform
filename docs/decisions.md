@@ -469,6 +469,10 @@ A submission that used more memory than its task allows had every criterion mark
 - **RabbitMQ:** one theory lesson, no task and no practice service. It is lesson 6 of the Kafka and event streaming module, next to the lesson that compares messaging tools, with its own skill and 12 cards. The code in it was type-checked against amqplib 2.4.0 but not run against a broker.
 - **Default branch:** `main` is the repository's default branch, confirmed with `git ls-remote --symref origin HEAD`. The branch that held the handoff is no longer needed.
 
+### D-131 · How backup and restore work — 2026-11-18
+
+Builds the first half of D-201. `pnpm backup` runs `pg_dump --format=custom` inside the platform database container and streams it to `backups/` (or `BACKUP_DIR`); the file gets its final name only when the dump is complete, and the newest 14 are kept. The job queue's schema (`pgboss`) is left out: it holds nothing worth keeping, and its partitioned tables made `pg_restore --clean` fail. `pnpm restore <file>` asks for the word "restore", then runs `pg_restore --clean --if-exists --single-transaction --exit-on-error`, so a bad file leaves the data as it was. Tried against the local database: changed and deleted rows came back, and a file that is not a dump changed nothing. The daily automatic backup and the Settings line are a separate change.
+
 ---
 
 ## Product direction

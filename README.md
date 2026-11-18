@@ -25,6 +25,19 @@ pnpm dev
 
 `pnpm dev` creates `.env` on first run, starts PostgreSQL in Docker, then starts four processes with hot reload: the web app on http://localhost:5173, the API on http://localhost:3000/api, the worker, and the host bridge that runs task checks. Data lives in a Docker volume and survives restarts. `pnpm infra:down` stops the database and keeps the data.
 
+### Backups and moving to another machine
+
+All progress (lessons done, cards and their schedule, submissions, reviews, settings) lives in the platform database, in one Docker volume. Nothing else holds it, so back it up:
+
+```sh
+pnpm backup                                        # writes backups/study-YYYY-MM-DD-HHmm.dump, keeps the newest 14
+pnpm restore backups/study-2026-11-18-0900.dump    # replaces all current data with that backup
+```
+
+`backups/` is not committed. Set `BACKUP_DIR` to write somewhere else, for example a synced folder. `pnpm restore` asks you to type "restore" first (`--yes` skips the question) and runs as one transaction, so a file that cannot be read leaves the current data untouched. Stop `pnpm dev` before restoring.
+
+To move to a new machine: run `pnpm backup` on the old one, copy the `.dump` file and your lab repository across, then on the new one run `pnpm install`, `pnpm infra:up`, `pnpm restore <file>` and `pnpm dev`, and set the lab repository path again under Settings if it changed.
+
 ### Everything in Docker
 
 ```sh
@@ -109,6 +122,7 @@ The platform was built and tested in a Linux environment. Three things could not
 | `pnpm dev`                        | Start the database and all apps in watch mode                        |
 | `pnpm full:up` / `pnpm full:down` | Run the API, worker and web app as containers                        |
 | `pnpm bridge`                     | Run only the host bridge (for full Docker mode)                      |
+| `pnpm backup` / `pnpm restore`    | Save the platform database to `backups/`, or load one backup back    |
 | `pnpm lab <command>`              | Lab repository, check images and practice services (`pnpm lab help`) |
 | `pnpm build`                      | Build every package                                                  |
 | `pnpm typecheck`                  | Type-check every package                                             |

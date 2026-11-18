@@ -1,0 +1,60 @@
+- id: when-background-job
+  type: concept
+  front: "Interview: when do you move work to a background job?"
+  back: "When it is slow, calls something unreliable that needs retries, comes in bursts, or runs on a schedule, and the response does not need its result."
+  skills: [background-jobs]
+- id: retries-backoff-dlq
+  type: concept
+  front: "Interview: how do retries, backoff and dead letters work in BullMQ?"
+  back: "attempts sets the total tries, backoff (fixed or exponential, with jitter) spaces them, and a job that runs out lands in the failed set, which acts as the dead-letter queue."
+  skills: [background-jobs]
+- id: delivery-guarantee
+  type: concept
+  front: "Interview: what delivery guarantee does a queue like BullMQ or SQS give, and what follows?"
+  back: "At least once. A job can run twice after a crash or stall, so handlers must be idempotent."
+  skills: [background-jobs]
+- id: idempotent-consumer
+  type: concept
+  front: "Interview: how do you make a queue consumer idempotent?"
+  back: "Use a natural key (upsert, ON CONFLICT DO NOTHING), record processed ids with SET NX, pass an idempotency key to providers, and set state rather than increment it."
+  skills: [background-jobs]
+- id: exponential-backoff-formula
+  type: cloze
+  front: "BullMQ's exponential backoff waits {{delay × 2^(attempt − 1)}}: 1 s, 2 s, 4 s for a 1 s delay."
+  back: "delay × 2^(attempt − 1)"
+  skills: [background-jobs]
+- id: jitter-why
+  type: concept
+  front: Why add jitter to retry backoff?
+  back: "Jobs that failed together in an outage would otherwise all retry in the same instant and fail again."
+  skills: [background-jobs]
+- id: unrecoverable-error
+  type: snippet
+  front: Fail a BullMQ job at once, without using its remaining attempts.
+  back: "`throw new UnrecoverableError('mailbox does not exist')` (imported from bullmq)."
+  skills: [background-jobs]
+- id: stalled-job
+  type: term
+  front: Stalled job (BullMQ)
+  back: "An active job whose worker lock expired, because the worker died or blocked its event loop. Another worker runs it again."
+  skills: [background-jobs]
+- id: job-scheduler
+  type: snippet
+  front: Run a `cleanup` job every night at 03:00 with BullMQ, safely from every instance.
+  back: "`await queue.upsertJobScheduler('nightly-cleanup', { pattern: '0 3 * * *' }, { name: 'cleanup' })`"
+  skills: [background-jobs]
+- id: graceful-close
+  type: comparison
+  front: "`worker.close()` vs `worker.close(true)`"
+  back: "close() stops taking jobs and waits for running ones. close(true) does not wait, so those jobs come back later as stalled."
+  skills: [background-jobs]
+- id: separate-worker-process
+  type: concept
+  front: Why run BullMQ consumers in a separate process from the API?
+  back: "A burst of jobs cannot slow requests, and the two scale independently."
+  skills: [background-jobs]
+- id: jobid-dedupe
+  type: concept
+  front: What does a custom jobId do when you add the same job twice?
+  back: "The second add is a no-op while a job with that id still exists, so retention decides how long the dedupe lasts."
+  skills: [background-jobs]

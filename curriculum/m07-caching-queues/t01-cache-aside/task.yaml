@@ -1,0 +1,29 @@
+title: A cache-aside helper with stampede protection
+type: repo
+skills: [cache-strategies, cache-invalidation, valkey-data-structures]
+services: [valkey]
+runner: nest
+hints:
+  - "GET returns null for a missing key, and the string \"null\" for a stored JSON null. That difference is your negative cache."
+  - "SET key value EX seconds sets the value and its TTL in one command. A separate EXPIRE after SET leaves a gap in which the key has no TTL."
+  - "Inside one process, keep a Map from key to the in-flight promise. Callers that find a promise there await it instead of loading."
+  - "Across processes, SET lock token PX ms NX is a lock that frees itself. Delete it only if it still holds your token, in a short Lua script."
+  - "To stop a slow load from storing an old value after invalidate, give each key a version. invalidate changes it; the load reads it before calling the loader and stores only if it is unchanged, in one Lua script."
+  - "Run each test under a prefix of its own (a random UUID inside VALKEY_KEY_PREFIX) and delete those keys in after()."
+criteria:
+  - { id: typechecks, title: tsc reports no type errors }
+  - { id: hit-miss, title: "A miss loads and stores JSON with the TTL, and a hit skips the loader" }
+  - { id: negative-cache, title: "null is cached for negativeTtlSeconds, and loader errors are not cached" }
+  - { id: invalidate, title: invalidate removes the value and the next read loads fresh data }
+  - { id: no-stale-set, title: A load that began before invalidate does not store its old value }
+  - { id: single-flight, title: 50 concurrent misses in one process call the loader once }
+  - { id: cross-instance, title: Concurrent misses in two processes call the loader once }
+  - { id: lock-expiry, title: A stuck loader does not block other processes for longer than lockTimeoutMs }
+  - { id: keys-expire, title: Every key the cache writes is under the prefix and has a TTL }
+  - { id: own-tests, title: Your tests pass and catch a cache that never caches and an invalidate that does nothing }
+rubric:
+  - { id: atomic-steps, title: "Each multi-step change to Valkey that must not interleave (store if unchanged, release only your own lock, invalidate) is one command or one Lua script, with a comment saying what race it closes", skill: valkey-data-structures, max: 4 }
+  - { id: waiting-strategy, title: "Waiting callers poll with a short delay and give up at a deadline, the lock has a TTL, and the code never waits without a bound", skill: cache-strategies, max: 3 }
+  - { id: invalidation-design, title: "The invalidation approach is explained in code comments or the README, including the race between a slow read and a write that it prevents", skill: cache-invalidation, max: 4 }
+  - { id: readme-tradeoffs, title: "README names one thing this helper still gets wrong or cannot do (for example a request that joins an in-flight load started before invalidate, or cache and database writes that are not atomic) and what you would do about it", skill: cache-invalidation, max: 3 }
+limits: { timeoutSeconds: 120 }

@@ -1,0 +1,17 @@
+title: "Caching, queues and rate limiting"
+summary: >-
+  You can decide what to cache and where, keep a cache correct with TTLs and invalidation,
+  survive a stampede, use Valkey's data structures atomically, move work into BullMQ jobs that
+  retry safely, build a rate limiter shared by many instances, know what a distributed lock can
+  and cannot promise, and choose between BullMQ, pg-boss, a hosted job service and Temporal.
+kind: core
+effort: M
+services: [valkey]
+skills:
+  - { id: cache-strategies, title: "Caching strategies: what, where and how long" }
+  - { id: cache-invalidation, title: "Cache invalidation and stampedes" }
+  - { id: valkey-data-structures, title: "Valkey data structures and atomic operations" }
+  - { id: background-jobs, title: Background jobs with BullMQ }
+  - { id: rate-limiting, title: Rate limiting }
+  - { id: distributed-locks, title: "Distributed locks and fencing tokens" }
+  - { id: durable-workflows, title: "Hosted jobs and durable workflows" }

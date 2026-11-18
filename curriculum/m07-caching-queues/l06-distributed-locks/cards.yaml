@@ -1,0 +1,55 @@
+- id: lock-acquire
+  type: snippet
+  front: Acquire a Valkey lock `lock:import` for 30 seconds that a crash cannot leave behind.
+  back: "`await redis.set('lock:import', token, 'PX', 30000, 'NX') // 'OK' when acquired`, with a random token."
+  skills: [distributed-locks]
+- id: lock-release-token
+  type: concept
+  front: Why release a Valkey lock with a compare-and-delete script instead of DEL?
+  back: "If your lock expired and someone else took it, DEL would delete their lock. Delete only if the value is still your token."
+  skills: [distributed-locks]
+- id: setnx-expire-gap
+  type: concept
+  front: What goes wrong with SETNX followed by EXPIRE?
+  back: "A crash between the two leaves a lock with no TTL that blocks everyone until removed by hand."
+  skills: [distributed-locks]
+- id: lock-not-correctness
+  type: concept
+  front: Why can two processes both act while "holding" a lock with a TTL?
+  back: "The holder can pause (GC, blocked event loop, network) past the TTL; the lock expires, another process takes it, and the first carries on unaware."
+  skills: [distributed-locks]
+- id: fencing-token
+  type: term
+  front: Fencing token
+  back: "A number that increases each time the lock is granted. The resource rejects writes carrying a lower number than it has seen."
+  skills: [distributed-locks]
+- id: fencing-sql
+  type: snippet
+  front: Write an UPDATE that ignores a stale lock holder using a fencing token `$3`.
+  back: "`UPDATE products SET price_cents = $2, fence = $3 WHERE id = $1 AND fence < $3`"
+  skills: [distributed-locks]
+- id: efficiency-vs-correctness
+  type: comparison
+  front: Efficiency lock vs correctness lock
+  back: "An efficiency lock avoids duplicate work, and an overlap only wastes effort. A correctness lock prevents damage, and an overlap corrupts data, so it needs fencing or a database guarantee."
+  skills: [distributed-locks]
+- id: redlock-limit
+  type: concept
+  front: What does Redlock (several Valkey nodes) protect against, and what not?
+  back: "It survives one node failing. It does not fix a holder pausing past its lease."
+  skills: [distributed-locks]
+- id: advisory-lock
+  type: term
+  front: PostgreSQL advisory lock
+  back: "An application-defined lock held by a session or transaction and released when it ends, with no TTL. Example: `SELECT pg_advisory_xact_lock(42)`."
+  skills: [distributed-locks]
+- id: lock-alternatives
+  type: concept
+  front: Name two ways to avoid a distributed lock for "do this once".
+  back: "A unique constraint or ON CONFLICT DO NOTHING, idempotent work, a single queue consumer, or a row lock in a transaction."
+  skills: [distributed-locks]
+- id: lock-renewal
+  type: concept
+  front: Why renew a lock while the work runs instead of setting a long TTL?
+  back: "A short TTL frees the lock soon after a crash, and renewal keeps it while the holder is alive."
+  skills: [distributed-locks]

@@ -1,0 +1,29 @@
+title: A distributed rate limiter
+type: repo
+skills: [rate-limiting, valkey-data-structures]
+services: [valkey]
+runner: nest
+hints:
+  - "A sorted set per client fits a sliding window log: the score is the request time, ZREMRANGEBYSCORE drops what left the window, ZCARD counts what is left."
+  - "ZADD with a member that already exists only updates its score. Two requests in the same millisecond need two different members."
+  - "Reading the count and adding the request in two round trips lets two instances both see one free slot. Put the whole decision into one Lua script with redis.eval."
+  - "The oldest entry still in the window decides retryAfterMs: it leaves at its score plus windowMs. ZRANGE key 0 0 WITHSCORES returns it."
+  - "Pass the time into the script as an argument. Then a fake clock in your tests controls the window, and no test has to sleep."
+  - "PEXPIRE the key after each allowed request, so an idle client's key disappears on its own."
+criteria:
+  - { id: typechecks, title: tsc reports no type errors }
+  - { id: allows-up-to-limit, title: "limit requests pass, the next is denied, and remaining and retryAfterMs are exact" }
+  - { id: rolling-window, title: The window slides with the clock instead of resetting on fixed boundaries }
+  - { id: denied-not-counted, title: Rejected requests do not extend the block }
+  - { id: same-millisecond, title: Requests at the same instant each count }
+  - { id: atomic, title: Two instances on separate connections never allow more than the limit together }
+  - { id: keys, title: "One key per client under the prefix, with a TTL no longer than the window" }
+  - { id: http-429, title: The middleware answers 429 with Retry-After in whole seconds and passes allowed requests on }
+  - { id: fail-open, title: "When the limiter throws, the request still reaches the handler" }
+  - { id: own-tests, title: Your tests pass and catch a limiter that never denies and one that shares a limit between clients }
+rubric:
+  - { id: atomicity, title: "The check and the update happen in one Lua script (or one MULTI whose result cannot be wrong under concurrency), and a comment says which race it prevents", skill: valkey-data-structures, max: 4 }
+  - { id: algorithm-choice, title: "README compares the sliding window log with a fixed window and a token bucket: the boundary burst of the fixed window, and the memory cost per client of the log", skill: rate-limiting, max: 4 }
+  - { id: where-to-enforce, title: "README says where this limiter belongs in a real deployment (gateway or proxy, app middleware, per route) and what the key should be for anonymous and signed-in clients", skill: rate-limiting, max: 3 }
+  - { id: failure-mode, title: "README justifies fail open for this API and names one kind of endpoint (for example login or SMS sending) where failing closed is the better choice", skill: rate-limiting, max: 3 }
+limits: { timeoutSeconds: 120 }

@@ -1,0 +1,28 @@
+title: A reliable receipt worker with BullMQ
+type: repo
+skills: [background-jobs, durable-workflows]
+services: [valkey]
+runner: nest
+hints:
+  - "Job options set in the Queue's defaultJobOptions apply to every add(). attempts counts the first try, so 5 means one try and four retries."
+  - "A custom jobId deduplicates: adding a job whose id already exists does nothing. BullMQ does not allow ':' in custom ids."
+  - "UnrecoverableError from bullmq moves a job straight to failed, whatever attempts says."
+  - "Delivery is at least once. Record that a receipt was sent (a key with a TTL in Valkey), and claim the order with SET NX before sending, so two jobs running at once do not both send."
+  - "worker.close() waits for running jobs; worker.close(true) does not. Close your own ioredis connection after the worker."
+  - "Your tests can wait for a job with a short polling loop on queue.getJobState(id). Close every queue and worker in after(), or the test process will not exit."
+criteria:
+  - { id: typechecks, title: tsc reports no type errors }
+  - { id: enqueue, title: "One job per order in the receipts queue, with 5 attempts and exponential backoff" }
+  - { id: delayed, title: sendAt delays the job until that time }
+  - { id: retries-backoff, title: "Transient failures are retried with exponential delays, and exhausted jobs stay failed" }
+  - { id: permanent-failure, title: An error with retryable false fails the job at once }
+  - { id: idempotent, title: "The same order in several jobs sends one email, with the idempotency key" }
+  - { id: graceful-shutdown, title: "close() waits for the running job and then stops taking jobs" }
+  - { id: own-tests, title: Your tests pass and catch a worker that sends twice and one that swallows send errors }
+rubric:
+  - { id: idempotency-design, title: "The handler's idempotency covers both duplicates in sequence and two jobs at once, and a comment or the README names the window that remains (a crash between sending and recording) and how the provider's idempotency key closes it", skill: background-jobs, max: 4 }
+  - { id: error-classes, title: "Retryable and permanent errors are told apart in one place, and nothing is swallowed: every failure ends in a retry or in the failed set with its reason", skill: background-jobs, max: 3 }
+  - { id: retention, title: "Completed and failed jobs have explicit retention, with a reason (inspection, dead letters, the jobId dedupe window, memory)", skill: background-jobs, max: 3 }
+  - { id: nest-wiring, title: "README shows or describes how this worker runs inside a NestJS app: created in a provider, closed in onApplicationShutdown with enableShutdownHooks, ideally in a separate worker process", skill: background-jobs, max: 2 }
+  - { id: platform-choice, title: "README answers when this job would be better on a hosted job service (Inngest, Trigger.dev) or Temporal, with at least one concrete trigger such as multi-step flows with waits, or no Redis to operate", skill: durable-workflows, max: 3 }
+limits: { timeoutSeconds: 120 }

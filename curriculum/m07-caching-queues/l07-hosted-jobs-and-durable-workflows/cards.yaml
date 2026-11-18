@@ -1,0 +1,55 @@
+- id: durable-execution
+  type: term
+  front: Durable execution
+  back: "A runtime saves each step's result, so a function resumes after a crash or a long sleep without repeating finished steps. Example: Inngest's `step.run`."
+  skills: [durable-workflows]
+- id: pg-boss-transaction
+  type: concept
+  front: What can a Postgres job queue such as pg-boss do that BullMQ cannot?
+  back: "Enqueue a job in the same transaction as your data change, so both commit or neither does."
+  skills: [durable-workflows]
+- id: skip-locked
+  type: concept
+  front: Why do Postgres job queues take jobs with `FOR UPDATE SKIP LOCKED`?
+  back: "Each worker locks a different row and skips rows others have locked, so many workers run in parallel without blocking."
+  skills: [durable-workflows]
+- id: pg-queue-cost
+  type: concept
+  front: What does a job queue in your main Postgres cost?
+  back: "Lower throughput than Valkey, and extra load and vacuum work on the database that serves your app."
+  skills: [durable-workflows]
+- id: temporal-determinism
+  type: concept
+  front: Why must Temporal workflow code be deterministic?
+  back: "Temporal rebuilds a workflow's state by replaying its code against the recorded history. Different decisions on replay break it."
+  skills: [durable-workflows]
+- id: workflow-vs-activity
+  type: comparison
+  front: Temporal workflow vs activity
+  back: "A workflow is deterministic orchestration code that can sleep and wait. An activity performs the side effects, with timeouts and retries."
+  skills: [durable-workflows]
+- id: inngest-side-effects
+  type: concept
+  front: Why must side effects in an Inngest function sit inside `step.run`?
+  back: "The function body runs again each time it resumes. Only step results are saved and skipped on later runs."
+  skills: [durable-workflows]
+- id: trigger-dev-runs
+  type: concept
+  front: Why are long Trigger.dev tasks not cut off by a serverless function timeout?
+  back: "Tasks run on Trigger.dev's own machines, not inside your function, and waits pause the run without using compute."
+  skills: [durable-workflows]
+- id: queue-or-workflow
+  type: comparison
+  front: Job queue vs workflow engine
+  back: "A queue runs single retried steps. A workflow engine carries state across many steps and long waits, at the cost of a new system or vendor."
+  skills: [durable-workflows]
+- id: hosted-tradeoffs
+  type: concept
+  front: Name two costs of a hosted job service such as Inngest or Trigger.dev.
+  back: "A vendor in the critical path, pricing per run or step, and job payloads passing through their service."
+  skills: [durable-workflows]
+- id: still-idempotent
+  type: concept
+  front: Does a durable workflow engine make side effects exactly-once?
+  back: "No. Steps and activities are retried, so each side effect still needs to be idempotent."
+  skills: [durable-workflows]

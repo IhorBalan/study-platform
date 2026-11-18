@@ -1,0 +1,60 @@
+- id: single-command-atomic
+  type: concept
+  front: Why is a single Valkey command such as INCR atomic without any locking?
+  back: "Valkey executes commands one at a time on its main thread, so no other command can interleave with it."
+  skills: [valkey-data-structures]
+- id: keys-vs-scan
+  type: concept
+  front: Why use SCAN instead of KEYS in production?
+  back: "KEYS walks every key in one command and blocks the server meanwhile. SCAN works in small steps with a cursor."
+  skills: [valkey-data-structures]
+- id: hash-vs-json-string
+  type: comparison
+  front: Hash vs JSON string for an object in Valkey
+  back: "A hash lets you read or update one field (HINCRBY, HSET). A JSON string must be read and rewritten whole."
+  skills: [valkey-data-structures]
+- id: sorted-set-uses
+  type: concept
+  front: Name three jobs a sorted set does well.
+  back: "Leaderboards, time-indexed data scored by timestamp (recent items, sliding-window limits), and delayed jobs scored by run time."
+  skills: [valkey-data-structures]
+- id: set-use
+  type: term
+  front: Valkey set
+  back: "Unordered unique members, for membership and deduplication. Example: `SADD tags:p1 red sale`, then `SISMEMBER tags:p1 sale`."
+  skills: [valkey-data-structures]
+- id: stream-vs-pubsub
+  type: comparison
+  front: Valkey stream vs pub/sub
+  back: "A stream keeps entries and tracks what each consumer group acknowledged, so offline consumers catch up. Pub/sub delivers only to current subscribers."
+  skills: [valkey-data-structures]
+- id: multi-cannot-branch
+  type: concept
+  front: What can a Lua script do that MULTI/EXEC cannot?
+  back: "Read a value and decide what to write based on it. Commands inside MULTI cannot see each other's results."
+  skills: [valkey-data-structures]
+- id: lua-keys
+  type: concept
+  front: Why pass every key to a Lua script in KEYS instead of building names inside it?
+  back: "Valkey must know which keys a script touches, so the script can run on a cluster and be routed to the right node."
+  skills: [valkey-data-structures]
+- id: check-then-act
+  type: snippet
+  front: "Store `processed:evt_1` for a day only if it is not already there, in one atomic command."
+  back: "`await redis.set('processed:evt_1', '1', 'EX', 86400, 'NX') // 'OK' or null`"
+  skills: [valkey-data-structures]
+- id: rdb-vs-aof
+  type: comparison
+  front: RDB vs AOF persistence
+  back: "RDB takes periodic snapshots and loses writes since the last one. AOF logs every write and with everysec loses about a second."
+  skills: [valkey-data-structures]
+- id: noeviction-for-queues
+  type: concept
+  front: Which maxmemory-policy does BullMQ need, and why?
+  back: "noeviction. Evicting a job's keys silently corrupts the queue; a write error is the safer failure."
+  skills: [valkey-data-structures]
+- id: valkey-origin
+  type: term
+  front: Valkey
+  back: "The Linux Foundation's open source fork of Redis 7.2.4 from 2024. Same protocol, so ioredis and BullMQ work unchanged."
+  skills: [valkey-data-structures]

@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { useState, type FormEvent } from 'react';
 import { api } from '../lib/api';
+import { ReviewPanel } from './ReviewPanel';
 import { Button, Input } from './ui';
 
 const runLabel: Record<RunDto['status'], string> = {
@@ -165,7 +166,13 @@ function SubmissionCard({ submission, open }: { submission: SubmissionDto; open:
               {run.checks.length > 0 && ` · ${passed} of ${run.checks.length} checks`}
             </span>
           ) : (
-            <span className="text-zinc-500">Saved. Review comes next.</span>
+            <span className="text-zinc-500">Saved</span>
+          )}
+          {submission.review?.status === 'passed' && (
+            <span className="font-medium text-violet-600 dark:text-violet-400">
+              Reviewed · {submission.review.scores.reduce((sum, x) => sum + x.score, 0)} of{' '}
+              {submission.review.scores.reduce((sum, x) => sum + x.max, 0)} points
+            </span>
           )}
         </summary>
 
@@ -204,6 +211,8 @@ function SubmissionCard({ submission, open }: { submission: SubmissionDto; open:
             ))}
           </ul>
         )}
+
+        <ReviewPanel submission={submission} />
 
         {submission.body && (
           <pre className="mt-3 max-h-64 overflow-auto rounded-md bg-zinc-50 p-3 text-xs whitespace-pre-wrap dark:bg-zinc-900">

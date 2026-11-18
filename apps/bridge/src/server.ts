@@ -67,6 +67,9 @@ export function createBridgeServer({ config, curriculum, run = runChecks }: Brid
   const handle = async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
     const host = (req.headers.host ?? '').replace(/:\d+$/, '');
     if (!ALLOWED_HOSTS.has(host)) return problem(res, 403, 'Forbidden');
+    // Only browsers send Origin. The worker and the API never do, so any request
+    // carrying one comes from a web page and is refused.
+    if (req.headers.origin !== undefined) return problem(res, 403, 'Forbidden');
     if (!authorised(req, config.BRIDGE_SECRET)) return problem(res, 401, 'Unauthorized');
 
     const url = new URL(req.url ?? '/', 'http://bridge');

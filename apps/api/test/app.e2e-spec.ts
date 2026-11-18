@@ -119,7 +119,12 @@ describe('API (e2e, real Postgres)', () => {
         .post('/api/tasks/m00-demo/t01-explain/submissions')
         .send({ type: 'text', body: 'Because of caching.' })
         .expect(201);
-      expect(res.body).toMatchObject({ type: 'text', body: 'Because of caching.', runs: [] });
+      expect(res.body).toMatchObject({
+        type: 'text',
+        body: 'Because of caching.',
+        runs: [],
+        review: null,
+      });
     });
 
     it('queues automated checks for a code submission', async () => {
@@ -154,6 +159,95 @@ describe('API (e2e, real Postgres)', () => {
     it('answers 404 for an unknown task', async () => {
       const res = await http().get('/api/tasks/m00-demo/t99-none/submissions');
       expect(res.status).toBe(404);
+    });
+
+    describe('Claude review by copy and paste', () => {
+      let submissionId: string;
+      let runId: string;
+      const reply = {
+        scores: [{ rubricId: 'clarity', score: 3, comment: 'Clear, but misses revalidation.' }],
+        strengths: ['Names the cache layers.'],
+        issues: [{ severity: 'medium', message: 'ETag is not mentioned.', file: null, line: null }],
+        securityConcerns: [],
+        nextStep: 'Read about conditional requests.',
+        suggestedCards: [
+          { type: 'concept', front: 'What does ETag do?', back: 'It names a version.' },
+        ],
+      };
+
+      it('builds a prompt with the task, the rubric and the answer', async () => {
+        const created = await http()
+          .post('/api/tasks/m00-demo/t01-explain/submissions')
+          .send({ type: 'text', body: 'Caches store responses.' })
+          .expect(201);
+        submissionId = created.body.id;
+        const res = await http().post(`/api/submissions/${submissionId}/reviews`).expect(201);
+        runId = res.body.runId;
+        expect(res.body).toMatchObject({ status: 'queued', mode: 'copy_paste', result: null });
+        expect(res.body.prompt).toContain('Explain it');
+        expect(res.body.prompt).toContain('id "clarity", 0 to 4 points');
+        expect(res.body.prompt).toContain('Caches store responses.');
+      });
+
+      it('explains what is wrong with a reply that is not JSON', async () => {
+        const res = await http().post(`/api/reviews/${runId}/result`).send({ raw: 'Looks good!' });
+        expect(res.status).toBe(422);
+        expect(res.body.errors[0].message).toContain('No JSON object');
+      });
+
+      it('rejects a score above the rubric maximum and an unknown rubric item', async () => {
+        const bad = {
+          ...reply,
+          scores: [
+            { rubricId: 'clarity', score: 9, comment: 'x' },
+            { rubricId: 'style', score: 1, comment: 'x' },
+          ],
+        };
+        const res = await http()
+          .post(`/api/reviews/${runId}/result`)
+          .send({ raw: JSON.stringify(bad) });
+        expect(res.status).toBe(422);
+        const messages = res.body.errors.map((e: { message: string }) => e.message).join(' ');
+        expect(messages).toContain('maximum is 4');
+        expect(messages).toContain('"style" is not a rubric item');
+      });
+
+      it('accepts a valid reply wrapped in a code fence and stores scores and cards', async () => {
+        const raw = 'Here you go:\n```json\n' + JSON.stringify(reply, null, 2) + '\n```';
+        const res = await http().post(`/api/reviews/${runId}/result`).send({ raw }).expect(200);
+        expect(res.body).toMatchObject({
+          status: 'passed',
+          cardsSuggested: 1,
+          scores: [{ rubricId: 'clarity', score: 3, max: 4 }],
+        });
+        expect(res.body.result.nextStep).toBe('Read about conditional requests.');
+
+        const pending = await http().get('/api/cards?status=pending').expect(200);
+        expect(pending.body.cards).toHaveLength(1);
+        expect(pending.body.cards[0]).toMatchObject({
+          source: 'claude',
+          front: 'What does ETag do?',
+        });
+
+        const list = await http().get('/api/tasks/m00-demo/t01-explain/submissions').expect(200);
+        const mine = list.body.submissions.find((s: { id: string }) => s.id === submissionId);
+        expect(mine.review).toMatchObject({ runId, status: 'passed' });
+      });
+
+      it('does not accept a second result for the same review', async () => {
+        const res = await http()
+          .post(`/api/reviews/${runId}/result`)
+          .send({ raw: JSON.stringify(reply) });
+        expect(res.status).toBe(409);
+      });
+
+      it('keeps suggested cards out of the review queue until approved', async () => {
+        const queue = await http().get('/api/review/queue').expect(200);
+        expect(queue.body.counts.pendingApproval).toBe(1);
+        expect(
+          queue.body.cards.some((c: { front: string }) => c.front === 'What does ETag do?'),
+        ).toBe(false);
+      });
     });
 
     it('reports the bridge as unreachable when it is not running', async () => {

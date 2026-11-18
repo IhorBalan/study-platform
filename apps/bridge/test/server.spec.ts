@@ -79,6 +79,11 @@ describe('bridge server', () => {
     expect(status).toBe(403);
   });
 
+  it('rejects a request that comes from a web page', async () => {
+    const res = await post({}, { origin: 'http://localhost:5173' });
+    expect(res.status).toBe(403);
+  });
+
   it('rejects a body that is not valid JSON', async () => {
     const res = await post('{nope');
     expect(res.status).toBe(400);

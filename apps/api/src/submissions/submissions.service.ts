@@ -5,6 +5,7 @@ import { asc, desc, eq, inArray } from 'drizzle-orm';
 import { CurriculumService } from '../curriculum/curriculum.service.js';
 import { InjectDb, type Database } from '../database/database.module.js';
 import { QueueService } from '../queue/queue.service.js';
+import { SubmissionReviewService } from '../review/review.service.js';
 
 const { submissions, verificationRuns, checkResults } = schema;
 
@@ -14,6 +15,7 @@ export class SubmissionsService {
     @InjectDb() private readonly db: Database,
     private readonly curriculum: CurriculumService,
     private readonly queue: QueueService,
+    private readonly reviews: SubmissionReviewService,
   ) {}
 
   async create(taskId: string, input: CreateSubmission): Promise<SubmissionDto> {
@@ -91,6 +93,7 @@ export class SubmissionsService {
               ),
             )
             .orderBy(asc(checkResults.position));
+    const reviews = await this.reviews.latestFor(ids);
 
     return subs.map((s) => ({
       id: s.id,
@@ -99,8 +102,9 @@ export class SubmissionsService {
       commitSha: s.commitSha,
       body: s.body,
       createdAt: s.createdAt.toISOString(),
+      review: reviews.get(s.id) ?? null,
       runs: runs
-        .filter((r) => r.submissionId === s.id)
+        .filter((r) => r.submissionId === s.id && r.stage === 'checks')
         .map((r) => ({
           id: r.id,
           stage: r.stage,

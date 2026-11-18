@@ -8,6 +8,7 @@ import {
   CardListResponse,
   ReviewQueueResponse,
   BridgeStatusResponse,
+  ReviewDto,
   SettingsDto,
   SubmissionDto,
   SubmissionListResponse,
@@ -29,6 +30,13 @@ export class ApiError extends Error {
     readonly problem: ProblemDetails | null,
   ) {
     super(problem?.detail ?? problem?.title ?? `Request failed with status ${status}`);
+  }
+
+  /** Field-level messages from a validation failure, if the server sent any. */
+  get errors(): string[] {
+    return (this.problem?.errors ?? []).map((e) =>
+      e.path ? `${e.path}: ${e.message}` : e.message,
+    );
   }
 }
 
@@ -67,6 +75,10 @@ export const api = {
   submit: (taskId: string, body: CreateSubmission) =>
     request(`/tasks/${taskId}/submissions`, SubmissionDto, { method: 'POST', body }),
   bridge: () => request('/bridge', BridgeStatusResponse),
+  startReview: (submissionId: string) =>
+    request(`/submissions/${submissionId}/reviews`, ReviewDto, { method: 'POST', body: {} }),
+  submitReviewResult: (runId: string, raw: string) =>
+    request(`/reviews/${runId}/result`, ReviewDto, { method: 'POST', body: { raw } }),
 
   reviewQueue: () => request('/review/queue', ReviewQueueResponse),
   submitReview: (cardId: string, grade: Grade, answerMs: number) =>

@@ -286,3 +286,17 @@ Decisions made while building are appended below.
 
 ### D-094 · The lab folder for a task is `<module>/<task>` at the root of the lab repository — Accepted, 2026-11-18
 - **Why:** the task id is already that path, so one string identifies the task everywhere. `pnpm lab start` also writes the brief as `TASK.md` next to the starter files.
+
+### D-095 · Bridge rules from the security review (S-012) — Accepted, 2026-11-18
+- **Source:** `docs/security-decisions.md` in the security review pull request, passed on by the coordinator.
+- **Already in place:** no shell, argument lists, `--` before paths, constant-time secret comparison, host-name check, generated secret.
+- **Added now:** requests that carry an `Origin` header are refused.
+- **Two deliberate differences:** a commit id may be 7 to 40 hex characters (hex only, so it cannot carry an option; the bridge resolves it to the full id before use), and `host.docker.internal` stays an accepted host name because the worker uses it in full Docker mode.
+- **Still to do, tracked here:** S-011 applies when one-click review is built (CLI flags, strip `.claude/`, `.mcp.json` and `CLAUDE.md` from the export). S-010 applies when the Lambda profile is added (socket proxy, separate network). S-013: pin images by digest. Remove the temporary package release-age exceptions after 2026-11-19 08:00 UTC.
+
+### D-096 · Copy-paste review of code tasks is done in Claude Code inside the lab repository — Accepted, 2026-11-18
+- **Chosen:** for a code task the prompt names the task folder and the commit, and Claude Code reads the files itself. For a written answer the prompt contains the answer, so claude.ai works too.
+- **Why:** pasting a whole solution into a chat is clumsy and hits length limits, and the API process has no access to the lab repository by design.
+- **Alternatives:** have the bridge inline every file into the prompt (works in claude.ai, but long and needs the bridge running).
+- **Validation:** a pasted reply is accepted only if it is valid JSON in the expected shape, has exactly one score per rubric item, and no score exceeds its maximum. Otherwise the page lists what is wrong so Claude can be asked to correct it.
+- **Suggested cards** are stored as "waiting for approval" and stay out of the review queue until approved on the Cards page.

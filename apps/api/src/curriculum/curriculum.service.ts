@@ -42,6 +42,11 @@ export class CurriculumService implements OnModuleInit {
     );
   }
 
+  /** Every skill id declared by any module. */
+  skillIds(): string[] {
+    return this.modules.flatMap((m) => m.skills.map((s) => s.id));
+  }
+
   allModules(): readonly LoadedModule[] {
     return this.modules;
   }

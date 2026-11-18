@@ -9,6 +9,8 @@ import { HealthController } from './health/health.controller.js';
 import { PlanController } from './plan/plan.controller.js';
 import { PlanService } from './plan/plan.service.js';
 import { QueueService } from './queue/queue.service.js';
+import { SubmissionReviewController } from './review/review.controller.js';
+import { SubmissionReviewService } from './review/review.service.js';
 import { SettingsController } from './settings/settings.controller.js';
 import { SettingsService } from './settings/settings.service.js';
 import { SubmissionsController } from './submissions/submissions.controller.js';
@@ -25,6 +27,7 @@ import { SrsController } from './srs/srs.controller.js';
     SettingsController,
     SrsController,
     SubmissionsController,
+    SubmissionReviewController,
     BridgeController,
   ],
   providers: [
@@ -34,6 +37,7 @@ import { SrsController } from './srs/srs.controller.js';
     ReviewService,
     QueueService,
     SubmissionsService,
+    SubmissionReviewService,
     { provide: APP_FILTER, useClass: ProblemDetailsFilter },
     {
       // Validates every parameter declared with a `schema` option, e.g.

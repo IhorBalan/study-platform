@@ -242,6 +242,8 @@ export const SubmissionDto = z.object({
   body: z.string().nullable(),
   createdAt: z.string(),
   runs: z.array(RunDto),
+  /** The latest review of this submission, if one was started. */
+  review: z.lazy(() => ReviewDto).nullable(),
 });
 export type SubmissionDto = z.infer<typeof SubmissionDto>;
 
@@ -294,3 +296,72 @@ export type RunChecksResponse = z.infer<typeof RunChecksResponse>;
 export const CHECKS_QUEUE = 'verification-checks';
 export const ChecksJob = z.object({ runId: z.string().uuid() });
 export type ChecksJob = z.infer<typeof ChecksJob>;
+
+// ---------------------------------------------------------------------------
+// Claude review (stage 2)
+// ---------------------------------------------------------------------------
+
+/** The JSON Claude must return. The same schema validates pasted and one-click output. */
+export const ReviewResult = z.object({
+  scores: z
+    .array(
+      z.object({
+        rubricId: z.string().min(1),
+        score: z.number().int().min(0),
+        comment: z.string().trim().min(1).max(1500),
+      }),
+    )
+    .min(1),
+  strengths: z.array(z.string().trim().min(1).max(600)).max(8),
+  issues: z
+    .array(
+      z.object({
+        severity: z.enum(['high', 'medium', 'low']),
+        message: z.string().trim().min(1).max(1500),
+        file: z.string().max(300).nullish(),
+        line: z.number().int().min(1).nullish(),
+      }),
+    )
+    .max(20),
+  securityConcerns: z.array(z.string().trim().min(1).max(800)).max(10),
+  nextStep: z.string().trim().min(1).max(1000),
+  suggestedCards: z
+    .array(
+      z.object({
+        type: CardType,
+        front: z.string().trim().min(1).max(600),
+        back: z.string().trim().min(1).max(1200),
+      }),
+    )
+    .max(5),
+});
+export type ReviewResult = z.infer<typeof ReviewResult>;
+
+export const ReviewDto = z.object({
+  runId: z.string().uuid(),
+  status: RunStatus,
+  mode: ReviewMode,
+  /** The text to give to Claude. */
+  prompt: z.string(),
+  result: ReviewResult.nullable(),
+  /** Points per rubric item, with the maximum, once a result is stored. */
+  scores: z.array(
+    z.object({
+      rubricId: z.string(),
+      title: z.string(),
+      score: z.number().int(),
+      max: z.number().int(),
+      comment: z.string().nullable(),
+    }),
+  ),
+  /** How many suggested cards were added for approval. */
+  cardsSuggested: z.number().int(),
+  createdAt: z.string(),
+});
+export type ReviewDto = z.infer<typeof ReviewDto>;
+
+export const SubmitReviewResult = z.object({
+  /** Claude's reply as pasted. Text around the JSON is tolerated. */
+  raw: z.string().trim().min(2).max(90_000),
+});
+export type SubmitReviewResult = z.infer<typeof SubmitReviewResult>;

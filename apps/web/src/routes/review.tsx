@@ -8,6 +8,16 @@ import { api } from '../lib/api';
 import { untilLabel } from '../lib/format';
 import { useStudySession } from '../lib/useStudySession';
 
+/** "in 14 hours", "in 3 days": how long until a moment in the future. */
+function untilDue(iso: string): string {
+  const minutes = Math.max(1, Math.round((new Date(iso).getTime() - Date.now()) / 60_000));
+  const format = new Intl.RelativeTimeFormat('en', { numeric: 'always' });
+  if (minutes < 60) return format.format(minutes, 'minute');
+  const hours = Math.round(minutes / 60);
+  if (hours < 48) return format.format(hours, 'hour');
+  return format.format(Math.round(hours / 24), 'day');
+}
+
 export const Route = createFileRoute('/review')({ component: ReviewPage });
 
 const grades: { grade: Grade; label: string; key: string; tone: string }[] = [
@@ -96,10 +106,19 @@ function ReviewPage() {
 
       {!card ? (
         <div className="rounded-lg border border-dashed border-zinc-300 p-8 text-center dark:border-zinc-700">
-          <p className="font-medium">Nothing due right now.</p>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Finish a lesson to add its cards, or add your own under Manage cards.
+          <p className="font-medium">
+            {counts.reviewedToday > 0
+              ? `Done for now: ${counts.reviewedToday} ${counts.reviewedToday === 1 ? 'card' : 'cards'} reviewed today.`
+              : 'Nothing due right now.'}
           </p>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            {queue.data.nextDue
+              ? `The next card is due ${untilDue(queue.data.nextDue)}.`
+              : 'Finish a lesson to add its cards, or add your own under Manage cards.'}
+          </p>
+          <Link to="/" className="mt-4 inline-block text-sm font-medium underline">
+            Back to the plan
+          </Link>
         </div>
       ) : (
         <div className="mx-auto max-w-2xl">

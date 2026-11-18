@@ -203,6 +203,8 @@ export const ReviewQueueResponse = z.object({
     reviewedToday: z.number().int(),
     pendingApproval: z.number().int(),
   }),
+  /** When the next card that is not due yet becomes due. Null when no such card exists. */
+  nextDue: z.string().nullable(),
 });
 export type ReviewQueueResponse = z.infer<typeof ReviewQueueResponse>;
 

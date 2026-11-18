@@ -7,7 +7,7 @@ import type {
   SubmitReview,
   SubmitReviewResponse,
 } from '@study/shared';
-import { and, asc, count, eq, gte, lte, ne } from 'drizzle-orm';
+import { and, asc, count, eq, gt, gte, lte, min, ne } from 'drizzle-orm';
 import { InjectDb, type Database } from '../database/database.module.js';
 import { SettingsService } from '../settings/settings.service.js';
 import { CardsService } from './cards.service.js';
@@ -47,7 +47,7 @@ export class ReviewService {
     const base = () =>
       this.db.select().from(cards).innerJoin(cardSchedules, eq(cardSchedules.cardId, cards.id));
 
-    const [dueRows, dueCount, newRows, newCount] = await Promise.all([
+    const [dueRows, dueCount, newRows, newCount, upcoming] = await Promise.all([
       base()
         .where(and(active, ne(cardSchedules.state, 'new'), lte(cardSchedules.due, now)))
         .orderBy(asc(cardSchedules.due))
@@ -66,6 +66,11 @@ export class ReviewService {
         .from(cards)
         .innerJoin(cardSchedules, eq(cardSchedules.cardId, cards.id))
         .where(and(active, eq(cardSchedules.state, 'new'))),
+      this.db
+        .select({ due: min(cardSchedules.due) })
+        .from(cards)
+        .innerJoin(cardSchedules, eq(cardSchedules.cardId, cards.id))
+        .where(and(active, ne(cardSchedules.state, 'new'), gt(cardSchedules.due, now))),
     ]);
 
     const rows = [...dueRows, ...newRows].slice(0, BATCH);
@@ -98,6 +103,7 @@ export class ReviewService {
         reviewedToday: todayNew + todaySeen,
         pendingApproval: pending[0]?.n ?? 0,
       },
+      nextDue: upcoming[0]?.due?.toISOString() ?? null,
     };
   }
 

@@ -352,3 +352,10 @@ Decisions made while building are appended below.
 - **Asked for:** both topics in the path at least as theory, with no Docker practice environment.
 - **Built:** module 16 (7 lessons, 78 cards, 4 written tasks) and module 17 (5 lessons, 59 cards, 3 written tasks). All tasks are written answers reviewed by Claude against a rubric. Each module ends with a "practise on your own" section (`kind` for Kubernetes, a single-node KRaft broker for Kafka).
 - **Verified:** every Kubernetes manifest validates against the 1.37 schemas and Gateway API v1.5. The Kafka code examples ran against a real Kafka 4.4 broker with `@confluentinc/kafka-javascript` 1.11.
+
+### D-105 · Images are pinned by digest (security rule S-013) — Accepted, 2026-11-18
+- **Chosen:** every image in the Compose files and Dockerfiles carries its `sha256` digest next to a readable tag. The AWS emulator and Mailpit moved from `latest` to the versions tested here (floci 2.5.0, Mailpit 1.34.0).
+- **Why:** a tag can be repointed to different content; a digest cannot. This also makes check results repeatable.
+- **Verified:** each digest is a multi-architecture index that includes `arm64`, so it works on Apple Silicon.
+- **Cost:** updates are manual. To update, pull the new tag, read its digest with `docker image inspect --format '{{index .RepoDigests 0}}'`, and replace it.
+- **Runner packages added the same day:** BullMQ, ioredis, express, AWS SDK v3 clients, nodemailer and Stripe, each at an exact version at least a day old. Run `pnpm lab images` again after pulling.

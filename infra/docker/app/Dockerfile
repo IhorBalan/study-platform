@@ -2,7 +2,7 @@
 #   docker compose -f infra/compose/full.compose.yaml up --build
 # The host bridge is never containerised: it is the only process allowed to use Docker.
 
-FROM node:24-alpine AS build
+FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS build
 RUN corepack enable
 WORKDIR /repo
 # Manifests first, so the dependency layer is reused until a manifest changes.
@@ -22,7 +22,7 @@ RUN pnpm build
 RUN pnpm --filter @study/api deploy --prod --legacy /out/api \
  && pnpm --filter @study/worker deploy --prod --legacy /out/worker
 
-FROM node:24-alpine AS api
+FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS api
 ENV NODE_ENV=production API_HOST=0.0.0.0 CURRICULUM_DIR=/curriculum
 WORKDIR /app
 COPY --from=build /out/api ./
@@ -31,14 +31,14 @@ USER node
 EXPOSE 3000
 CMD ["node", "dist/main.js"]
 
-FROM node:24-alpine AS worker
+FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS worker
 ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=build /out/worker ./
 USER node
 CMD ["node", "dist/main.js"]
 
-FROM nginxinc/nginx-unprivileged:1.29-alpine AS web
+FROM nginxinc/nginx-unprivileged:1.29-alpine@sha256:0c79d56aee561a1d81c63f00eee5fb5fe29279560cdc55e91425133104c7fbe6 AS web
 COPY infra/docker/app/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /repo/apps/web/dist /usr/share/nginx/html
 EXPOSE 8080

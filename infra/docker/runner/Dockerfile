@@ -3,7 +3,7 @@
 #   docker build -t study-runner-nest --target nest -f infra/docker/runner/Dockerfile infra/docker
 # Build context is infra/docker so the nest stage can read runner-nest/package.json.
 
-FROM node:24-alpine AS base
+FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS base
 RUN addgroup -g 10001 runner && adduser -u 10001 -G runner -D -H runner \
  && mkdir -p /opt/runner /work /results /checks /submission
 COPY runner/reporter.mjs runner/entrypoint.sh /opt/runner/

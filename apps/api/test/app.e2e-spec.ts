@@ -622,6 +622,49 @@ describe('API (e2e, real Postgres)', () => {
       expect(again.body.cards.find((c: { id: string }) => c.id === reviewed.id).reps).toBe(3);
     });
 
+    it('undoes the latest grade and restores the schedule exactly', async () => {
+      const list = await http().get('/api/cards').expect(200);
+      const target = list.body.cards.find((c: { reps: number }) => c.reps === 3);
+      await makeDue(target.id);
+      const before = (await http().get('/api/cards').expect(200)).body.cards.find(
+        (c: { id: string }) => c.id === target.id,
+      );
+      const reviewedBefore = (await http().get('/api/review/queue').expect(200)).body.counts
+        .reviewedToday;
+
+      await http().post(`/api/review/${target.id}`).send({ grade: 'easy' }).expect(200);
+      const undone = await http().post(`/api/review/${target.id}/undo`).expect(200);
+      expect(undone.body.due).toBe(before.due);
+
+      const after = (await http().get('/api/cards').expect(200)).body.cards.find(
+        (c: { id: string }) => c.id === target.id,
+      );
+      expect(after).toEqual(before);
+      const queue = await http().get('/api/review/queue').expect(200);
+      expect(queue.body.counts.reviewedToday).toBe(reviewedBefore);
+
+      // A new grade can be undone again.
+      await http().post(`/api/review/${target.id}`).send({ grade: 'good' }).expect(200);
+      await http().post(`/api/review/${target.id}/undo`).expect(200);
+
+      await http().post('/api/review/00000000-0000-4000-8000-000000000000/undo').expect(404);
+    });
+
+    it('refuses to undo a grade that is more than ten minutes old', async () => {
+      const list = await http().get('/api/cards').expect(200);
+      const target = list.body.cards.find((c: { reps: number }) => c.reps === 3);
+      await makeDue(target.id);
+      await http().post(`/api/review/${target.id}`).send({ grade: 'good' }).expect(200);
+      await app
+        .get<Database>(DB)
+        .update(schema.reviews)
+        .set({ reviewedAt: new Date(Date.now() - 11 * 60_000) })
+        .where(eq(schema.reviews.cardId, target.id));
+      const res = await http().post(`/api/review/${target.id}/undo`);
+      expect(res.status).toBe(409);
+      expect(res.body.detail ?? res.body.message).toMatch(/10 minutes/);
+    });
+
     it('allows one open refresh per skill', async () => {
       const db = app.get<Database>(DB);
       const [skill] = await db.select().from(schema.skills).limit(1);

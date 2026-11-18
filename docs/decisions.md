@@ -510,6 +510,10 @@ D-079 says each task's checks pass on `solution/` and fail on `starter/`, but no
 
 A second workflow, `Curriculum checks`, builds the two sandbox images, starts the four practice services and runs `pnpm curriculum:verify --no-skip`. It runs on pull requests and pushes to `main` that touch `curriculum/`, the runner images, the lab compose file, the bridge, or the curriculum and lab-cli packages; other changes cannot affect the result and skip the several minutes it takes. `--no-skip` turns "skipped: service not running" into a failure, so CI cannot pass by quietly checking fewer tasks. Images are not cached yet: the build takes about two minutes and caching can come later if the job proves slow.
 
+### D-138 · A grade can be undone for ten minutes — 2026-11-18
+
+A mis-pressed key in a review used to be permanent (UX review). Each review row now keeps `schedule_before`, a copy of the card's schedule as it was, and `POST /api/review/:cardId/undo` deletes the card's latest review and restores that copy, in one transaction under the same row lock a grade takes. Restoring the stored copy, instead of recomputing with FSRS, makes the undo exact, and deleting the row keeps the daily counts and retention statistics as if the grade never happened. Only the latest grade of a card, and only within ten minutes: the point is fixing a slip, not rewriting history. Reviews saved before this change have no copy and cannot be undone. The Review page offers "Undo" (key Z, matched by physical key) for the last card graded on that page.
+
 ---
 
 ## Product direction

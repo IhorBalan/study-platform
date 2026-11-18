@@ -309,6 +309,8 @@ export const reviews = pgTable(
     mode: gradingMode('mode').notNull().default('self'),
     /** The ts-fsrs review log, kept verbatim so the schedule can be replayed. */
     fsrsLog: jsonb('fsrs_log').notNull().default({}),
+    /** The card's schedule row as it was before this review, so the review can be undone. */
+    scheduleBefore: jsonb('schedule_before'),
   },
   (t) => [
     index('reviews_card_idx').on(t.cardId, t.reviewedAt),

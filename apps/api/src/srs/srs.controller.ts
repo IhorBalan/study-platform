@@ -85,4 +85,17 @@ export class SrsController {
     }
     return result;
   }
+
+  @Post('review/:cardId/undo')
+  @HttpCode(200)
+  async undo(@Param('cardId', ParseUUIDPipe) cardId: string): Promise<SubmitReviewResponse> {
+    const result = await this.review.undo(cardId);
+    // The grade that is gone may have been what put a skill on the refresh list.
+    try {
+      await this.weakSkills.evaluate();
+    } catch (error) {
+      this.logger.error('Could not update the weak-skill refresh list', error);
+    }
+    return result;
+  }
 }

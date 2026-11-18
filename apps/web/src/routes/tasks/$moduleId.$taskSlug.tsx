@@ -132,7 +132,7 @@ function TaskPage() {
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-zinc-700 dark:text-zinc-300">
             {task.rubric.map((r) => (
               <li key={r.id}>
-                {r.title} <span className="text-zinc-400">(0–{r.max})</span>
+                {r.title} <span className="text-zinc-500 dark:text-zinc-400">(0–{r.max})</span>
               </li>
             ))}
           </ul>

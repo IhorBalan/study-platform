@@ -35,7 +35,7 @@ function PlanPage() {
       {data.modules.length > 0 && <NextUpPanel nextUp={data.nextUp} />}
 
       {data.modules.length === 0 ? (
-        <p className="mt-8 rounded-lg border border-dashed border-zinc-300 p-6 text-sm text-zinc-500 dark:border-zinc-700">
+        <p className="mt-8 rounded-lg border border-dashed border-zinc-300 p-6 text-sm text-zinc-500 dark:text-zinc-400 dark:border-zinc-700">
           No modules loaded yet. Add content under <code className="font-mono">curriculum/</code>{' '}
           and restart the API.
         </p>
@@ -110,7 +110,10 @@ function NextUpPanel({ nextUp }: { nextUp: NextUp }) {
       aria-labelledby="next-up"
       className="mt-6 rounded-lg border border-zinc-300 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-900"
     >
-      <h2 id="next-up" className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
+      <h2
+        id="next-up"
+        className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+      >
         Next up
       </h2>
       {nothing ? (
@@ -180,7 +183,7 @@ function NextUpPanel({ nextUp }: { nextUp: NextUp }) {
               <span className="text-zinc-500 dark:text-zinc-400">{task.reason}</span>
               <button
                 type="button"
-                className="text-xs text-zinc-500 underline"
+                className="text-xs text-zinc-500 dark:text-zinc-400 underline"
                 onClick={() => dismiss.mutate(task.id)}
               >
                 Dismiss
@@ -275,7 +278,7 @@ function ModuleRow({ module: m }: { module: ModuleSummary }) {
           <h2 className="flex min-w-0 items-baseline gap-2 font-medium [overflow-wrap:anywhere]">
             <span
               aria-hidden="true"
-              className="inline-block self-center text-xs text-zinc-400 transition-transform group-open:rotate-90"
+              className="inline-block self-center text-xs text-zinc-500 dark:text-zinc-400 transition-transform group-open:rotate-90"
             >
               ▶
             </span>
@@ -323,7 +326,7 @@ function ModuleRow({ module: m }: { module: ModuleSummary }) {
               return (
                 <li key={t.id} className="flex items-center gap-2">
                   <StatusDot status={t.status} />
-                  <span className="rounded border border-zinc-300 px-1 text-[10px] uppercase text-zinc-500 dark:border-zinc-700">
+                  <span className="rounded border border-zinc-300 px-1 text-[10px] uppercase text-zinc-500 dark:text-zinc-400 dark:border-zinc-700">
                     {t.type === 'repo' ? 'Code' : t.type === 'text' ? 'Write' : 'Draw'}
                   </span>
                   <Link

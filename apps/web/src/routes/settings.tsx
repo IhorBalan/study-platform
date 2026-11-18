@@ -22,7 +22,7 @@ function SettingsPage() {
     },
   });
 
-  if (!settings.data) return <p className="text-sm text-zinc-500">Loading…</p>;
+  if (!settings.data) return <p className="text-sm text-zinc-500 dark:text-zinc-400">Loading…</p>;
 
   const set = <K extends keyof UpdateSettings>(key: K, value: UpdateSettings[K]) =>
     setDraft((current) => ({ ...current, [key]: value }));

@@ -104,7 +104,7 @@ function ReviewPage() {
     return () => window.removeEventListener('keydown', onKey);
   }, [onKey]);
 
-  if (queue.isPending) return <p className="text-sm text-zinc-500">Loading…</p>;
+  if (queue.isPending) return <p className="text-sm text-zinc-500 dark:text-zinc-400">Loading…</p>;
   if (queue.isError) {
     return (
       <p role="alert" className="text-sm text-red-600">
@@ -144,7 +144,7 @@ function ReviewPage() {
       ) : (
         <div className="mx-auto max-w-2xl">
           <div className="min-h-64 rounded-xl border border-zinc-200 p-6 dark:border-zinc-800">
-            <p className="mb-3 text-xs uppercase tracking-wide text-zinc-400">
+            <p className="mb-3 text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
               {card.type}
               {card.state === 'new' && ' · new'}
             </p>
@@ -189,7 +189,7 @@ function ReviewPage() {
               Show answer
             </Button>
           )}
-          <p className="mt-3 text-center text-xs text-zinc-400">
+          <p className="mt-3 text-center text-xs text-zinc-500 dark:text-zinc-400">
             Space shows the answer. Keys 1–4 grade it.
           </p>
           {submit.isError && (
@@ -211,7 +211,7 @@ function ReviewPage() {
           >
             Undo
           </button>{' '}
-          <span className="text-xs text-zinc-400">(key Z)</span>
+          <span className="text-xs text-zinc-500 dark:text-zinc-400">(key Z)</span>
         </p>
       )}
       {undo.isError && (

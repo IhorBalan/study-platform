@@ -148,6 +148,12 @@ The sandbox reaches a service by its name on a network without internet. The che
 | `aws` | `AWS_ENDPOINT_URL`, `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_RESOURCE_PREFIX` | prefix every bucket, queue and table name |
 | `mailpit` | `SMTP_HOST`, `SMTP_PORT`, `MAILPIT_URL` | filter by a recipient that contains `CHECK_RUN_ID` |
 
+Notes for `aws` (verified with the emulator and AWS SDK 3.1169):
+
+- The SDK reads `AWS_ENDPOINT_URL` by itself. Create S3 clients with `forcePathStyle: true`.
+- Create SQS clients with `useQueueUrlAsEndpoint: false`. The emulator returns queue URLs with `localhost` in them, which is wrong inside the sandbox.
+- Presigned S3 URLs work inside the sandbox with `fetch`.
+
 Rules:
 
 - The submission must read its connection settings from these variables. Say so in the brief, and name the variables.

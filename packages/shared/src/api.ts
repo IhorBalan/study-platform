@@ -169,8 +169,11 @@ export const UpdateCard = z
     type: CardType,
     front: z.string().trim().min(1).max(2000),
     back: z.string().trim().min(1).max(4000),
-    /** `pending` -> `active` approves a suggested card. */
-    status: CardStatus,
+    /**
+     * `pending` -> `active` approves a suggested card. Only a review suggests cards,
+     * so nothing can be moved back to `pending`.
+     */
+    status: z.enum(['active', 'suspended']),
   })
   .partial();
 export type UpdateCard = z.infer<typeof UpdateCard>;

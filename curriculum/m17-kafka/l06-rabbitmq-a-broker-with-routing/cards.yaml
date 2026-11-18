@@ -25,8 +25,8 @@
   skills: [rabbitmq-basics]
 - id: rabbitmq-prefetch
   type: cloze
-  front: "`await ch.prefetch(20)` means the consumer holds at most {{20 unacknowledged messages}} at a time."
-  back: 20 unacknowledged messages
+  front: "`await ch.prefetch(20)` means the consumer holds at most 20 {{unacknowledged messages}} at a time."
+  back: unacknowledged messages
   skills: [rabbitmq-basics]
 - id: rabbitmq-nack-requeue
   type: comparison
@@ -62,4 +62,9 @@
   type: comparison
   front: "Interview: RabbitMQ vs Kafka"
   back: "RabbitMQ routes messages to queues and deletes them once acked. Kafka keeps a partitioned log that many groups read and replay."
+  skills: [rabbitmq-basics]
+- id: rabbitmq-connection-loss
+  type: concept
+  front: What happens to an amqplib consumer when the broker restarts, and how do you handle it?
+  back: "The connection and all its channels close, so the consumer stops silently. Reconnect and declare topology and consumers again, for example with amqplib's `recovery` option and its `setup` function."
   skills: [rabbitmq-basics]

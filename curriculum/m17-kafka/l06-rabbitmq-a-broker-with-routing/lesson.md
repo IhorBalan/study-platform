@@ -7,7 +7,7 @@ Lesson 5 compared Kafka with SQS, BullMQ and Postgres. RabbitMQ is the other nam
 
 ## The AMQP 0-9-1 model
 
-RabbitMQ's classic protocol is AMQP 0-9-1, and its model has five parts:
+RabbitMQ's classic protocol is AMQP 0-9-1, and its model has five parts. (RabbitMQ 4 also speaks AMQP 1.0 as a core protocol; most Node code still uses 0-9-1.)
 
 ```text
 producer --publish(exchange, routingKey)--> [exchange] --bindings--> [queue] --> consumer
@@ -60,7 +60,9 @@ To survive a broker restart, you need all of these:
 2. A **persistent message** (`persistent: true`, delivery mode 2), so the message is written to disk.
 3. **Publisher confirms**, so the producer knows the broker has taken responsibility. Without them, a message lost in transit or during a crash looks exactly like a sent one.
 
-A confirm channel tells you, per message, when the broker has accepted it, which for a persistent message on a durable queue means it is on disk (or replicated, for quorum queues). Confirms say nothing about routing: an unroutable message is still confirmed, which is another reason to use `mandatory`.
+A confirm channel tells you, per message, when the broker has accepted it, which for a persistent message on a durable queue means it is on disk (or replicated, for quorum queues). On a quorum queue every message is written to disk whatever `persistent` says, so point 2 matters for classic queues; set it anyway, so the code does not depend on the queue type.
+
+Confirms say nothing about routing: an unroutable message is still confirmed, which is another reason to use `mandatory`.
 
 ## Dead letters and retry with delay
 
@@ -73,7 +75,7 @@ email.orders  --nack, no requeue--> DLX --> email.orders.retry (x-message-ttl 30
 email.orders.retry --TTL expires--> its DLX: '' (default exchange), key email.orders --> email.orders
 ```
 
-The consumer reads the `x-death` count, and after a few rounds publishes the message to a parking queue instead. Use a fixed TTL per retry queue rather than a TTL per message: messages expire only when they reach the head of the queue, so one long delay holds up shorter ones behind it. The community **delayed message exchange** plugin adds an exchange type with a per-message `x-delay` header; read its README for its limits before you rely on it.
+The consumer reads the `x-death` count, and after a few rounds publishes the message to a parking queue instead. Use a fixed TTL per retry queue rather than a TTL per message: messages expire only when they reach the head of the queue, so one long delay holds up shorter ones behind it. The community **delayed message exchange** plugin adds an exchange type with a per-message `x-delay` header; its delays are held on one node and are not replicated, and it is not built for large numbers of delayed messages, so read its README before you rely on it.
 
 ## Queue types
 
@@ -91,24 +93,73 @@ A queue is FIFO, but processing order is not. With competing consumers, message 
 
 `amqplib` is the standard Node client for AMQP 0-9-1 and ships its own types. Declaring topology from code is normal; `assert*` calls are idempotent but fail if an existing queue has different arguments.
 
+A broker restart or a network blip closes the connection and every channel on it. Consumers then stop without any error in your handler, and a connection with no `'error'` listener ends the Node process. amqplib 2 has opt-in **recovery**: pass a `recovery` option to `connect` and it reconnects with backoff, then calls your `setup` function after every successful connect. Put everything that lives on a channel in `setup`: topology, consumers and the publisher's channel.
+
 ```ts
-import { connect } from 'amqplib';
+import {
+  connect,
+  type Channel,
+  type ChannelModel,
+  type ConfirmChannel,
+  type ConsumeMessage,
+} from 'amqplib';
 
-const conn = await connect(process.env.AMQP_URL ?? 'amqp://localhost');
+const MAX_ROUNDS = 3;
+let pub: ConfirmChannel; // replaced after every reconnect
 
-const setup = await conn.createChannel();
-await setup.assertExchange('orders', 'topic', { durable: true });
-await setup.assertExchange('orders.dlx', 'fanout', { durable: true });
-await setup.assertQueue('email.orders', {
-  durable: true,
-  deadLetterExchange: 'orders.dlx',
-  arguments: { 'x-queue-type': 'quorum' },
+const conn = await connect(process.env.AMQP_URL ?? 'amqp://localhost', {
+  recovery: {
+    async setup(model: ChannelModel) {
+      const ch = await model.createChannel();
+      await ch.assertExchange('orders', 'topic', { durable: true });
+      await ch.assertExchange('orders.dlx', 'fanout', { durable: true });
+      await ch.assertQueue('email.orders', {
+        durable: true,
+        deadLetterExchange: 'orders.dlx',
+        arguments: { 'x-queue-type': 'quorum' },
+      });
+      await ch.assertQueue('email.orders.parked', {
+        durable: true,
+        arguments: { 'x-queue-type': 'quorum' },
+      });
+      await ch.bindQueue('email.orders', 'orders', 'order.*.paid');
+
+      await ch.prefetch(20);
+      await ch.consume('email.orders', (msg) => {
+        if (msg) void handle(ch, msg); // null: the broker cancelled this consumer
+      });
+
+      pub = await model.createConfirmChannel();
+    },
+  },
 });
-await setup.bindQueue('email.orders', 'orders', 'order.*.paid');
-await setup.close();
+conn.on('disconnect', (err) => console.warn('RabbitMQ disconnected', err.message));
+```
 
-// Publisher: persistent message on a confirm channel.
-const pub = await conn.createConfirmChannel();
+The retry queue from the previous section (`email.orders.retry`, bound to `orders.dlx`) is declared the same way. The handler acknowledges, retries or parks:
+
+```ts
+async function handle(ch: Channel, msg: ConsumeMessage) {
+  try {
+    const event = JSON.parse(msg.content.toString());
+    await sendReceipt(event.orderId, msg.properties.messageId); // idempotent
+    ch.ack(msg);
+  } catch {
+    const rounds = Number(msg.properties.headers?.['x-death']?.[0]?.count ?? 0);
+    if (rounds >= MAX_ROUNDS) {
+      // Give up: keep the message where a person can look at it, then remove it here.
+      ch.sendToQueue('email.orders.parked', msg.content, { ...msg.properties, persistent: true });
+      ch.ack(msg);
+    } else {
+      ch.nack(msg, false, false); // no requeue: dead-letter it into the retry loop
+    }
+  }
+}
+```
+
+Publishing uses the confirm channel:
+
+```ts
 const event = { type: 'OrderPaid', orderId: 'order-1042' };
 pub.publish('orders', 'order.eu.paid', Buffer.from(JSON.stringify(event)), {
   persistent: true,
@@ -118,23 +169,7 @@ pub.publish('orders', 'order.eu.paid', Buffer.from(JSON.stringify(event)), {
 await pub.waitForConfirms(); // rejects if the broker nacked a message
 ```
 
-```ts
-const ch = await conn.createChannel();
-await ch.prefetch(20);
-
-await ch.consume('email.orders', async (msg) => {
-  if (!msg) return; // the broker cancelled this consumer
-  try {
-    const event = JSON.parse(msg.content.toString());
-    await sendReceipt(event.orderId, msg.properties.messageId); // idempotent
-    ch.ack(msg);
-  } catch {
-    ch.nack(msg, false, false); // no requeue: dead-letter it
-  }
-});
-```
-
-`publish` returns `false` when the client's write buffer is full; wait for the channel's `drain` event before publishing more.
+`publish` returns `false` when the client's write buffer is full; wait for the channel's `drain` event before publishing more. A message published but not yet confirmed when the connection drops may or may not have arrived: publish it again after the reconnect and let the consumer's idempotency absorb the duplicate.
 
 ## RabbitMQ, Kafka, BullMQ or SQS
 
@@ -156,6 +191,8 @@ Choose RabbitMQ when messages need **flexible routing** to many queues, you want
 - Requeueing on every error, so a poison message loops forever (use a quorum queue's delivery limit or a DLX).
 - Publishing with a routing key nobody binds and never noticing the messages are dropped.
 - Assuming queue order means processing order with several consumers.
+- No reconnect handling: after a broker restart the consumer is gone and nothing in your code notices.
+- Dead-lettering every failure into a retry loop without counting rounds, so a broken message circles forever.
 - Changing a queue's arguments in code and expecting the broker to update the existing queue.
 
 ## Go deeper

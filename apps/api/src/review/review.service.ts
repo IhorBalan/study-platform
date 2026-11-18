@@ -39,6 +39,11 @@ interface ValidationError {
   message: string;
 }
 
+const REVIEW_TIMEOUT_MS = 8 * 60 * 1000;
+
+/** A failure between the API and the bridge, with a message written for the learner. */
+class BridgeProblem extends Error {}
+
 @Injectable()
 export class SubmissionReviewService implements OnModuleInit {
   private readonly logger = new Logger(SubmissionReviewService.name);
@@ -177,24 +182,50 @@ export class SubmissionReviewService implements OnModuleInit {
       this.logger.warn(
         `One-click review failed: ${error instanceof Error ? error.message : error}`,
       );
-      await fail(
-        'The host bridge could not be reached. Start it with "pnpm dev", or use copy and paste.',
-      ).catch(() => undefined);
+      // Only a failure to reach the bridge is the bridge's fault. Anything else
+      // (a reply in the wrong shape, a database error) gets its own message, so
+      // the learner is not sent to restart something that is running.
+      const message =
+        error instanceof BridgeProblem
+          ? error.message
+          : 'The review failed because of an error in the platform. Try again, or use copy and paste. The API log has the details.';
+      await fail(message).catch(() => undefined);
     }
   }
 
   private async callBridge(request: RunReviewRequest): Promise<RunReviewResponse> {
-    if (!this.env.BRIDGE_SECRET) throw new Error('BRIDGE_SECRET is not set');
-    const res = await fetch(new URL('/review/run', this.env.BRIDGE_URL), {
-      method: 'POST',
-      headers: {
-        authorization: `Bearer ${this.env.BRIDGE_SECRET}`,
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify(request),
-      signal: AbortSignal.timeout(8 * 60 * 1000),
-    });
-    if (!res.ok) throw new Error(`bridge answered ${res.status}`);
+    const unreachable =
+      'The host bridge could not be reached. Start it with "pnpm dev", or use copy and paste.';
+    if (!this.env.BRIDGE_SECRET) throw new BridgeProblem(unreachable);
+    let res: Response;
+    try {
+      res = await fetch(new URL('/review/run', this.env.BRIDGE_URL), {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${this.env.BRIDGE_SECRET}`,
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify(request),
+        signal: AbortSignal.timeout(REVIEW_TIMEOUT_MS),
+      });
+    } catch (error) {
+      this.logger.warn(`Bridge request failed: ${error instanceof Error ? error.message : error}`);
+      throw new BridgeProblem(
+        error instanceof Error && error.name === 'TimeoutError'
+          ? `The review took longer than ${REVIEW_TIMEOUT_MS / 60_000} minutes and was stopped. Try again, or use copy and paste.`
+          : unreachable,
+      );
+    }
+    if (res.status === 401 || res.status === 403) {
+      throw new BridgeProblem(
+        'The host bridge refused the request. Restart "pnpm dev" so the platform and the bridge use the same secret, or use copy and paste.',
+      );
+    }
+    if (!res.ok) {
+      throw new BridgeProblem(
+        `The host bridge answered with an error (${res.status}). Try again, or use copy and paste.`,
+      );
+    }
     return RunReviewResponse.parse(await res.json());
   }
 

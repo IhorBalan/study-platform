@@ -546,6 +546,10 @@ A count of cards does not say whether there is time for them before work. The re
 
 The last part of notes (D-143, D-144). `GET /api/search` reads the notes on every search and matches them by the words of the note, so a note is found the moment it is saved and there is no index to keep in step. A note result is marked `inNote`, links to its lesson or task, and ranks above an equal match in lesson text, because the learner's own words are what they are most likely looking for. The title of the page does not count for the note, or every titled match would appear twice.
 
+### D-148 · Restore loads the backup into a new database and swaps it in — 2026-11-18
+
+`pnpm restore` used `pg_restore --clean` on the live database, which drops only what the backup contains. A backup from before a migration that adds a table left that table in place while the list of applied migrations went back, so the next start failed with "relation already exists" (post-merge code review). Restore now creates an empty database, loads the backup into it in one transaction, renames the current database out of the way, renames the new one to `study` and drops the old one. The result is exactly the backup, whatever migrations came later, and the migrator then brings it up to date on the next start. A backup that cannot be read never touches the current data, and the safety backup from D-134 is still written first. `--force` now closes the other connections, because a database in use cannot be renamed.
+
 ---
 
 ## Product direction

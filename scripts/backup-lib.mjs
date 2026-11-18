@@ -34,9 +34,9 @@ export const IF_DATABASE_DOWN =
   'If the platform database is not running, start it with "pnpm infra:up" (or "pnpm dev") and try again.';
 
 /** Runs one SQL statement and returns its single value, or null if it could not run. */
-export async function queryDatabase(sql) {
+export async function queryDatabase(sql, database = 'study') {
   const child = inDatabase(
-    ['psql', '-U', 'study', '-d', 'study', '-Atc', sql],
+    ['psql', '-U', 'study', '-d', database, '-v', 'ON_ERROR_STOP=1', '-Atc', sql],
     ['ignore', 'pipe', 'ignore'],
   );
   let out = '';

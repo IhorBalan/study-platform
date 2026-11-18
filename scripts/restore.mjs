@@ -74,15 +74,31 @@ if (safety.error) {
 }
 console.log(`The current data was saved to ${safety.file}.`);
 
-// One transaction: a backup that cannot be read leaves the current data as it was.
+// The backup is loaded into a new, empty database, which then takes the place of the
+// current one. Restoring over the current database would keep every table the backup
+// does not know (one added by a later migration), and the next start would fail when
+// that migration tries to create it again. It also means a backup that cannot be read
+// never touches the current data.
+const SCRATCH = 'study_restoring';
+const PREVIOUS = 'study_previous';
+// Statements about a database cannot run from inside it, so these use "postgres".
+const admin = (sql) => queryDatabase(sql, 'postgres');
+const fail = (message) => {
+  console.error(message);
+  process.exit(1);
+};
+
+await admin(`drop database if exists ${SCRATCH} with (force)`);
+if ((await admin(`create database ${SCRATCH} owner study`)) === null) {
+  fail('A database to load the backup into could not be created. Nothing was changed.');
+}
+
 const restore = inDatabase(
   [
     'pg_restore',
     '-U',
     'study',
-    '--dbname=study',
-    '--clean',
-    '--if-exists',
+    `--dbname=${SCRATCH}`,
     '--no-owner',
     '--single-transaction',
     '--exit-on-error',
@@ -94,11 +110,31 @@ const [code] = await Promise.all([
   pipeline(createReadStream(file), restore.stdin).catch(() => undefined),
 ]);
 if (code !== 0) {
-  console.error(
-    `\nThe restore did not finish and the current data was kept. The lines above say why.`,
-  );
-  process.exit(1);
+  await admin(`drop database if exists ${SCRATCH} with (force)`);
+  fail(`\nThe backup could not be read and the current data was kept. The lines above say why.`);
 }
+
+if (force) {
+  // A database cannot be renamed while anything is connected to it.
+  await admin(
+    "select pg_terminate_backend(pid) from pg_stat_activity where datname = 'study' and pid <> pg_backend_pid()",
+  );
+}
+await admin(`drop database if exists ${PREVIOUS} with (force)`);
+if ((await admin(`alter database study rename to ${PREVIOUS}`)) === null) {
+  await admin(`drop database if exists ${SCRATCH} with (force)`);
+  fail(
+    'The current database is in use and could not be replaced. The current data was kept. Stop everything connected to it and try again.',
+  );
+}
+if ((await admin(`alter database ${SCRATCH} rename to study`)) === null) {
+  await admin(`alter database ${PREVIOUS} rename to study`);
+  await admin(`drop database if exists ${SCRATCH} with (force)`);
+  fail('The restored data could not be put in place. The current data was kept.');
+}
+// The data that was replaced is in the safety backup, so this copy is not needed.
+await admin(`drop database if exists ${PREVIOUS} with (force)`);
+
 console.log(
   `Restored. Start the platform again with "pnpm dev".\nTo undo this restore: pnpm restore "${safety.file}"`,
 );

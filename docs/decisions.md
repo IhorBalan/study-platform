@@ -474,6 +474,9 @@ A submission that used more memory than its task allows had every criterion mark
 Builds the first half of D-201. `pnpm backup` runs `pg_dump --format=custom` inside the platform database container and streams it to `backups/` (or `BACKUP_DIR`); the file gets its final name only when the dump is complete, and the newest 14 are kept. The job queue's schema (`pgboss`) is left out: it holds nothing worth keeping, and its partitioned tables made `pg_restore --clean` fail. `pnpm restore <file>` asks for the word "restore", then runs `pg_restore --clean --if-exists --single-transaction --exit-on-error`, so a bad file leaves the data as it was. Tried against the local database: changed and deleted rows came back, and a file that is not a dump changed nothing. The daily automatic backup and the Settings line are a separate change.
 
 **Daily backup, added later the same day:** `pnpm dev` runs the backup with `--daily` after the database is up. It does nothing when the newest backup is under 24 hours old or the database has no tables yet, and a failure only prints a warning, so it can never stop the platform from starting. The "Last backup" line in Settings is left out for now: the API can run in a container that does not see the backup folder.
+### D-132 · "Continue" on the Plan comes from the last study session — 2026-11-18
+
+The plan response carries `continueWith`: the lesson or task of the newest study session that has an item, when that item is not done and is not already the next lesson. No new table: sessions already record what was opened. It is the first row of "Next up". Remembering the scroll position inside a lesson is left for a separate change.
 
 ---
 

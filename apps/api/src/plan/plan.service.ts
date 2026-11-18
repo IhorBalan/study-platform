@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { schema } from '@study/db';
 import type { ModuleSummary, NextUp, PlanResponse, ProgressStatus } from '@study/shared';
-import { asc, eq, sql } from 'drizzle-orm';
+import { asc, desc, eq, isNotNull, sql } from 'drizzle-orm';
 import { CurriculumService } from '../curriculum/curriculum.service.js';
 import { InjectDb, type Database } from '../database/database.module.js';
 import { ReviewService } from '../srs/review.service.js';
@@ -16,9 +16,9 @@ export class PlanService {
 
   /** Modules in recommended order with progress, plus what to do next. */
   async getPlan(now = new Date()): Promise<PlanResponse> {
-    const { modules, lessons, tasks, lessonProgress, reviewTasks, skills } = schema;
+    const { modules, lessons, tasks, lessonProgress, reviewTasks, skills, studySessions } = schema;
 
-    const [moduleRows, lessonRows, taskRows, taskProgress, openReviewTasks, queue] =
+    const [moduleRows, lessonRows, taskRows, taskProgress, openReviewTasks, queue, lastOpened] =
       await Promise.all([
         this.db
           .select()
@@ -65,6 +65,13 @@ export class PlanService {
           .where(eq(reviewTasks.status, 'open'))
           .orderBy(asc(reviewTasks.createdAt)),
         this.review.queue(now),
+        // The page opened last. Review sessions have no item and are skipped.
+        this.db
+          .select({ activity: studySessions.activity, itemId: studySessions.itemId })
+          .from(studySessions)
+          .where(isNotNull(studySessions.itemId))
+          .orderBy(desc(studySessions.startedAt))
+          .limit(1),
       ]);
 
     const progress = new Map(taskProgress.rows.map((r) => [r.task_id, r]));
@@ -131,6 +138,25 @@ export class PlanService {
       )
       .slice(0, 6);
 
+    let continueWith: NextUp['continueWith'] = null;
+    const last = lastOpened[0];
+    if (last?.itemId && last.itemId !== lesson?.id) {
+      for (const m of result) {
+        const item =
+          last.activity === 'lesson'
+            ? m.lessons.find((l) => l.id === last.itemId)
+            : m.tasks.find((t) => t.id === last.itemId);
+        if (item && item.status !== 'done') {
+          continueWith = {
+            kind: last.activity === 'lesson' ? 'lesson' : 'task',
+            id: item.id,
+            title: item.title,
+            moduleTitle: m.title,
+          };
+        }
+      }
+    }
+
     const lessonForSkill = (skillId: string): string | null =>
       this.curriculum
         .allModules()
@@ -140,6 +166,7 @@ export class PlanService {
     return {
       modules: result,
       nextUp: {
+        continueWith,
         lesson,
         tasks: openTasks,
         dueCards: queue.counts.due,

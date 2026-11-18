@@ -58,6 +58,11 @@ const NextItem = z.object({ id: z.string(), title: z.string(), moduleTitle: z.st
 
 /** What to do next. No dates: the platform is self-paced. */
 export const NextUp = z.object({
+  /**
+   * The lesson or task opened most recently, when it is not finished and is not
+   * already the next lesson. Lets the learner pick up where they stopped.
+   */
+  continueWith: NextItem.extend({ kind: z.enum(['lesson', 'task']) }).nullable(),
   lesson: NextItem.nullable(),
   /** Tasks of modules the learner has started, not yet done. */
   tasks: z.array(NextItem.extend({ type: SubmissionType })),

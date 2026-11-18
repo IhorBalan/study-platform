@@ -1,0 +1,29 @@
+title: Outbox, relay and inbox
+type: repo
+skills: [transactional-outbox, idempotent-operations]
+services: [postgres]
+runner: nest
+hints:
+  - "Run the starter's relay twice at the same time in your head: both read the same pending rows before either deletes them. What has to happen to a row between being read and being published?"
+  - "SELECT ... FOR UPDATE SKIP LOCKED inside a transaction claims rows: they stay locked until COMMIT, and other relays skip them instead of waiting."
+  - "Mark a message published in the same transaction that claimed it, and only after publish() resolved. If publish() throws, leave it pending."
+  - "Keep the batch small. The relay holds its transaction, and one pooled connection, for as long as the batch takes to publish."
+  - "In the inbox, insert the message id first with ON CONFLICT DO NOTHING. Zero rows means someone already processed it, or is processing it right now and will commit first."
+  - "Pass apply() the client of your transaction, so its writes roll back with the inbox row when it throws."
+  - "Watch out for ORDER BY id after SELECT id::text AS id: Postgres sorts by the output column, as text. Qualify it as outbox.id."
+criteria:
+  - { id: compiles, title: The project compiles with tsc }
+  - { id: writes-atomically, title: An order and its message commit together or not at all }
+  - { id: relays, title: "Pending messages are published oldest first, once, as { id, topic, payload }" }
+  - { id: batch-size, title: "One round publishes at most batchSize messages, 50 by default" }
+  - { id: at-least-once, title: "A failed publish leaves the message pending for a later round, and relayOnce resolves" }
+  - { id: concurrent-relays, title: Four relays running at once publish every message exactly once }
+  - { id: inbox, title: "consume() applies a message once, in the same transaction as its inbox record" }
+  - { id: own-tests, title: Your tests pass and catch a relay that loses messages whose publish failed }
+rubric:
+  - { id: single-transaction, title: "placeOrder writes the order and the outbox row in one transaction on one client, and never publishes directly", skill: transactional-outbox, max: 3 }
+  - { id: claiming, title: "The relay claims rows so that concurrent relays work in parallel without duplicates (SKIP LOCKED or an atomic claim), and the code or README states what is held while publishing and for how long", skill: transactional-outbox, max: 4 }
+  - { id: failure-bookkeeping, title: "A failed publish is recorded (attempts, last error or similar) and the README says what would happen to a message that keeps failing, such as a cap and an alert", skill: transactional-outbox, max: 3 }
+  - { id: delivery-guarantee, title: "README explains why delivery is at least once, naming the crash window between publish and commit, and how the inbox makes processing effectively once", skill: transactional-outbox, max: 4 }
+  - { id: tests, title: "Own tests cover atomicity or a failing publish, two relays at once and a duplicate delivery to the inbox", skill: transactional-outbox, max: 3 }
+limits: { timeoutSeconds: 120 }

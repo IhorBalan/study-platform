@@ -1,0 +1,50 @@
+- id: saga-definition
+  type: term
+  front: Saga
+  back: "A sequence of steps that each commit on their own, with a compensating action per step that runs in reverse if a later step fails. Example: reserve stock, charge, book courier."
+  skills: [sagas]
+- id: saga-when-not
+  type: concept
+  front: When do you not need a saga?
+  back: "When every step writes to the same database. Use one transaction, even if the code is split into modules."
+  skills: [sagas]
+- id: compensation-vs-rollback
+  type: comparison
+  front: Rollback vs compensation
+  back: "A rollback erases an uncommitted change. A compensation is a new action that counteracts a committed one, such as a refund for a charge."
+  skills: [sagas]
+- id: irreversible-last
+  type: concept
+  front: Where in a saga do steps that cannot be undone, like sending an email, belong?
+  back: "Last, after every step that may still fail, so they never need compensating."
+  skills: [sagas]
+- id: pivot-step
+  type: term
+  front: Pivot step in a saga
+  back: "The step after which the saga only moves forward: earlier failures compensate, later ones are retried until they succeed. Example: the card charge, before shipping."
+  skills: [sagas]
+- id: compensation-retry
+  type: concept
+  front: What must be true of every compensating action?
+  back: "It is idempotent and retried until it succeeds, with an alert to a person if it cannot."
+  skills: [sagas]
+- id: saga-isolation
+  type: concept
+  front: What isolation does a saga give you, and how do you cope?
+  back: "None: others see intermediate states. Model them explicitly (`status = 'pending_payment'`) so the rest of the system treats them as provisional."
+  skills: [sagas]
+- id: orchestration-vs-choreography
+  type: comparison
+  front: Saga orchestration vs choreography
+  back: "Orchestration: one component runs the steps and keeps state, easy to follow. Choreography: services react to each other's events, decoupled but hard to see as a whole."
+  skills: [sagas]
+- id: saga-persist-progress
+  type: concept
+  front: Why must a saga orchestrator save its status after every step?
+  back: "So a crashed run can be resumed or compensated from the last finished step instead of starting over or being forgotten."
+  skills: [sagas]
+- id: interview-saga-vs-2pc
+  type: comparison
+  front: "Interview: sagas vs distributed transactions (2PC)?"
+  back: "2PC gives atomicity and isolation but holds locks across systems and needs every participant to support it. Sagas commit each step and compensate on failure: no isolation, but available and practical with third-party APIs."
+  skills: [sagas]

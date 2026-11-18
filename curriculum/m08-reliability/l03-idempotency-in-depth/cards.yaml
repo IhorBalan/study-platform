@@ -1,0 +1,55 @@
+- id: atomic-phases
+  type: concept
+  front: Why split an idempotent payment handler into reserve, call out and finish phases?
+  back: "Each phase is one local transaction or one external call, so no transaction is held open across the network and every crash point leaves a state a retry can resume."
+  skills: [idempotent-operations]
+- id: no-tx-across-http
+  type: concept
+  front: Why not wrap the card charge and the database writes in one transaction?
+  back: "The transaction would hold locks and a connection for the whole network call, and a rollback cannot undo a charge anyway."
+  skills: [idempotent-operations]
+- id: key-lease
+  type: term
+  front: Lease on an idempotency key
+  back: "A `locked_until` time. Before it, duplicates get \"in progress\"; after it, a retry may take the key over. Example: `locked_until = now() + interval '30 seconds'`."
+  skills: [idempotent-operations]
+- id: atomic-takeover
+  type: snippet
+  front: Take over an expired `started` key atomically in SQL.
+  back: "`update idempotency_keys set locked_until = now() + interval '30 seconds' where customer_id = $1 and key = $2 and status = 'started' and locked_until < now() returning key`"
+  skills: [idempotent-operations]
+- id: downstream-key
+  type: concept
+  front: Why derive a stable idempotency key for the provider call instead of a fresh UUID?
+  back: "A takeover repeats the call. With the same key the provider returns the first charge; with a new one it charges again."
+  skills: [idempotent-operations]
+- id: finish-one-tx
+  type: concept
+  front: Why write the payment row and mark the key `done` in one transaction?
+  back: "Separately, a crash between them leaves a payment the key does not know about, or a `done` key that replays a payment that does not exist."
+  skills: [idempotent-operations]
+- id: fingerprint-contents
+  type: concept
+  front: What goes into a request fingerprint?
+  back: "A hash of the validated, normalised fields that define the effect (amount, currency, target). Not timestamps, tracing headers or raw JSON bytes."
+  skills: [idempotent-operations]
+- id: natural-idempotency
+  type: term
+  front: Natural idempotency
+  back: "An operation that is safe to repeat by its shape, with no key table. Example: `update orders set status = 'paid' where id = $1 and status = 'pending'`."
+  skills: [idempotent-operations]
+- id: set-not-increment
+  type: comparison
+  front: "`set plan = 'pro'` vs `set credits = credits + 100` under retries"
+  back: "Setting a value is idempotent; running it twice changes nothing. Incrementing adds 100 twice."
+  skills: [idempotent-operations]
+- id: no-idempotency-support
+  type: concept
+  front: The dependency you call has no idempotency keys. How can a retry still avoid doing the work twice?
+  back: "Record a reference before the call and ask the provider for it before retrying. Failing that, reconcile your records with theirs afterwards."
+  skills: [idempotent-operations]
+- id: unknown-outcome
+  type: concept
+  front: The provider call times out. What should happen to the idempotency key?
+  back: "Leave it `started` with its lease. A retry after the lease repeats the call with the same downstream key, which settles the outcome."
+  skills: [idempotent-operations]

@@ -220,7 +220,7 @@ function CardList({
               <div className="min-w-0 flex-1 text-sm">
                 <p className="font-medium break-words">{card.front}</p>
                 <p className="mt-1 break-words text-zinc-600 dark:text-zinc-300">{card.back}</p>
-                <p className="mt-1 text-xs text-zinc-400">
+                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                   {card.type} · {card.source} ·{' '}
                   {card.status === 'suspended' ? 'suspended' : card.state}
                   {card.lessonId && (

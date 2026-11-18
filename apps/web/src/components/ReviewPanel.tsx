@@ -8,7 +8,7 @@ import { Button } from './ui';
 const severityTone = {
   high: 'text-red-600 dark:text-red-400',
   medium: 'text-amber-600 dark:text-amber-400',
-  low: 'text-zinc-500',
+  low: 'text-zinc-500 dark:text-zinc-400',
 } as const;
 
 /** Stage 2: build a prompt for Claude, take the reply back, and show the result. */
@@ -130,7 +130,9 @@ function PasteStep({
           )}
         </div>
         <details className="mt-2">
-          <summary className="cursor-pointer text-xs text-zinc-500">Show the prompt</summary>
+          <summary className="cursor-pointer text-xs text-zinc-500 dark:text-zinc-400">
+            Show the prompt
+          </summary>
           <pre className="mt-1 max-h-64 overflow-auto rounded-md bg-zinc-50 p-2 text-xs whitespace-pre-wrap dark:bg-zinc-900">
             {review.prompt}
           </pre>

@@ -16,7 +16,7 @@ const runLabel: Record<RunDto['status'], string> = {
 };
 
 const runTone: Record<RunDto['status'], string> = {
-  queued: 'text-zinc-500',
+  queued: 'text-zinc-500 dark:text-zinc-400',
   running: 'text-sky-600 dark:text-sky-400',
   passed: 'text-emerald-600 dark:text-emerald-400',
   failed: 'text-red-600 dark:text-red-400',
@@ -174,7 +174,7 @@ function SubmissionCard({ submission, open }: { submission: SubmissionDto; open:
         <summary className="flex cursor-pointer flex-wrap items-center gap-x-3 gap-y-1">
           <span className="font-medium">{new Date(submission.createdAt).toLocaleString()}</span>
           {submission.commitSha && (
-            <code className="font-mono text-xs text-zinc-500">
+            <code className="font-mono text-xs text-zinc-500 dark:text-zinc-400">
               {submission.commitSha.slice(0, 10)}
             </code>
           )}
@@ -184,7 +184,7 @@ function SubmissionCard({ submission, open }: { submission: SubmissionDto; open:
               {run.checks.length > 0 && ` · ${passed} of ${run.checks.length} checks`}
             </span>
           ) : (
-            <span className="text-zinc-500">
+            <span className="text-zinc-500 dark:text-zinc-400">
               {submission.review?.status === 'passed'
                 ? 'Saved'
                 : 'Saved · counts as done after a Claude review'}

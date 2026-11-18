@@ -19,7 +19,7 @@ export function Markdown({ children }: { children: string }) {
       <MarkdownHooks
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[[rehypeShiki, shikiOptions]]}
-        fallback={<p className="text-sm text-zinc-500">Rendering…</p>}
+        fallback={<p className="text-sm text-zinc-500 dark:text-zinc-400">Rendering…</p>}
         components={components}
       >
         {children}

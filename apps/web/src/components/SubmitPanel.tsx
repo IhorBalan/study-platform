@@ -45,6 +45,15 @@ export function SubmitPanel({ task }: { task: TaskDetail }) {
     refetchInterval: 30_000,
   });
 
+  // Checks need the lab repository. Without its path a submission could only fail.
+  const settings = useQuery({
+    queryKey: ['settings'],
+    queryFn: api.settings,
+    enabled: task.type === 'repo' && task.hasChecks,
+  });
+  const labPathMissing =
+    task.type === 'repo' && task.hasChecks && settings.data?.labRepoPath === null;
+
   const [commitSha, setCommitSha] = useState('');
   const [answer, setAnswer] = useState('');
 
@@ -83,6 +92,14 @@ export function SubmitPanel({ task }: { task: TaskDetail }) {
                 Commit your work in the lab repository, then submit. The checks run against the
                 commit, so uncommitted changes are not seen.
               </p>
+              {labPathMissing && (
+                <p role="status" className="text-sm text-amber-700 dark:text-amber-400">
+                  Set the path of your lab repository first, so the checks know where your code is.{' '}
+                  <Link to="/settings" className="font-medium underline">
+                    Open Settings
+                  </Link>
+                </p>
+              )}
               {bridge.data && !bridge.data.reachable && (
                 <p role="status" className="text-sm text-amber-700 dark:text-amber-400">
                   The host bridge is not running, so automated checks will be skipped. Start
@@ -124,7 +141,7 @@ export function SubmitPanel({ task }: { task: TaskDetail }) {
             </label>
           )}
           <div className="flex items-center gap-3">
-            <Button type="submit" disabled={submit.isPending}>
+            <Button type="submit" disabled={submit.isPending || labPathMissing}>
               {task.type === 'repo' ? 'Run checks' : 'Save answer'}
             </Button>
             {submit.isError && (

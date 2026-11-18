@@ -446,6 +446,10 @@ Decisions made while building are appended below.
 - **Why:** saving two words marked the task as finished on the Plan and in the statistics. Found by the UX review.
 - **Alternatives:** a "mark as done" button for learners who skip reviews. Not added: every task has a rubric, and the copy-and-paste review needs no setup.
 - **Effect on existing data:** answers saved without a review go back to in progress.
+### D-119 · "Run checks" is disabled until the lab repository path is set — 2026-11-18
+- **What:** on a code task with checks, the task page says to set the lab repository path and links to Settings, and the button is disabled until the path exists.
+- **Why:** a new learner's first submission could only fail with "set the path", and that failed attempt was stored. Found by the UX review.
+- **Scope:** the web app only. The API still accepts the submission and the worker still reports the missing path, so a direct API call behaves as before.
 
 ---
 

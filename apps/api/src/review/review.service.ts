@@ -296,7 +296,8 @@ export class SubmissionReviewService implements OnModuleInit {
       await this.db
         .update(verificationRuns)
         .set({ rawOutput: raw })
-        .where(eq(verificationRuns.id, runId));
+        // A valid reply may have been stored since this one was read. Its text stays.
+        .where(and(eq(verificationRuns.id, runId), ne(verificationRuns.status, 'passed')));
       return errors.length > 0 ? errors : [{ path: '', message: 'The reply is empty.' }];
     }
 

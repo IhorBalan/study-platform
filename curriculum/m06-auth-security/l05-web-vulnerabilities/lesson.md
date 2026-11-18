@@ -101,7 +101,7 @@ SSRF happens when your server fetches a URL the client chose: a webhook target, 
 Fixes, from strongest:
 
 - **Do not fetch arbitrary URLs.** Use an allow-list of hosts when the feature allows it.
-- **Validate the destination, not the string.** Parse the URL, allow only `https`, resolve the hostname and reject private, loopback, link-local and metadata addresses. Check again after every redirect, or disable redirects (`fetch(url, { redirect: 'manual' })`). Hostnames can resolve to a public address once and a private one the next time, so checking the string alone is not enough.
+- **Validate the address you connect to, not the string.** Parse the URL and allow only `https`. Resolving the hostname, checking the IP and then calling `fetch(url)` is not enough: `fetch` resolves the name again, and the second answer can be `169.254.169.254` (DNS rebinding). Do the check inside the connection instead: use the `undici` package's `fetch` with an `Agent` whose `connect.lookup` rejects private, loopback, link-local and metadata addresses, so the address you check is the address you connect to. The lookup is skipped for a URL that already holds an IP, so check IP literals yourself. Check again after every redirect, or disable redirects (`fetch(url, { redirect: 'manual' })`).
 - **Isolate egress**: send such requests through a proxy or network that cannot reach internal ranges, and require session tokens for the cloud metadata service (IMDSv2 on AWS).
 
 ## Mass assignment (A08, API3)

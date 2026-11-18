@@ -39,7 +39,7 @@
 - id: ssrf-fix
   type: concept
   front: Why is checking the URL string not enough to stop SSRF?
-  back: "Redirects and DNS can lead elsewhere. Resolve and check the address, recheck after redirects, and prefer allow-lists or isolated egress."
+  back: "Redirects and a second DNS lookup can lead elsewhere. Validate the resolved IP inside the connection's own lookup (or use an egress proxy), recheck each redirect, prefer allow-lists."
   skills: [web-vulnerabilities]
 - id: mass-assignment
   type: term

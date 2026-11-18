@@ -50,6 +50,13 @@
       "when": 1795036803800,
       "tag": "0006_clumsy_captain_stacy",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795038692273,
+      "tag": "0007_unique_the_renegades",
+      "breakpoints": true
     }
   ]
 }

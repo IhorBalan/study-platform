@@ -4,11 +4,13 @@ import type { LessonDetail, LessonProgressResponse, ProgressStatus } from '@stud
 import { eq } from 'drizzle-orm';
 import { InjectDb, type Database } from '../database/database.module.js';
 import { CurriculumService } from './curriculum.service.js';
+import { DeckSyncService } from './deck-sync.service.js';
 
 @Injectable()
 export class LessonsService {
   constructor(
     private readonly curriculum: CurriculumService,
+    private readonly decks: DeckSyncService,
     @InjectDb() private readonly db: Database,
   ) {}
 
@@ -44,7 +46,7 @@ export class LessonsService {
    */
   async setProgress(lessonId: string, status: ProgressStatus): Promise<LessonProgressResponse> {
     const lesson = this.curriculum.lesson(lessonId);
-    const { lessonProgress, cards, cardSchedules, cardSkills } = schema;
+    const { lessonProgress } = schema;
     const now = new Date();
 
     return this.db.transaction(async (tx) => {
@@ -63,33 +65,8 @@ export class LessonsService {
 
       if (status !== 'done' || lesson.cards.length === 0) return { status, cardsAdded: 0 };
 
-      // sourceKey is unique, so completing a lesson twice never duplicates cards
-      // and never resets the schedule of cards already under review.
-      const inserted = await tx
-        .insert(cards)
-        .values(
-          lesson.cards.map((c) => ({
-            type: c.type,
-            front: c.front,
-            back: c.back,
-            source: 'lesson' as const,
-            status: 'active' as const,
-            lessonId,
-            sourceKey: c.key,
-          })),
-        )
-        .onConflictDoNothing({ target: cards.sourceKey })
-        .returning({ id: cards.id, sourceKey: cards.sourceKey });
-
-      if (inserted.length > 0) {
-        await tx.insert(cardSchedules).values(inserted.map((c) => ({ cardId: c.id, due: now })));
-        const byKey = new Map(lesson.cards.map((c) => [c.key, c] as const));
-        const links = inserted.flatMap((c) =>
-          (byKey.get(c.sourceKey ?? '')?.skills ?? []).map((skillId) => ({ cardId: c.id, skillId })),
-        );
-        if (links.length > 0) await tx.insert(cardSkills).values(links);
-      }
-      return { status, cardsAdded: inserted.length };
+      // Completing a lesson twice never duplicates cards and never resets a schedule.
+      return { status, cardsAdded: await this.decks.addDeck(tx, lesson, now) };
     });
   }
 }

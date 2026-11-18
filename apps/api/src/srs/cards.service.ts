@@ -71,14 +71,34 @@ export class CardsService {
   async update(id: string, patch: UpdateCard): Promise<CardDto> {
     await this.get(id);
     if (Object.keys(patch).length > 0) {
-      await this.db.update(cards).set(patch).where(eq(cards.id, id));
+      // Once the learner has changed the text, the card is theirs: a later
+      // correction in the curriculum must not overwrite it.
+      const textChanged =
+        patch.type !== undefined || patch.front !== undefined || patch.back !== undefined;
+      await this.db
+        .update(cards)
+        .set(textChanged ? { ...patch, editedAt: new Date() } : patch)
+        .where(eq(cards.id, id));
     }
     return this.get(id);
   }
 
   async remove(id: string): Promise<void> {
-    const deleted = await this.db.delete(cards).where(eq(cards.id, id)).returning({ id: cards.id });
-    if (deleted.length === 0) throw new NotFoundException(`Card "${id}" does not exist`);
+    await this.db.transaction(async (tx) => {
+      const deleted = await tx
+        .delete(cards)
+        .where(eq(cards.id, id))
+        .returning({ source: cards.source, sourceKey: cards.sourceKey });
+      const [card] = deleted;
+      if (!card) throw new NotFoundException(`Card "${id}" does not exist`);
+      // Remember a deleted lesson card, so a curriculum update does not add it again.
+      if (card.source === 'lesson' && card.sourceKey) {
+        await tx
+          .insert(schema.removedLessonCards)
+          .values({ sourceKey: card.sourceKey })
+          .onConflictDoNothing();
+      }
+    });
   }
 
   private async assertSkillsExist(ids: string[]): Promise<void> {

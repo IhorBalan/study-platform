@@ -250,6 +250,8 @@ export const cards = pgTable(
     suggestedByRunId: uuid('suggested_by_run_id').references(() => verificationRuns.id, {
       onDelete: 'set null',
     }),
+    /** Set when the learner changed the text, so a curriculum update leaves the card alone. */
+    editedAt: timestamp('edited_at', { withTimezone: true }),
     createdAt,
     updatedAt,
   },
@@ -259,6 +261,15 @@ export const cards = pgTable(
     index('cards_lesson_idx').on(t.lessonId),
   ],
 );
+
+/**
+ * Lesson cards the learner deleted, by source key, so a curriculum update
+ * does not bring them back.
+ */
+export const removedLessonCards = pgTable('removed_lesson_cards', {
+  sourceKey: text('source_key').primaryKey(),
+  removedAt: timestamp('removed_at', { withTimezone: true }).notNull().defaultNow(),
+});
 
 export const cardSkills = pgTable(
   'card_skills',

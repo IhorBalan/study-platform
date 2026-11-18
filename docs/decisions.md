@@ -554,6 +554,10 @@ The last part of notes (D-143, D-144). `GET /api/search` reads the notes on ever
 
 Before an interview on one topic, or after a week away from it, the learner wants that topic's cards and not the whole queue (feature proposals, focused review). The Review page has a "Cards from" list, and `GET /api/review/queue?module=<id>` returns only cards that come from that module's lessons. The choice is in the address, so a reload keeps it. The rules do not change: the same cards are due, and the daily limits still count every review of the day, so this is a filter and not a second scheduler. Manual cards and Claude's cards without a lesson belong to no module and appear only under "All modules". An unknown module is a 404. Reviewing cards before they are due is a separate question and is not part of this.
 
+### D-152 · Lesson cards follow the curriculum after the lesson is finished — 2026-11-18
+
+A lesson's deck is copied into the database when the lesson is completed (D-077: the queue should hold only what was read). The copy never changed afterwards, so a card corrected by a content review, or added to a lesson later, never reached a learner who had finished that lesson. At start-up the API now compares the learner's lesson cards with the files. Where the type, front or back differ, the text is replaced and the schedule is kept. Cards that are new in a finished lesson are added as new cards. Two things belong to the learner and are respected: a card whose text they changed (`cards.edited_at`) is not overwritten, and a lesson card they deleted (`removed_lesson_cards`) is not added again, also not when the lesson is completed a second time. A card that leaves the curriculum stays with the learner, who may be half-way through learning it. Skill links of existing cards are not re-synced.
+
 ---
 
 ## Product direction

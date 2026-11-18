@@ -66,6 +66,8 @@ export class NotesModule {}
 
 Providers are private unless exported, so another feature cannot reach into this one's internals by accident. `@Global()` makes a module's exports visible everywhere without an import. Keep it for true infrastructure such as configuration.
 
+Sometimes two providers need each other: `OrdersService` injects `PaymentsService`, which injects `OrdersService`. Nest cannot build either first and fails at start-up. `forwardRef` postpones the lookup until both classes exist. It goes on both sides, as `@Inject(forwardRef(() => PaymentsService))` in each constructor, and as `forwardRef(() => PaymentsModule)` in `imports` when the cycle crosses modules. Treat it as a patch. A cycle means two features know too much about each other, and the usual fix is to move the part they share into a third provider that both depend on, or to let one side publish an event the other reacts to.
+
 ## Custom providers
 
 When the thing to inject is not a class, or needs set-up, spell the recipe out:

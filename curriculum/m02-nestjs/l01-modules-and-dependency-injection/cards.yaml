@@ -68,3 +68,13 @@
   front: "`onModuleInit` vs `onApplicationBootstrap`"
   back: "`onModuleInit` runs when the provider's own dependencies are ready. `onApplicationBootstrap` runs once every module is initialized, just before the app listens."
   skills: [nest-di]
+- id: nest-forward-ref
+  type: concept
+  front: What does `forwardRef(() => X)` solve in Nest?
+  back: "A circular dependency between two providers or modules. It postpones resolving `X` until both classes are defined, and it is needed on both sides of the cycle."
+  skills: [nest-di]
+- id: nest-cycle-design-smell
+  type: concept
+  front: Two Nest providers inject each other. What is the usual fix that needs no `forwardRef`?
+  back: Move what both need into a third provider that each depends on, or have one side emit an event the other handles. The cycle shows the two features are too entangled.
+  skills: [nest-di]

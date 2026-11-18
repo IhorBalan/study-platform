@@ -534,6 +534,10 @@ Finishing several lessons in a burst creates a pile of reviews a week later, and
 
 There was nowhere to write your own words, which is what you reread before an interview (feature proposal 6, part 1). Each lesson and task page has a "My notes" box, closed until there is a note. A new `notes` table keeps one row per item, keyed by the lesson or task id, so notes survive curriculum edits and are part of every backup. `GET` and `PUT /api/notes/:module/:slug` read and save it; the id must be an existing lesson or task, an emptied note deletes the row, and a note is at most 20,000 characters. The box saves 0.8 seconds after typing stops, and at once (with `keepalive`) when the page is left or the tab closes, so the last words are not lost. A Notes page that lists all notes, and notes in Search, are the second part.
 
+### D-144 · The Notes page lists notes in plan order and skips orphans — 2026-11-18
+
+Part 2 of notes. `GET /api/notes` walks the curriculum and returns the notes it finds, with the lesson or task title and module, so the page reads in the order of the plan and needs no second request for titles. A note whose lesson or task no longer exists stays in the table but is not listed; it comes back if the content does. The page renders notes as Markdown and links each to its lesson or task. Notes is in the navigation and under `g n`. Notes in Search are still to do.
+
 ---
 
 ## Product direction

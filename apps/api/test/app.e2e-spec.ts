@@ -363,6 +363,36 @@ describe('API (e2e, real Postgres)', () => {
         expect(res.status).toBe(409);
       });
 
+      it('stores one result when the same reply arrives twice at once', async () => {
+        const started = await http()
+          .post(`/api/submissions/${submissionId}/reviews`)
+          .send({})
+          .expect(201);
+        const second = started.body.runId as string;
+        const raw = JSON.stringify(reply);
+        const answers = await Promise.all([
+          http().post(`/api/reviews/${second}/result`).send({ raw }),
+          http().post(`/api/reviews/${second}/result`).send({ raw }),
+        ]);
+        expect(answers.map((r) => r.status).toSorted()).toEqual([200, 409]);
+
+        const db = app.get<Database>(DB);
+        const scores = await db
+          .select()
+          .from(schema.rubricScores)
+          .where(eq(schema.rubricScores.runId, second));
+        expect(scores).toHaveLength(1);
+        const suggested = await db
+          .select()
+          .from(schema.cards)
+          .where(eq(schema.cards.suggestedByRunId, second));
+        expect(suggested).toHaveLength(1);
+
+        // Remove this extra review so the later tests see only the first one.
+        await db.delete(schema.cards).where(eq(schema.cards.suggestedByRunId, second));
+        await db.delete(schema.verificationRuns).where(eq(schema.verificationRuns.id, second));
+      });
+
       it('keeps suggested cards out of the review queue until approved', async () => {
         const queue = await http().get('/api/review/queue').expect(200);
         expect(queue.body.counts.pendingApproval).toBe(1);

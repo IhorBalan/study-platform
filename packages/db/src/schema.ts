@@ -224,7 +224,8 @@ export const rubricScores = pgTable(
     comment: text('comment'),
   },
   (t) => [
-    index('rubric_scores_run_idx').on(t.runId),
+    // One score per rubric item in a review. Also serves lookups by run.
+    uniqueIndex('rubric_scores_run_item_idx').on(t.runId, t.rubricItemId),
     index('rubric_scores_skill_idx').on(t.skillId),
   ],
 );

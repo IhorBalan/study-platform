@@ -41,7 +41,8 @@ function Step({ done, title, children }: { done: boolean; title: string; childre
 
 /**
  * What a new learner has to set up before the first code task can be checked.
- * Shown on the Plan until the lab repository is known and a first lesson is done.
+ * Shown on the Plan until the lab repository is known, a first lesson is done and
+ * the check images are not reported missing.
  */
 export function SetupPanel({
   nextLesson,
@@ -56,9 +57,12 @@ export function SetupPanel({
 
   if (hidden || !settings.data) return null;
   const pathSet = settings.data.labRepoPath !== null;
-  if (pathSet && anyLessonDone) return null;
-
   const imagesBuilt = ['node', 'nest'].every((runner) => bridge.data?.runners.includes(runner));
+  // Stay while the bridge says the check images are missing: the first "Run checks"
+  // would fail. If the bridge cannot be asked, that step cannot be judged, so it does
+  // not keep the panel open on its own.
+  const imagesMissing = bridge.data !== undefined && !imagesBuilt;
+  if (pathSet && anyLessonDone && !imagesMissing) return null;
   const [moduleId = '', lessonSlug = ''] = nextLesson?.id.split('/') ?? [];
 
   return (
@@ -103,7 +107,9 @@ export function SetupPanel({
           </p>
         </Step>
         <Step done={anyLessonDone} title="Read your first lesson">
-          {nextLesson ? (
+          {anyLessonDone ? (
+            'Done. The plan below shows what comes next.'
+          ) : nextLesson ? (
             <Link
               to="/lessons/$moduleId/$lessonSlug"
               params={{ moduleId, lessonSlug }}

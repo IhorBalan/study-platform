@@ -68,8 +68,13 @@ function NextUpPanel({ nextUp }: { nextUp: NextUp }) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['plan'] }),
   });
   const cards = nextUp.dueCards + nextUp.newCards;
+  const resume = nextUp.continueWith;
   const nothing =
-    !nextUp.lesson && nextUp.tasks.length === 0 && cards === 0 && nextUp.reviewTasks.length === 0;
+    !resume &&
+    !nextUp.lesson &&
+    nextUp.tasks.length === 0 &&
+    cards === 0 &&
+    nextUp.reviewTasks.length === 0;
 
   return (
     <section
@@ -83,6 +88,37 @@ function NextUpPanel({ nextUp }: { nextUp: NextUp }) {
         <p className="mt-2 text-sm">Everything is done. Nothing is due.</p>
       ) : (
         <ul className="mt-2 grid gap-2 text-sm">
+          {resume && (
+            <li>
+              Continue:{' '}
+              {resume.kind === 'lesson' ? (
+                <Link
+                  to="/lessons/$moduleId/$lessonSlug"
+                  params={{
+                    moduleId: splitId(resume.id).moduleId,
+                    lessonSlug: splitId(resume.id).slug,
+                  }}
+                  className="font-medium hover:underline"
+                >
+                  {resume.title}
+                </Link>
+              ) : (
+                <Link
+                  to="/tasks/$moduleId/$taskSlug"
+                  params={{
+                    moduleId: splitId(resume.id).moduleId,
+                    taskSlug: splitId(resume.id).slug,
+                  }}
+                  className="font-medium hover:underline"
+                >
+                  {resume.title}
+                </Link>
+              )}{' '}
+              <span className="text-zinc-500 dark:text-zinc-400">
+                {resume.moduleTitle} · where you stopped last time
+              </span>
+            </li>
+          )}
           {cards > 0 && (
             <li>
               <Link to="/review" className="font-medium hover:underline">

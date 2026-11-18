@@ -740,6 +740,24 @@ describe('API (e2e, real Postgres)', () => {
       expect(total).toBeGreaterThan(0);
     });
 
+    it('offers the page opened last, while it is unfinished', async () => {
+      // The session test above opened the first lesson, which is done by now.
+      const before = await http().get('/api/plan').expect(200);
+      expect(before.body.nextUp.continueWith).toBeNull();
+
+      await http()
+        .post('/api/sessions')
+        .send({ activity: 'task', itemId: 'm00-demo/t02-code' })
+        .expect(201);
+      const after = await http().get('/api/plan').expect(200);
+      expect(after.body.nextUp.continueWith).toEqual({
+        kind: 'task',
+        id: 'm00-demo/t02-code',
+        title: expect.any(String),
+        moduleTitle: 'Demo module',
+      });
+    });
+
     it('rejects a heartbeat for an unknown session', async () => {
       const res = await http()
         .patch('/api/sessions/00000000-0000-4000-8000-000000000000')

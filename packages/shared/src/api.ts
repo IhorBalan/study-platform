@@ -195,6 +195,16 @@ export const QueueCard = CardDto.extend({
 });
 export type QueueCard = z.infer<typeof QueueCard>;
 
+/** `?module=m07-queues` narrows the queue to the cards of one module's lessons. */
+export const ReviewQueueQuery = z.object({
+  module: z
+    .string()
+    .regex(/^[a-z0-9-]+$/)
+    .max(100)
+    .optional(),
+});
+export type ReviewQueueQuery = z.infer<typeof ReviewQueueQuery>;
+
 export const ReviewQueueResponse = z.object({
   cards: z.array(QueueCard),
   counts: z.object({

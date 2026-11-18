@@ -89,7 +89,11 @@ export const api = {
   submitReviewResult: (runId: string, raw: string) =>
     request(`/reviews/${runId}/result`, ReviewDto, { method: 'POST', body: { raw } }),
 
-  reviewQueue: () => request('/review/queue', ReviewQueueResponse),
+  reviewQueue: (moduleId?: string) =>
+    request(
+      `/review/queue${moduleId ? `?module=${encodeURIComponent(moduleId)}` : ''}`,
+      ReviewQueueResponse,
+    ),
   submitReview: (cardId: string, grade: Grade, answerMs: number) =>
     request(`/review/${cardId}`, SubmitReviewResponse, {
       method: 'POST',

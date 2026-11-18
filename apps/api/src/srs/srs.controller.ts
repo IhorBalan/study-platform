@@ -14,6 +14,7 @@ import {
 import {
   CardStatus,
   CreateCard,
+  ReviewQueueQuery,
   SubmitReview,
   UpdateCard,
   type CardDto,
@@ -22,6 +23,7 @@ import {
   type SubmitReviewResponse,
 } from '@study/shared';
 import { z } from 'zod';
+import { CurriculumService } from '../curriculum/curriculum.service.js';
 import { CardsService } from './cards.service.js';
 import { WeakSkillsService } from '../stats/weak-skills.service.js';
 import { ReviewService } from './review.service.js';
@@ -37,6 +39,7 @@ export class SrsController {
     private readonly cards: CardsService,
     private readonly review: ReviewService,
     private readonly weakSkills: WeakSkillsService,
+    private readonly curriculum: CurriculumService,
   ) {}
 
   @Get('cards')
@@ -64,8 +67,12 @@ export class SrsController {
   }
 
   @Get('review/queue')
-  queue(): Promise<ReviewQueueResponse> {
-    return this.review.queue();
+  queue(
+    @Query({ schema: ReviewQueueQuery }) query: ReviewQueueQuery,
+  ): Promise<ReviewQueueResponse> {
+    // An unknown module is a 404, not an empty queue that looks like "all done".
+    if (query.module) this.curriculum.module(query.module);
+    return this.review.queue(new Date(), query.module);
   }
 
   @Post('review/:cardId')

@@ -559,6 +559,16 @@ describe('API (e2e, real Postgres)', () => {
         state: 'new',
         skills: ['http-basics'],
       });
+
+      // A queue narrowed to one module holds that module's lesson cards only.
+      const all = await http().get('/api/review/queue').expect(200);
+      const focused = await http().get('/api/review/queue?module=m00-demo').expect(200);
+      const fronts = (body: { cards: { front: string }[] }) => body.cards.map((c) => c.front);
+      expect(fronts(all.body)).toContain('Idempotency key');
+      expect(fronts(focused.body)).toEqual(['Q1', expect.any(String)]);
+      expect(focused.body.counts.newAvailable).toBe(all.body.counts.newAvailable - 1);
+      await http().get('/api/review/queue?module=m99-missing').expect(404);
+      await http().get('/api/review/queue?module=Not_An_Id').expect(400);
     });
 
     it('rejects a card that refers to an unknown skill', async () => {

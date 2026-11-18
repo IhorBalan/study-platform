@@ -550,6 +550,10 @@ The last part of notes (D-143, D-144). `GET /api/search` reads the notes on ever
 
 `pnpm restore` used `pg_restore --clean` on the live database, which drops only what the backup contains. A backup from before a migration that adds a table left that table in place while the list of applied migrations went back, so the next start failed with "relation already exists" (post-merge code review). Restore now creates an empty database, loads the backup into it in one transaction, renames the current database out of the way, renames the new one to `study` and drops the old one. The result is exactly the backup, whatever migrations came later, and the migrator then brings it up to date on the next start. A backup that cannot be read never touches the current data, and the safety backup from D-134 is still written first. `--force` now closes the other connections, because a database in use cannot be renamed.
 
+### D-147 · Review can be narrowed to one module — 2026-11-18
+
+Before an interview on one topic, or after a week away from it, the learner wants that topic's cards and not the whole queue (feature proposals, focused review). The Review page has a "Cards from" list, and `GET /api/review/queue?module=<id>` returns only cards that come from that module's lessons. The choice is in the address, so a reload keeps it. The rules do not change: the same cards are due, and the daily limits still count every review of the day, so this is a filter and not a second scheduler. Manual cards and Claude's cards without a lesson belong to no module and appear only under "All modules". An unknown module is a 404. Reviewing cards before they are due is a separate question and is not part of this.
+
 ---
 
 ## Product direction

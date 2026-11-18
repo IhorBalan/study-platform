@@ -33,14 +33,18 @@ function NotFound() {
 function RootLayout() {
   return (
     <div className="mx-auto flex min-h-dvh max-w-5xl flex-col px-4 sm:px-6">
-      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-zinc-200 py-4 dark:border-zinc-800">
-        <nav className="flex min-w-0 flex-wrap items-center gap-1" aria-label="Main">
-          <span className="mr-3 font-semibold">Study platform</span>
+      {/* On a phone the title and status share the first line and the links take the second. */}
+      <header className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-zinc-200 py-3 sm:py-4 dark:border-zinc-800">
+        <span className="font-semibold">Study platform</span>
+        <nav
+          className="order-last -mx-1 flex w-full min-w-0 items-center gap-0.5 overflow-x-auto sm:order-none sm:mx-0 sm:w-auto sm:flex-1 sm:gap-1"
+          aria-label="Main"
+        >
           {nav.map((item) => (
             <Link
               key={item.to}
               to={item.to}
-              className="rounded-md px-3 py-1.5 text-sm text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900"
+              className="shrink-0 rounded-md px-2.5 py-1.5 text-sm text-zinc-600 hover:bg-zinc-100 sm:px-3 dark:text-zinc-300 dark:hover:bg-zinc-900"
               activeProps={{
                 className: 'bg-zinc-100 font-medium text-zinc-950 dark:bg-zinc-900 dark:text-white',
               }}
@@ -50,7 +54,9 @@ function RootLayout() {
             </Link>
           ))}
         </nav>
-        <HealthBadge />
+        <div className="ml-auto">
+          <HealthBadge />
+        </div>
       </header>
       <main className="flex-1 py-8">
         <Outlet />

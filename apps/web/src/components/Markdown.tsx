@@ -12,13 +12,42 @@ const components: Components = {
   a: ({ node: _node, ...props }) => <a {...props} target="_blank" rel="noreferrer" />,
 };
 
-/** Renders lesson and task Markdown with GitHub tables and highlighted code. */
-export function Markdown({ children }: { children: string }) {
+interface HastNode {
+  type: string;
+  tagName?: string;
+  properties?: Record<string, unknown>;
+  children?: HastNode[];
+}
+
+/**
+ * Gives the document's top-level `h2` elements the given ids, in order, so a
+ * table of contents built from the same Markdown can link to them.
+ */
+function headingIds(ids: string[]) {
+  return (tree: HastNode) => {
+    let index = 0;
+    for (const node of tree.children ?? []) {
+      if (node.type !== 'element' || node.tagName !== 'h2') continue;
+      const id = ids[index];
+      index += 1;
+      if (id) node.properties = { ...node.properties, id };
+    }
+  };
+}
+
+/**
+ * Renders lesson and task Markdown with GitHub tables and highlighted code.
+ * `sectionIds` are the ids for its second-level headings, from `lessonOutline`.
+ */
+export function Markdown({ children, sectionIds }: { children: string; sectionIds?: string[] }) {
   return (
-    <div className="prose prose-zinc dark:prose-invert prose-code:before:content-none prose-code:after:content-none prose-pre:border prose-pre:border-zinc-200 prose-pre:bg-zinc-50 dark:prose-pre:border-zinc-800 dark:prose-pre:bg-zinc-900 max-w-none">
+    <div className="prose prose-zinc prose-h2:scroll-mt-4 dark:prose-invert prose-code:before:content-none prose-code:after:content-none prose-pre:border prose-pre:border-zinc-200 prose-pre:bg-zinc-50 dark:prose-pre:border-zinc-800 dark:prose-pre:bg-zinc-900 max-w-none">
       <MarkdownHooks
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[[rehypeShiki, shikiOptions]]}
+        rehypePlugins={[
+          [rehypeShiki, shikiOptions],
+          [headingIds, sectionIds ?? []],
+        ]}
         fallback={<p className="text-sm text-zinc-500 dark:text-zinc-400">Rendering…</p>}
         components={components}
       >

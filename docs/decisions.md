@@ -518,6 +518,10 @@ A mis-pressed key in a review used to be permanent (UX review). Each review row 
 
 The Plan page was 3,800px tall on a desktop and 6,800px on a phone, because every module showed its summary (UX review, round 1, item 5). Each module is now one line (title, kind, effort, lessons and tasks done) that opens to show the summary and its items. A module with anything started and not everything done starts open and has a stronger border; the others start closed. Above the list, a line and a bar give lessons and tasks done across the whole plan. Status dots carry their meaning as hidden text ("Done:", "In progress:", "Not started:") instead of an `aria-label` on a span, which screen readers skip and axe reports. The page is now about 2,100px on a desktop and 2,800px on a phone with one module open.
 
+### D-140 · Lessons show a reading time and a list of their sections — 2026-11-18
+
+A lesson is up to 6,000px tall on a phone with nothing to say how long it is or what it holds (UX review, round 1, item 16). Under the title there is now "About N min read" (words divided by 200, code included, at least 1) and a closed "In this lesson" list of the `##` headings that jumps to each. The list is built in the browser from the lesson's Markdown (`lib/lessonOutline.ts`, unit tested), and a small rehype step gives the page's top-level `h2` elements the same ids in the same order, so the two cannot drift apart by wording. Ids are slugs of the heading text, so a link to a section can be shared.
+
 ---
 
 ## Product direction

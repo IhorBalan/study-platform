@@ -64,7 +64,7 @@ Compare that with a long-lived `develop` branch and release branches. Each extra
 
 ## A real example: this repository's workflow
 
-The platform you are using has its own CI at `.github/workflows/ci.yml`:
+The platform you are using has its own CI at `.github/workflows/ci.yml`. This is its main job:
 
 ```yaml
 on:
@@ -84,9 +84,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      # Actions are pinned to a full commit SHA: a tag can be moved to malicious code, a SHA cannot.
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -95,12 +98,18 @@ jobs:
       - run: pnpm format:check
       - run: pnpm build
       - run: pnpm typecheck
+      # The tests use a small fixture curriculum, so the real one is validated here.
+      # The API refuses to start when a content file is wrong.
+      - run: pnpm curriculum:check
+      # The API e2e test starts PostgreSQL with Testcontainers; hosted runners ship Docker.
       - run: pnpm test
 ```
 
-Read it against this lesson. It runs on pull requests and again on `main` after a merge. A new push cancels the run it replaces. The token is read-only. Node comes from `.nvmrc`, so CI and laptops agree. The pnpm store is cached and the install is frozen. Cheap checks run first. `build` comes before `typecheck` here because the workspace packages are typechecked against each other's compiled output. That is a project-specific reason, and a good pipeline has a reason for every step it reorders.
+Read it against this lesson. It runs on pull requests and again on `main` after a merge. A new push cancels the run it replaces. The token is read-only, and `persist-credentials: false` stops checkout from leaving that token in `.git/config` for later steps to read. Every action is pinned to a commit SHA, which lesson 2 explains. Node comes from `.nvmrc`, so CI and laptops agree. The pnpm store is cached and the install is frozen. Cheap checks run first. `build` comes before `typecheck` here because the workspace packages are typechecked against each other's compiled output. That is a project-specific reason, and a good pipeline has a reason for every step it reorders.
 
-What would you change? The actions are pinned to tags, which can move. Lesson 2 explains why pinning to a commit SHA is safer, and task 1 asks you to do it.
+A second job, `supply-chain`, runs in parallel. It installs with `--ignore-scripts` to check the lockfile against the workspace's dependency policies, then fails on any high or critical advisory from `pnpm audit` and `npm audit`.
+
+What would you change? The tests start PostgreSQL through Testcontainers rather than a service container (lesson 2 compares the two). When would you switch, and what would the workflow gain and lose?
 
 ## Common mistakes
 

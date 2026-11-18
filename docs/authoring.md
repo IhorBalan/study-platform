@@ -133,3 +133,24 @@ SUBMISSION_DIR=$(mktemp -d) && cp -R curriculum/<module>/<task>/solution/. "$SUB
 ### Text and diagram tasks
 
 No `criteria`, `starter`, `checks` or `solution`. The rubric does all the work, so make each item observable ("names at least two failure modes and how each is detected") and never vague ("good understanding").
+
+## Tasks that use practice services
+
+List the services in `task.yaml`, for example `services: [postgres]`. Known names: `postgres`, `valkey`, `aws`, `mailpit`. The learner starts them with `pnpm lab up <name>`, and the check run refuses to start, with that instruction, when one is down.
+
+The sandbox reaches a service by its name on a network without internet. The check suite and the submission get these environment variables:
+
+| Service | Variables | Isolation |
+|---|---|---|
+| any | `CHECK_RUN_ID` | unique per run |
+| `postgres` | `DATABASE_URL` | a new empty database per run, dropped afterwards |
+| `valkey` | `VALKEY_URL`, `VALKEY_KEY_PREFIX` | prefix every key with the given prefix |
+| `aws` | `AWS_ENDPOINT_URL`, `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_RESOURCE_PREFIX` | prefix every bucket, queue and table name |
+| `mailpit` | `SMTP_HOST`, `SMTP_PORT`, `MAILPIT_URL` | filter by a recipient that contains `CHECK_RUN_ID` |
+
+Rules:
+
+- The submission must read its connection settings from these variables. Say so in the brief, and name the variables.
+- Checks must leave nothing behind in Valkey, the emulator or Mailpit. The Postgres database is removed for you.
+- A task that needs a package (for example `pg`) uses `runner: nest` and may only import what `infra/docker/runner-nest/package.json` lists. Add a package there when a module needs one, and list it in your report.
+- To run such checks outside the sandbox while authoring, publish the service port (`pnpm lab up postgres` publishes 55432) and set the variables yourself, for example `DATABASE_URL=postgres://lab:lab@localhost:55432/lab`.

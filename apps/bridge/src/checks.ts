@@ -7,6 +7,7 @@ import type { LoadedTask } from '@study/curriculum';
 import type { CheckResultDto, RunChecksRequest, RunChecksResponse } from '@study/shared';
 import type { Config } from './config.js';
 import { exec } from './exec.js';
+import { prepareServices } from './services.js';
 
 const RUNNER_IMAGES = { node: 'study-runner-node', nest: 'study-runner-nest' } as const;
 const DEFAULT_MEMORY_MB = { node: 512, nest: 1024 } as const;
@@ -200,6 +201,9 @@ export async function runChecks(
   const networkError = await ensureNetwork(config);
   if (networkError) return failure(networkError, startedAt, sha);
 
+  const services = await prepareServices(config, task.services);
+  if (typeof services === 'string') return failure(services, startedAt, sha);
+
   const temp = await mkdtemp(path.join(os.tmpdir(), 'study-check-'));
   const name = `study-check-${randomUUID()}`;
   try {
@@ -244,6 +248,7 @@ export async function runChecks(
         '/work:rw,exec,size=256m,uid=10001,gid=10001',
         '--user',
         '10001:10001',
+        ...Object.entries(services.env).flatMap(([key, value]) => ['--env', `${key}=${value}`]),
         '-v',
         `${path.join(exportDir, folder)}:/submission:ro`,
         '-v',
@@ -295,6 +300,7 @@ export async function runChecks(
       durationMs: Date.now() - startedAt,
     };
   } finally {
+    await services.cleanup();
     await rm(temp, { recursive: true, force: true });
   }
 }

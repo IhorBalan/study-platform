@@ -451,6 +451,10 @@ Decisions made while building are appended below.
 - **Why:** a new learner's first submission could only fail with "set the path", and that failed attempt was stored. Found by the UX review.
 - **Scope:** the web app only. The API still accepts the submission and the worker still reports the missing path, so a direct API call behaves as before.
 
+### D-126 · The Plan shows a getting-started panel until setup is done — 2026-11-18
+- **What:** above "Next up", three steps with their state: build the check images, create the lab repository and set its path, read a first lesson. Commands have a copy button. The panel goes away once the path is set and a lesson is done, or when the learner hides it (remembered in the browser).
+- **Why:** a new learner saw 20 modules and nothing about setup, and found out at the first code task. Found by the UX review.
+
 ---
 
 ## Agreed before this log

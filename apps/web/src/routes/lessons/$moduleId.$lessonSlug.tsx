@@ -84,6 +84,34 @@ function LessonPage() {
             {notice.text}
           </span>
         )}
+        {lesson.status === 'done' && (
+          <span className="flex flex-wrap items-center gap-3 sm:ml-auto">
+            {notice?.lessonId === id && (
+              <Link
+                to="/review"
+                className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
+              >
+                Review the new cards
+              </Link>
+            )}
+            {lesson.next ? (
+              <Link
+                to="/lessons/$moduleId/$lessonSlug"
+                params={splitId(lesson.next.id)}
+                className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+              >
+                Next: {lesson.next.title}
+              </Link>
+            ) : (
+              <Link
+                to="/"
+                className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+              >
+                Back to the plan
+              </Link>
+            )}
+          </span>
+        )}
         {progress.isError && (
           <span role="alert" className="text-sm text-red-600">
             Could not save progress: {progress.error.message}

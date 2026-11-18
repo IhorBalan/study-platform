@@ -5,7 +5,7 @@ services: []
 runner: node
 hints:
   - "Measure before you read code. Run the service, send it traffic in a loop with curl or a small fetch script, and watch monitorEventLoopDelay and process.memoryUsage()."
-  - "node --cpu-prof start.mjs writes a .cpuprofile when the process exits (Ctrl+C). Open it in Chrome DevTools (Performance panel) or in VS Code and look for the widest frames under the request handler."
+  - "node --cpu-prof start.mjs writes a .cpuprofile when the process exits normally. start.mjs turns Ctrl+C into process.exit(0) for this; without that handler the signal kills Node and no file is written. Open the file in Chrome DevTools (Performance panel) or in VS Code and look for the widest frames under the request handler."
   - "For memory, start with node --inspect start.mjs, open chrome://inspect, take a heap snapshot, send a few thousand requests with different query strings, take another, and use the Comparison view."
   - "A cache key decides how many entries a cache can have. Ask what in the key is unbounded."
   - "A Map remembers insertion order, which is enough for a small LRU: delete and re-set a key on every hit, and drop the first key when the map is too big."

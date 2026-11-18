@@ -53,3 +53,8 @@
   front: Why renew a lock while the work runs instead of setting a long TTL?
   back: "A short TTL frees the lock soon after a crash, and renewal keeps it while the holder is alive."
   skills: [distributed-locks]
+- id: lock-fence-atomic
+  type: concept
+  front: Why must the lock grant and the fencing-token `INCR` be one atomic step?
+  back: "If the holder pauses between them, the lock can expire and pass to another process first. The stale holder then gets the higher token and the resource rejects the real one."
+  skills: [distributed-locks]

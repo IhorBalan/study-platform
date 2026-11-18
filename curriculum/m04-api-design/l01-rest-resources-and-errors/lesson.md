@@ -108,7 +108,7 @@ A small API for a team's projects, written as the table you would put in a desig
 | `GET /projects?limit=20&cursor=…` | `200` page | `400` bad limit |
 | `POST /projects` | `201` + `Location` | `400` invalid body, `409` name taken |
 | `GET /projects/{id}` | `200` | `404` |
-| `PATCH /projects/{id}` (merge patch) | `200` updated project | `400`, `404`, `409` stale `If-Match` |
+| `PATCH /projects/{id}` (merge patch) | `200` updated project | `400`, `404`, `412` stale `If-Match` (`428` if it is missing) |
 | `POST /projects/{id}/archive` | `200` archived project | `404`, `409` already archived |
 | `DELETE /projects/{id}` | `204` | `404`, `409` project still has open tasks |
 

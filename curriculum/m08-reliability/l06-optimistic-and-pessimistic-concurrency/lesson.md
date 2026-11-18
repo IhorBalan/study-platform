@@ -49,7 +49,7 @@ Content-Type: application/json
 | `If-Match` does not match | `412 Precondition Failed` |
 | `If-Match` missing on an endpoint that requires it | `428 Precondition Required` |
 
-RFC 9110 names `412` for a failed `If-Match`. Some APIs answer `409 Conflict` instead, as the example table in module 4, lesson 1 did; either works if it is documented, but `412` is what generic HTTP clients and caches understand.
+RFC 9110 names `412` for a failed `If-Match`. Some APIs answer `409 Conflict` instead, usually when the version travels in the body and not in a header; either works if it is documented, but `412` is what generic HTTP clients and caches understand.
 
 ```ts
 import pg from 'pg';

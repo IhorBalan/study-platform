@@ -6,7 +6,7 @@
 
 **Measured.** With a loop of `curl localhost:3000/products/$RANDOM/related` in two terminals, `GET /health` took 150 to 400 ms. A `monitorEventLoopDelay` histogram printed every second showed a p99 of about 200 ms, and 1.5 s of blocking for 15 requests.
 
-**Profiled.** `node --cpu-prof start.mjs`, the same traffic for 20 seconds, Ctrl+C, and the `.cpuprofile` opened in Chrome DevTools. Bottom-up view: about 85% of the time in `Array.prototype.sort` → `byRatingThenName` → `String.prototype.localeCompare`, called from `relatedProducts`.
+**Profiled.** `node --cpu-prof start.mjs`, the same traffic for 20 seconds, Ctrl+C (`start.mjs` turns `SIGINT` into a normal exit, which `--cpu-prof` needs to write its file), and the `.cpuprofile` opened in Chrome DevTools. Bottom-up view: about 85% of the time in `Array.prototype.sort` → `byRatingThenName` → `String.prototype.localeCompare`, called from `relatedProducts`.
 
 **Cause.** `relatedProducts` copies and sorts all 100,000 products on every request, synchronously, to pick five. The ranking is the same for every request.
 

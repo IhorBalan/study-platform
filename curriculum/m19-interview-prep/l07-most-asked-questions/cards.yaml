@@ -6,7 +6,7 @@
 - id: nexttick-microtasks
   type: concept
   front: "Interview: when do `process.nextTick`, promise callbacks, `setImmediate` and `setTimeout(fn, 0)` run?"
-  back: "After the current operation, the nextTick queue drains first, then promise microtasks. `setTimeout(0)` waits for the timers phase and `setImmediate` for the check phase."
+  back: "Inside callbacks and in CommonJS, the nextTick queue drains before promise microtasks; in an ES module's top-level code, promises run first. `setTimeout(0)` waits for the timers phase and `setImmediate` for the check phase."
   skills: [interview-core-questions]
 - id: blocked-loop-production
   type: concept

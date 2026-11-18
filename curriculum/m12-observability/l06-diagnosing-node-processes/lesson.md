@@ -52,6 +52,14 @@ node --cpu-prof --cpu-prof-dir=./profiles start.mjs
 # a CPU.<date>.<pid>....cpuprofile file appears in ./profiles
 ```
 
+`--cpu-prof` writes the file only when the process exits normally. Ctrl+C sends `SIGINT`, and with no handler the signal kills Node before the profile is saved, so you get nothing. Make the entry point exit cleanly on the signals:
+
+```ts
+for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => process.exit(0));
+```
+
+In a real service the graceful-shutdown handler does the same job, as long as it ends in a normal exit.
+
 Open the file in Chrome DevTools (Performance panel, load profile) or in VS Code, which opens `.cpuprofile` files directly. You get a **flame graph**: the x-axis is the share of samples (time), not a timeline order; the y-axis is the call stack, callers below and callees above (or the reverse, depending on the tool). A wide bar is a function that was on the stack for much of the time. Look for the widest bars under your request handler, and use the "bottom-up" view to see which functions spent the time themselves rather than in their callees.
 
 Without a restart, `node --inspect start.mjs` opens the inspector on `127.0.0.1:9229`. In Chrome, open `chrome://inspect`, attach, and record a profile from the Performance or Memory tab while traffic runs. Never expose the inspector port beyond localhost: it gives full code execution.

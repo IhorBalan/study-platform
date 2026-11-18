@@ -36,11 +36,12 @@ LIMIT 21;                                   -- page size + 1
 
 With an index on `(created_at DESC, id DESC)`, PostgreSQL walks the index from that point and stops after 21 entries. Page 5,000 costs the same as page 1. And because the position is a value rather than a count, inserted or deleted rows elsewhere cannot shift it. Even if the row the cursor points at is deleted, the comparison still works, since it does not need that row to exist.
 
-Three details make it correct:
+Four details make it correct:
 
 1. **The sort must be total.** If two orders share `created_at`, their relative order is undefined and a page boundary between them can drop or repeat one. Add a unique tie-breaker, usually the primary key, to both the `ORDER BY` and the comparison.
 2. **Fetch one extra row.** If 21 rows come back, there is a next page; return 20 and build the cursor from the 20th. The last page then says `nextCursor: null` itself, and the client never makes a request that returns an empty page.
 3. **The row comparison `(a, b) < (x, y)`** is PostgreSQL's row constructor comparison: it compares `a` first and uses `b` only on a tie. Written by hand it is `a < x OR (a = x AND b < y)`, which is easy to get wrong. When the sort mixes directions (`ORDER BY price ASC, id DESC`), the row form no longer applies and you must write the expanded form.
+4. **Keep the cursor at the column's precision.** A `timestamptz` stores microseconds, but a JavaScript `Date` keeps milliseconds. If the last row of a page has `created_at` ending in `.123456`, a cursor built from a `Date` holds `.123`, and rows between `.123000` and `.123456` are skipped on the next page. Select `created_at::text` for the cursor, or declare the column `timestamptz(3)`, or build the cursor from the id alone when ids are time-ordered (UUIDv7).
 
 ### The cursor is opaque
 

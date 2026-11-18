@@ -9,7 +9,7 @@ curl -s 'localhost:3000/products/42?utm_campaign=autumn' | head -c 200
 Diagnose with the tools from the lesson, for example:
 
 ```sh
-node --cpu-prof start.mjs          # Ctrl+C writes a CPU-*.cpuprofile file
+node --cpu-prof start.mjs          # Ctrl+C writes a CPU.*.cpuprofile file (start.mjs exits cleanly on SIGINT)
 node --inspect start.mjs           # then open chrome://inspect for heap snapshots
 ```
 

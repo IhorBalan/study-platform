@@ -57,3 +57,8 @@
   front: "Why reject `limit` above the maximum instead of silently clamping it?"
   back: "Clamping hides client bugs. A client that asked for 500 and got 100 may wrongly conclude it reached the end."
   skills: [api-pagination]
+- id: cursor-timestamp-precision
+  type: concept
+  front: "Why can a keyset cursor built from a JavaScript `Date` skip rows in Postgres? (interview)"
+  back: "`timestamptz` stores microseconds and `Date` keeps milliseconds. The truncated cursor sorts before rows in the same millisecond, so they are skipped. Use `created_at::text`, `timestamptz(3)`, or a time-ordered id."
+  skills: [api-pagination]

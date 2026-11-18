@@ -3,7 +3,7 @@ import type { SearchResponse, SearchResult } from '@study/shared';
 import { CurriculumService } from './curriculum.service.js';
 
 const MAX_RESULTS = 20;
-const MIN_QUERY_LENGTH = 2;
+const MIN_TERM_LENGTH = 2;
 const SNIPPET_BEFORE = 60;
 const SNIPPET_AFTER = 120;
 
@@ -50,8 +50,16 @@ export class SearchService {
   constructor(private readonly curriculum: CurriculumService) {}
 
   search(query: string): SearchResponse {
-    const terms = [...new Set(query.toLowerCase().split(/\s+/).filter(Boolean))];
-    if (query.length < MIN_QUERY_LENGTH || terms.length === 0) return { query, results: [] };
+    // One-letter words match almost every page, so they are ignored.
+    const terms = [
+      ...new Set(
+        query
+          .toLowerCase()
+          .split(/\s+/)
+          .filter((term) => term.length >= MIN_TERM_LENGTH),
+      ),
+    ];
+    if (terms.length === 0) return { query, results: [] };
 
     const scored: { entry: Entry; score: number }[] = [];
     for (const entry of this.index()) {
@@ -87,6 +95,8 @@ export class SearchService {
   private snippet(entry: Entry, terms: string[]): string {
     const positions = terms.map((t) => entry.textLower.indexOf(t)).filter((at) => at !== -1);
     if (positions.length === 0) return '';
+    // Positions come from the lower-cased text. A few non-English letters change length when
+    // lower-cased, which would shift the snippet slightly. The curriculum is English.
     const at = Math.min(...positions);
     const start = Math.max(0, at - SNIPPET_BEFORE);
     const end = Math.min(entry.text.length, at + SNIPPET_AFTER);

@@ -19,6 +19,14 @@ function SearchPage() {
   const navigate = Route.useNavigate();
   const [text, setText] = useState(q);
 
+  // The address can change without typing: the Search link clears it, and Back and Forward
+  // move between searches. Follow it, or the old text would be searched again.
+  const [seenQ, setSeenQ] = useState(q);
+  if (q !== seenQ) {
+    setSeenQ(q);
+    if (q !== text.trim()) setText(q);
+  }
+
   // Wait for a pause in typing before searching.
   useEffect(() => {
     const trimmed = text.trim();

@@ -205,8 +205,8 @@ describe('API (e2e, real Postgres)', () => {
       expect(task.body.results).toMatchObject([{ kind: 'task', id: 'm00-demo/t01-explain' }]);
     });
 
-    it('returns no results for an empty, one-letter or unmatched search', async () => {
-      for (const q of ['', 'e', 'kubernetes']) {
+    it('returns no results for an empty search, one-letter words or no match', async () => {
+      for (const q of ['', 'e', 'e%20o', 'kubernetes']) {
         const res = await http().get(`/api/search?q=${q}`).expect(200);
         expect(res.body.results).toEqual([]);
       }

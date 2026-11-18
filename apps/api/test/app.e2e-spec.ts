@@ -654,6 +654,13 @@ describe('API (e2e, real Postgres)', () => {
       expect(res.status).toBe(409);
     });
 
+    it('does not let a card be moved back to waiting for approval', async () => {
+      const list = await http().get('/api/cards?status=active').expect(200);
+      const target = list.body.cards[0];
+      const res = await http().patch(`/api/cards/${target.id}`).send({ status: 'pending' });
+      expect(res.status).toBe(400);
+    });
+
     it('validates settings', async () => {
       const res = await http().patch('/api/settings').send({ desiredRetention: 1.5 });
       expect(res.status).toBe(400);

@@ -29,7 +29,7 @@ function CardsPage() {
     },
   });
   const update = useMutation({
-    mutationFn: (v: { id: string; status: CardDto['status'] }) =>
+    mutationFn: (v: { id: string; status: 'active' | 'suspended' }) =>
       api.updateCard(v.id, { status: v.status }),
     onSuccess: refresh,
   });

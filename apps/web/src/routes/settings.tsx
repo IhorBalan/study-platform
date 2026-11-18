@@ -4,6 +4,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useState, type FormEvent } from 'react';
 import { Button, Field, Input, PageHeader, Select } from '../components/ui';
 import { api, ApiError } from '../lib/api';
+import { agoLabel } from '../lib/format';
 import { saveTheme, storedTheme, themes, type Theme } from '../lib/theme';
 
 export const Route = createFileRoute('/settings')({ component: SettingsPage });
@@ -11,6 +12,7 @@ export const Route = createFileRoute('/settings')({ component: SettingsPage });
 function SettingsPage() {
   const queryClient = useQueryClient();
   const settings = useQuery({ queryKey: ['settings'], queryFn: api.settings });
+  const bridge = useQuery({ queryKey: ['bridge'], queryFn: api.bridge });
   // Only the fields the user has edited are kept locally; the rest come from the server.
   const [draft, setDraft] = useState<UpdateSettings>({});
   const [theme, setTheme] = useState<Theme>(storedTheme);
@@ -153,6 +155,23 @@ function SettingsPage() {
             ))}
           </Select>
         </Field>
+      </div>
+
+      <div className="mt-10 max-w-md border-t border-zinc-200 pt-6 dark:border-zinc-800">
+        <h2 className="text-lg font-semibold">Backups</h2>
+        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
+          {!bridge.data
+            ? 'Checking for backups…'
+            : !bridge.data.reachable
+              ? 'The backup folder cannot be read while the host bridge is not running.'
+              : bridge.data.lastBackupAt
+                ? `The last backup was made ${agoLabel(bridge.data.lastBackupAt)}.`
+                : 'There is no backup yet.'}
+        </p>
+        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+          <code className="font-mono">pnpm dev</code> makes one when it starts if the newest is more
+          than a day old. Run <code className="font-mono">pnpm backup</code> to make one now.
+        </p>
       </div>
     </section>
   );

@@ -558,6 +558,10 @@ Before an interview on one topic, or after a week away from it, the learner want
 
 A lesson's deck is copied into the database when the lesson is completed (D-077: the queue should hold only what was read). The copy never changed afterwards, so a card corrected by a content review, or added to a lesson later, never reached a learner who had finished that lesson. At start-up the API now compares the learner's lesson cards with the files. Where the type, front or back differ, the text is replaced and the schedule is kept. Cards that are new in a finished lesson are added as new cards. Two things belong to the learner and are respected: a card whose text they changed (`cards.edited_at`) is not overwritten, and a lesson card they deleted (`removed_lesson_cards`) is not added again, also not when the lesson is completed a second time. A card that leaves the curriculum stays with the learner, who may be half-way through learning it. Skill links of existing cards are not re-synced.
 
+### D-150 · Settings shows when the last backup was made — 2026-11-18
+
+Backups happen quietly when `pnpm dev` starts, so there was no way to see from the app that they work (feature proposals). The backup folder is on the host, where the API cannot look when it runs in Docker, so the host bridge reads it: its health answer carries the time of the newest `study-*.dump`, the API passes it on in `GET /api/bridge`, and Settings shows "The last backup was made 3 hours ago." Safety copies written by a restore do not count. The bridge honours `BACKUP_DIR` the same way the backup script does.
+
 ---
 
 ## Product direction

@@ -37,3 +37,14 @@ export function reviewEstimate(cards: number, secondsPerCard: number): string {
   const minutes = Math.max(1, Math.round((cards * secondsPerCard) / 60));
   return `about ${minutes} min`;
 }
+
+/** "just now", "3 hours ago", "5 days ago": how long ago something happened. */
+export function agoLabel(iso: string, now = Date.now()): string {
+  const minutes = Math.round((now - new Date(iso).getTime()) / 60_000);
+  if (minutes < 2) return 'just now';
+  const plural = (n: number, unit: string) => `${n} ${unit}${n === 1 ? '' : 's'} ago`;
+  if (minutes < 60) return plural(minutes, 'minute');
+  const hours = Math.round(minutes / 60);
+  if (hours < 48) return plural(hours, 'hour');
+  return plural(Math.round(hours / 24), 'day');
+}

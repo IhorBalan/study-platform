@@ -1,0 +1,15 @@
+title: A deploy that broke halfway
+type: text
+skills: [zero-downtime-deploys, continuous-delivery, zero-downtime-migrations]
+hints:
+  - "Start with what users see right now, and which of the two app versions causes it."
+  - "Ask of every step: can it be undone, and is the old code still compatible with the database after it?"
+  - "Rolling back the code is quick. Rolling back the schema is not always possible, and is rarely the fastest way out."
+  - "Expand and contract splits one breaking change into several deploys that are each safe on their own."
+rubric:
+  - { id: triage, title: "Explains that the v57 pods fail because they still query `orders.total`, which the committed rename removed, so the old version and not the new one is producing the errors", skill: zero-downtime-deploys, max: 3 }
+  - { id: immediate-action, title: "Compares at least two ways out (finish the rollout to v58, or rename the column back and roll back to v57), explains why rolling back the image alone makes things worse, and picks one with a reason and an order of steps", skill: zero-downtime-deploys, max: 4 }
+  - { id: leftovers, title: "Deals with the leftovers with a concrete check or action for each: the half-applied migration that is not recorded, the missing index, and the checkouts that timed out while inserts were blocked", skill: zero-downtime-migrations, max: 3 }
+  - { id: safer-rollout, title: "Replaces the single migration with an expand and contract sequence of at least three deploys, each compatible with the version before it, including how the index is built without a long lock", skill: zero-downtime-migrations, max: 4 }
+  - { id: guardrails, title: "Names at least two pipeline guardrails and how each would have caught or contained this incident; one of them must address the migrate step whose failure did not stop the deploy", skill: continuous-delivery, max: 3 }
+  - { id: clarity, title: "The answer is ordered as a runbook (numbered steps, decisions stated with their reason) and stays within the word limit", max: 2 }

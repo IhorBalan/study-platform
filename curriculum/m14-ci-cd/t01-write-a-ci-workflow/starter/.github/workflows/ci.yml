@@ -1,0 +1,13 @@
+# CI for notes-api. See task.md for the requirements.
+name: CI
+
+# TODO: triggers (pull requests, and pushes to main only)
+
+# TODO: least-privilege permissions for the GITHUB_TOKEN
+
+# TODO: cancel superseded runs for the same branch
+
+# TODO: one job named `verify` on ubuntu-latest with a timeout,
+#       a PostgreSQL 18 service container, Node from .nvmrc, pnpm with a cached store,
+#       then install, lint, typecheck, test and build.
+#       Pin every action to a full commit SHA, with the version in a comment.

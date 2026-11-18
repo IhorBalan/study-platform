@@ -1,0 +1,24 @@
+title: Shut down without dropping requests
+type: repo
+skills: [zero-downtime-deploys, graceful-shutdown]
+services: []
+runner: node
+hints:
+  - "A default SIGTERM ends the process at once. Registering a listener with process.on('SIGTERM') replaces that behaviour, so from then on you decide when to exit."
+  - "server.close() stops accepting and calls back when the last connection has closed. It does not close a keep-alive connection that is busy when you call it."
+  - "Sending `Connection: close` on responses while draining tells keep-alive clients to drop the connection after this response."
+  - "Call .unref() on the deadline timer so that, on a clean drain, the timer alone does not keep the process alive."
+  - "Handle a second signal by ignoring it; one shutdown is enough."
+criteria:
+  - { id: starts-healthy, title: The server listens on PORT and both health endpoints answer 200 }
+  - { id: readiness-fails, title: "After SIGTERM readiness answers 503 while the server keeps serving for SHUTDOWN_DELAY_MS" }
+  - { id: stops-accepting, title: "Once the delay is over, new connections are refused while in-flight work continues" }
+  - { id: finishes-inflight, title: "A request in flight when SIGTERM arrives completes, then the process exits 0" }
+  - { id: keep-alive, title: Idle and busy keep-alive connections do not hold the process open }
+  - { id: deadline, title: "A request that outlives SHUTDOWN_TIMEOUT_MS does not block the exit, which then has code 1" }
+rubric:
+  - { id: sequence, title: "The shutdown runs in the order readiness off, delay, stop accepting, drain, exit, and each stage is visible in the code without reading it twice", skill: zero-downtime-deploys, max: 4 }
+  - { id: deadline-design, title: "The deadline starts at the signal, is unref'd or cleared, and a second signal does not start a second shutdown", skill: graceful-shutdown, max: 3 }
+  - { id: logging, title: "Shutdown start, completion and a forced exit are each logged as one structured line", skill: graceful-shutdown, max: 2 }
+  - { id: readme-values, title: "README explains how to choose the delay and the timeout relative to the load balancer's probe settings and the platform's grace period", skill: zero-downtime-deploys, max: 3 }
+limits: { timeoutSeconds: 90 }

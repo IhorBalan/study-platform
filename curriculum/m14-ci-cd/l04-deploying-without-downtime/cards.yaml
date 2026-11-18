@@ -1,0 +1,68 @@
+- id: interview-zero-downtime-deploy
+  type: concept
+  front: "Interview: how do you deploy without downtime?"
+  back: |-
+    Rolling or canary rollout gated on readiness; graceful shutdown (fail readiness, keep serving briefly, drain, exit).
+    Schema changes that both versions can use (expand and contract).
+  skills: [zero-downtime-deploys]
+- id: interview-rollback
+  type: concept
+  front: "Interview: how do you roll back a bad deploy?"
+  back: |-
+    Redeploy the previous image digest, which works when the schema still suits the old code.
+    Otherwise roll forward with a fix. A feature flag can switch the change off without a deploy.
+  skills: [zero-downtime-deploys]
+- id: interview-migrations-in-deploy
+  type: concept
+  front: "Interview: how do database migrations fit into a deploy?"
+  back: |-
+    Run them as a separate step before the rollout, failing the deploy if they fail.
+    Each migration must work with both the old and the new code; breaking changes are split with expand and contract.
+  skills: [zero-downtime-deploys, zero-downtime-migrations]
+- id: rolling-both-versions
+  type: concept
+  front: What does a rolling deploy imply for your database schema and APIs?
+  back: Old and new versions serve traffic at the same time, so every change must be compatible with both.
+  skills: [zero-downtime-deploys]
+- id: blue-green-vs-canary
+  type: comparison
+  front: Blue-green vs canary
+  back: Blue-green switches all traffic to a fully started new set, with instant switch-back. Canary sends a small share first and continues only if its metrics stay healthy.
+  skills: [zero-downtime-deploys]
+- id: shutdown-order
+  type: concept
+  front: "On SIGTERM, why fail readiness and keep serving for a few seconds before `server.close()`?"
+  back: The load balancer notices the instance is leaving only after a delay. Serving during that delay means the requests it still sends are not refused.
+  skills: [zero-downtime-deploys]
+- id: shutdown-deadline
+  type: concept
+  front: Why does a graceful shutdown need its own deadline?
+  back: A stuck request would otherwise hold the process until the platform's SIGKILL. The deadline exits first, on your terms, with a log line.
+  skills: [zero-downtime-deploys]
+- id: platform-stop-signal
+  type: cloze
+  front: "Kubernetes sends SIGTERM and waits 30 s by default. Fly sends {{...}} by default and waits 5 s."
+  back: "`SIGINT`, so handle both signals."
+  skills: [zero-downtime-deploys]
+- id: liveness-no-db
+  type: concept
+  front: Why should a liveness check not query the database?
+  back: A short database outage would fail liveness everywhere and restart every instance at once, turning a blip into an outage.
+  skills: [zero-downtime-deploys]
+- id: rollback-schema
+  type: concept
+  front: Why is rolling back the schema rarely the right first move in production?
+  back: Down migrations are seldom tested and can drop data the new version already wrote. Rolling the code back or forward is safer.
+  skills: [zero-downtime-deploys]
+- id: interview-feature-flags
+  type: concept
+  front: "Interview: feature flags, why use them and what do they cost?"
+  back: |-
+    They separate deploy from release: gradual rollout and a kill switch without redeploying.
+    Cost: more code paths to test, stale flags as debt, and a runtime dependency on the flag service.
+  skills: [zero-downtime-deploys]
+- id: deploy-vs-release
+  type: comparison
+  front: Deploy vs release
+  back: Deploying puts new code into production. Releasing exposes a change to users, which a feature flag can do later and gradually.
+  skills: [zero-downtime-deploys, continuous-delivery]

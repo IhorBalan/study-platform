@@ -1,0 +1,75 @@
+- id: gha-job-vs-step
+  type: comparison
+  front: GitHub Actions job vs step
+  back: A job gets its own fresh runner and runs in parallel unless it has `needs`. Steps run in order inside one job and share its file system.
+  skills: [github-actions]
+- id: gha-needs
+  type: cloze
+  front: "Make the `image` job wait for `test` and skip it when `test` fails: `{{...}}: test`"
+  back: "`needs`"
+  skills: [github-actions]
+- id: gha-matrix-cost
+  type: concept
+  front: Why is a matrix of 3 operating systems and 3 Node versions a bad default for a server?
+  back: It starts nine jobs per push. Test what production runs (Linux, its Node version) plus the next version you plan to adopt.
+  skills: [github-actions, ci-pipeline-design]
+- id: gha-pnpm-cache-order
+  type: concept
+  front: "Why must `pnpm/action-setup` run before `actions/setup-node` with `cache: pnpm`?"
+  back: setup-node asks pnpm for its store path to build the cache. Without pnpm on the PATH that step fails.
+  skills: [github-actions]
+- id: gha-service-health
+  type: concept
+  front: What does `--health-cmd pg_isready` on a Postgres service container prevent?
+  back: Steps starting before Postgres accepts connections. The runner waits until the health check passes.
+  skills: [github-actions]
+- id: gha-service-postgres-snippet
+  type: snippet
+  front: Add a Postgres 18 service container that steps reach on localhost:5432.
+  back: |-
+    ```yaml
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env: { POSTGRES_PASSWORD: test }
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 2s --health-retries 20
+    ```
+  skills: [github-actions]
+- id: gha-script-injection
+  type: concept
+  front: "Why is `run: echo \"${{ github.event.pull_request.title }}\"` dangerous?"
+  back: The expression is pasted into the script before the shell runs, so a crafted title becomes shell code. Pass it through `env:` and use `"$TITLE"`.
+  skills: [ci-workflow-security]
+- id: gha-pr-target
+  type: comparison
+  front: "`pull_request` vs `pull_request_target`"
+  back: "`pull_request` runs fork code with a read-only token and no secrets. `pull_request_target` runs with secrets and write access, so it must never execute the pull request's code."
+  skills: [ci-workflow-security]
+- id: gha-permissions-replace
+  type: concept
+  front: "A workflow sets `contents: read`. A job sets `packages: write`. What can that job's token do with contents?"
+  back: "Nothing. Job-level permissions replace the workflow ones, so the job must list `contents: read` again."
+  skills: [ci-workflow-security]
+- id: gha-pin-sha
+  type: concept
+  front: Why pin an action to a commit SHA instead of `@v4`?
+  back: A tag can be moved to other code, as in the 2025 tj-actions compromise. A full commit SHA cannot.
+  skills: [ci-workflow-security]
+- id: gha-concurrency
+  type: snippet
+  front: Cancel a running CI run when a newer push to the same branch arrives.
+  back: |-
+    ```yaml
+    concurrency:
+      group: ci-${{ github.ref }}
+      cancel-in-progress: true
+    ```
+  skills: [github-actions]
+- id: act-limits
+  type: concept
+  front: Name two things a green `act` run does not prove.
+  back: |-
+    That `permissions`, `concurrency` or timeouts behave (act ignores them).
+    That the job works on GitHub's larger runner image with its preinstalled tools.
+  skills: [github-actions]

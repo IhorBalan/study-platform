@@ -1,0 +1,27 @@
+title: Fix a slow and unsafe pipeline
+type: repo
+skills: [ci-workflow-security, github-actions, ci-container-images]
+services: []
+runner: node
+hints:
+  - "Read the workflow twice: once as an attacker who can open a pull request from a fork, once as the person waiting for the checks."
+  - "`${{ }}` is replaced before the shell sees the script. Put untrusted values in `env:` and use `\"$NAME\"` in the script."
+  - "Job-level `permissions` replace the workflow-level ones entirely; they do not add to them."
+  - "A job runs in parallel with the others unless it lists them in `needs`."
+  - "docker/build-push-action takes several tags as a multi-line string."
+criteria:
+  - { id: safe-triggers, title: Fork pull requests run unprivileged and pushes build main only }
+  - { id: least-privilege, title: The token is read-only except for the job that pushes the image }
+  - { id: pinned-actions, title: Every action is pinned to a full commit SHA }
+  - { id: failures-fail, title: A failing lint or test fails the run }
+  - { id: no-injection, title: Untrusted input and secrets never appear inside run scripts }
+  - { id: fast-feedback, title: "Two Linux jobs, a cached pnpm store and cancelled superseded runs" }
+  - { id: image-gated, title: The image is built only after verify passes on a push to main }
+  - { id: image-tags-cache, title: The image is tagged with the commit SHA and reuses the build cache }
+rubric:
+  - { id: threat-model, title: "README explains, for pull_request_target and for the expression in a run script, what an attacker could do and how the fix prevents it", skill: ci-workflow-security, max: 4 }
+  - { id: token-scope, title: "Write access exists only where it is used (packages: write on the image job) and the registry login uses the job token, not a personal token", skill: ci-workflow-security, max: 3 }
+  - { id: speed-reasoning, title: "README justifies the smaller matrix with where the code runs in production, and names what was cached and what is cancelled", skill: ci-pipeline-design, max: 3 }
+  - { id: image-traceability, title: "Each pushed image can be traced to its commit through its tag, and README explains why :latest alone cannot be rolled back to", skill: ci-container-images, max: 3 }
+  - { id: change-list, title: "README lists every change with what was wrong, one line each", max: 2 }
+limits: { timeoutSeconds: 60 }

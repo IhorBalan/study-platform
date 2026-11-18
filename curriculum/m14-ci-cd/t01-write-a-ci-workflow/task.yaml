@@ -1,0 +1,27 @@
+title: Write a CI workflow
+type: repo
+skills: [github-actions, ci-pipeline-design, ci-workflow-security]
+services: []
+runner: node
+hints:
+  - "Find the commit behind a tag without leaving the terminal: `git ls-remote --tags https://github.com/actions/checkout`. For an annotated tag, use the line that ends in `^{}`."
+  - "actions/setup-node needs pnpm on the PATH before it can cache the pnpm store, so pnpm/action-setup comes first."
+  - "A service container is reachable from the steps on localhost only if you map its port (`ports: - 5432:5432`)."
+  - "Without a health check the steps can start before Postgres accepts connections. `--health-cmd pg_isready` in `options` makes the runner wait."
+  - "A step's `env` and the job's `env` are both fine for DATABASE_URL."
+criteria:
+  - { id: workflow-parses, title: "ci.yml exists, is valid YAML and defines jobs" }
+  - { id: triggers, title: Runs on pull requests and on pushes to main only }
+  - { id: permissions, title: The token is read-only and limited to repository contents }
+  - { id: pinned-actions, title: Every action is pinned to a full commit SHA }
+  - { id: node-and-pnpm-cache, title: Node comes from .nvmrc and the pnpm store is cached }
+  - { id: step-order, title: "Install, lint, typecheck, test and build run in that order" }
+  - { id: postgres-service, title: Tests get a healthy PostgreSQL 18 service and its DATABASE_URL }
+  - { id: fast-feedback, title: Superseded runs are cancelled and the job has a timeout }
+rubric:
+  - { id: feedback-order, title: "Steps are ordered so the cheapest checks fail first, and the README gives a reason for the order that refers to feedback time", skill: ci-pipeline-design, max: 4 }
+  - { id: least-privilege, title: "The token has only contents: read, no secrets are used, and nothing in the workflow would need more", skill: ci-workflow-security, max: 3 }
+  - { id: reproducible, title: "Versions come from the repository (.nvmrc, packageManager, the lockfile with --frozen-lockfile) and every action carries its version in a comment next to the SHA", skill: github-actions, max: 3 }
+  - { id: service-setup, title: "The Postgres service uses the same major version as production, waits on a health check and is wired to the tests through one DATABASE_URL", skill: github-actions, max: 3 }
+  - { id: readability, title: "The workflow is short and has no dead steps, duplicated setup or commented-out code", max: 2 }
+limits: { timeoutSeconds: 60 }

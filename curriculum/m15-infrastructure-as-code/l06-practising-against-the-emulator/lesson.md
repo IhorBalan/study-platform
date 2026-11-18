@@ -74,7 +74,14 @@ Use the emulator for what it is good at: learning the language, reading plans, t
 
 This walkthrough was written from the OpenTofu and AWS provider documentation and **was not run in the environment that produced this course**. Run it on your own machine. If a step behaves differently, the documentation linked below is the authority.
 
-**1. Install OpenTofu** with the method for your system from the installation guide, then check it with `tofu version`.
+**1. Install OpenTofu yourself.** The platform does not install it for you, and the task checks do not need it. On macOS with Homebrew:
+
+```sh
+brew install opentofu
+tofu version
+```
+
+For other systems, use the method from the installation guide linked below.
 
 **2. Start the emulator and set credentials.**
 

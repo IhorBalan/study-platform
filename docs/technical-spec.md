@@ -1,6 +1,6 @@
 # Technical spec v1: backend self-study platform
 
-Status: 2026-11-18. This replaces draft v0 (kept verbatim in [`HANDOFF.md`](./HANDOFF.md), section 5). Tool choices and versions are in [`stack-decisions.md`](./stack-decisions.md). The reasoning behind each choice is in [`decisions.md`](./decisions.md).
+Status: 2026-11-18. This replaces draft v0, which is in the git history. Tool choices and versions are in [`stack-decisions.md`](./stack-decisions.md). The reasoning behind each choice is in [`decisions.md`](./decisions.md).
 
 ## 1. Vision
 

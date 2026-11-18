@@ -4,7 +4,7 @@ Every decision made without asking first is recorded here so it can be reviewed 
 
 Status values: **Accepted** (in use), **Provisional** (chosen, but depends on something not yet verified), **Superseded** (replaced; the entry says by what).
 
-Decisions agreed with Ihor before this log existed are in [`HANDOFF.md`](./HANDOFF.md), section 2. Versions and sources are in [`stack-decisions.md`](./stack-decisions.md).
+Decisions agreed with Ihor before this log existed are at the end of this file, under "Agreed before this log". Versions and sources are in [`stack-decisions.md`](./stack-decisions.md).
 
 ---
 
@@ -372,3 +372,83 @@ Decisions made while building are appended below.
 - **What is not verified:** that `tofu validate`, `plan` or `apply` accept these files, and that the lab AWS emulator supports every call the provider makes (including the conditional writes that S3 state locking needs). No output in the module is presented as captured from a real run; the one plan excerpt is labelled as illustrative.
 - **Alternatives:** leave the module out until it can be run (rejected: the path would have a hole, and a later run can correct it); checks based on a plan file you commit (rejected: I could not produce a real one to test the checks against).
 - **To close this:** run the walkthrough in lesson 6 and both task solutions with OpenTofu on your machine, or allow the hosts in the project's cloud environment so I can.
+
+### D-108 · OpenTofu stays in the curriculum and is installed by the learner — Decided by Ihor, 2026-11-18
+- **Decision:** module 15 keeps teaching OpenTofu as written. Nothing is added to the platform, the check images or the build environment. A learner who wants to run the examples installs OpenTofu themselves (`brew install opentofu`); lesson 6 says so.
+- **Consequence:** D-107 still holds. The module's configuration has not been run by me, and its task checks read the files only.
+- **Options offered:** keep as is (chosen), make it a theory-only module, or remove it.
+
+### D-109 · The pnpm release-age rule gets no exceptions — Decided by Ihor, 2026-11-18
+- **Decision:** no package version is ever exempted from the one-day release-age rule again. If a release is too new, use the previous version or wait a day.
+- **Done the same day:** the twelve existing exemptions are removed. turbo went back from 2.11.12 to 2.11.11 and vitest from 5.1.1 to 5.1.0, both pinned exactly in the catalog. TanStack Query 5.108.0 was already more than a day old, so it stays. `pnpm install --frozen-lockfile` passes with no exemption list. This replaces the temporary rule S-002 in `docs/security-decisions.md`.
+
+### D-110 · Security and research pull requests merged into the build branch — 2026-11-18
+- **What:** PR #2 (market research) and PR #3 (supply-chain policy, CI hardening) were merged into this branch on Ihor's instruction that green CI means a pull request can be merged.
+- **Follow-up done in the same step:** the lock file for the check image (`infra/docker/runner-nest/package-lock.json`) was regenerated, because this branch had added packages to that image after PR #3 was written. The image now installs with `npm ci` and install scripts off.
+
+### D-111 · The handoff document is removed — Decided by Ihor, 2026-11-18
+- **What:** `docs/HANDOFF.md` is deleted. It was the note that started this build and is no longer needed.
+- **Kept:** its section of decisions agreed with Ihor is copied below without changes. The original draft brief (draft v0) is not kept; `technical-spec.md` replaced it, and the old text stays in the git history.
+
+### D-112 · `main` is the main branch — Decided by Ihor, 2026-11-18
+- **What:** a `main` branch is created from the branch that held the handoff, and the build is merged into it.
+
+---
+
+## Agreed before this log
+
+These were agreed with Ihor in the session before this log existed. They are copied from the handoff document as they were written.
+
+#### Scope and pacing
+- **No fixed schedule; fully self-paced.** Remove week estimates, the weekly hour budget, the projected finish date and the "hours logged vs planned" stats. The plan becomes a recommended order plus progress, and stats show time actually spent. The curriculum is a starting point, and learners can go deeper or skip.
+  - Note for the next session: the original brief asks for "week estimates at 10 h/week" in the curriculum. That is superseded. At most, give a rough relative-effort indicator such as S/M/L per module.
+- **Add topics proactively.** Add any modules that are needed, for example API design (REST conventions, OpenAPI, pagination, versioning, error formats, idempotency), reliability and distributed patterns (outbox, retries and backoff, sagas, concurrency control), and Kubernetes as an optional elective (`kind` or `k3d`, no account). Mark modules as core or optional so learners can skip what isn't relevant.
+- **Claude writes the lesson content for ALL modules** in Phase 2: concise original lessons with links to official docs, written in batches, module by module. This changes the MVP definition of done, which previously covered only modules 0–2.
+
+#### Resource tiers (the user wants this to work on low-RAM machines too)
+- The user has an M4 with 24 GB RAM, but the platform must work on weaker Macs.
+- **Core tier:** web, API and worker plus **one Postgres**. That's enough for lessons, flashcards and copy-paste verification. Consider a Postgres-backed queue (**pg-boss**) for the platform's own jobs so the core doesn't need Redis; verify this in research. Target about 1 GB RAM.
+- **Practice add-ons:** each module declares the services it needs (Compose profiles), and the learner starts them only for hands-on practice, e.g. `pnpm lab up postgres redis`. Without them a module still works as reading plus flashcards.
+- **Heavy extras are opt-in:** the observability stack and the identity provider (e.g. Keycloak).
+
+#### Lab vs platform isolation
+- **The lab gets its own AWS emulator instance**, separate from anything the platform uses. Lab Postgres and Redis are separate too, as in the draft.
+- **Lab layout:** one lab git repo with **plain folders per module and task**, not git submodules. Example: `lab/m02-postgres/t03-indexes/`. Each task folder is self-contained. A submission is the folder path plus a commit SHA, and checks only see that folder.
+
+#### Host bridge (option D, chosen)
+- A small **native host bridge** process (Node, runs on macOS) is the **only** component that:
+  1. runs the Claude Code CLI headless (it depends on the user's local Claude login), and
+  2. launches sandbox containers through Docker.
+- The worker always calls the bridge, in both dev mode and full mode. The worker never touches the Docker socket.
+- Sandbox containers get:
+  - **Network:** only an internal `lab-net` network (lab Postgres, Redis and AWS emulator). No internet and no access to the platform DB.
+  - **Limits:** `--memory`, `--cpus`, `--pids-limit` and a hard timeout.
+  - **Hardening:** a non-root user, `--cap-drop ALL`, `no-new-privileges`, and a read-only root filesystem with a tmpfs work directory.
+  - **Code:** the task folder at the submitted commit, mounted read-only.
+- Threat model: accidents (a stray `DROP SCHEMA`, a wrong DB URL, runaway loops, `down -v`), not malicious code.
+
+#### Claude verification (Pro plan, no API key)
+- Target the **Claude Pro plan** at minimum. **No Anthropic API key is assumed.**
+- There are two verification modes behind one provider interface:
+  1. **"Copy for Claude" (manual, zero setup).** The platform builds a prompt containing the task spec, the rubric, the diff from the lab repo, the stage 1 results and the required JSON schema. The user pastes it into claude.ai or Claude Code, then pastes the JSON reply back. The platform validates it with zod and stores it.
+  2. **One-click review through the bridge.** The bridge runs `claude -p` headless with read-only tools and JSON output, using the user's Pro subscription. Research must confirm that subscription auth works headless, plus any usage-limit or ToS caveats.
+- The **Anthropic API provider** stays as an interface slot only and is **not built in the MVP**. Still research it briefly (models, pricing, structured outputs, rough cost per run) for completeness.
+- Free-recall flashcard grading by Claude works only through mode 2, since copy-paste per card is too tedious. Otherwise the learner grades themselves.
+
+#### Spaced repetition
+- Use **standard FSRS** (e.g. ts-fsrs; verify).
+- **Retention rate** follows the standard FSRS definition: the share of reviews not graded "Again".
+- Store every review in Postgres so schedules can be recomputed.
+
+#### CI/CD
+- The **platform repo itself** gets a real GitHub Actions pipeline: lint, typecheck, test, build and Docker images. GitHub is fine; the repo is on GitHub.
+- **Task verification never runs in CI.** It is always local, through the worker and the bridge.
+- The CI/CD **curriculum module's exercises** target the learner's own lab or capstone project. Offer `act` as an offline path.
+
+#### Output location
+- Phase 1 documents are committed as markdown in this repo under `docs/` and pushed to GitHub.
+
+#### Assumptions (not explicitly confirmed, defaults accepted)
+- macOS on Apple Silicon.
+- Real GitHub Actions is allowed, with an `act` offline path.
+- The curriculum leans toward preparing for a backend job switch, so weight the industry/job-posting check accordingly.

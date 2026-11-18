@@ -4,10 +4,10 @@ packages:
 
 catalog:
   typescript: 7.0.2
-  turbo: ^2.11.12
+  turbo: 2.11.11
   oxlint: ^1.94.0
   prettier: ^3.6.0
-  vitest: ^5.1.1
+  vitest: 5.1.0
   zod: ^4.6.7
   drizzle-orm: 0.45.4
   drizzle-kit: 0.31.11
@@ -25,6 +25,7 @@ allowBuilds:
 
 # Supply-chain policy. See docs/security-decisions.md (S-001 to S-004).
 # Wait one day before installing a newly published version, so hijacked releases are usually caught first.
+# No version is ever exempted. If a release is too new, use the previous one or wait a day (docs/decisions.md D-109).
 minimumReleaseAge: 1440
 # Refuse a version that was published with weaker evidence (no provenance or trusted publisher) than an earlier one.
 trustPolicy: no-downgrade
@@ -37,18 +38,3 @@ auditConfig:
   ignoreGhsas:
     # picomatch ReDoS: no fixed version exists. Only reached by dev build tooling with globs we write ourselves. S-005.
     - GHSA-fc5q-39xc-vjpf
-
-# Temporary exceptions to minimumReleaseAge. Each entry must be removed once the version is older than the window. S-002.
-minimumReleaseAgeExclude:
-  - '@turbo/darwin-64@2.11.12'
-  - '@turbo/darwin-arm64@2.11.12'
-  - '@turbo/linux-64@2.11.12'
-  - '@turbo/linux-arm64@2.11.12'
-  - '@turbo/windows-64@2.11.12'
-  - '@turbo/windows-arm64@2.11.12'
-  - turbo@2.11.12
-  - '@vitest/mocker@5.1.1'
-  - '@vitest/spy@5.1.1'
-  - vitest@5.1.1
-  - '@tanstack/query-core@5.108.0'
-  - '@tanstack/react-query@5.108.0'

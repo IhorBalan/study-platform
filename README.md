@@ -13,7 +13,7 @@ A local-first platform for learning backend engineering: lessons, hands-on tasks
 - pnpm 11 (`corepack enable` picks the pinned version up)
 - A Docker runtime: OrbStack, Colima or Docker Desktop
 
-No cloud accounts are needed. Two optional parts need a free account of their own: error tracking with Sentry (module 12) and deploying to a PaaS (module 14).
+No cloud accounts are needed. Module 15 teaches OpenTofu; if you want to run its examples, install it yourself (`brew install opentofu`). The platform does not need it. Two optional parts need a free account of their own: error tracking with Sentry (module 12) and deploying to a PaaS (module 14).
 
 ## Run it
 
@@ -99,7 +99,7 @@ The platform was built and tested in a Linux environment. Three things could not
 
 - **One-click review with a real Claude login.** The flow was tested with a stand-in for the CLI. If the real CLI answers in a different shape, the task page shows the error and copy and paste still works.
 - **Full Docker mode reaching the host bridge.** The containers call the bridge at `host.docker.internal`, which exists on Docker Desktop and OrbStack for macOS. If checks report that the bridge is not running while `pnpm bridge` is up, this is the place to look.
-- **Module 15.** OpenTofu could not be installed in the build environment, so its configuration files were written from the official documentation and never run. Its checks read the `.tf` files and do not run OpenTofu.
+- **Module 15.** OpenTofu is not part of the platform, so its configuration files were written from the official documentation and never run. Its checks read the `.tf` files and do not run OpenTofu.
 
 ## Commands
 
@@ -130,5 +130,5 @@ packages/lab-cli    The `pnpm lab` command
 curriculum          Lessons, card decks and tasks, one folder per module
 infra/compose       Docker Compose files: platform database, full mode, practice services
 infra/docker        Images for the apps and for the check sandboxes
-docs                Spec, stack decisions, decision log, authoring guide
+docs                Spec, stack decisions, decision log, security review, authoring guide, market research
 ```

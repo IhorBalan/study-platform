@@ -25,7 +25,7 @@
 - id: nexttick-vs-promise
   type: comparison
   front: "`process.nextTick` callbacks vs promise callbacks: which queue drains first?"
-  back: 'The `nextTick` queue. Both drain completely after each callback, before the loop continues.'
+  back: 'The `nextTick` queue, inside callbacks and in CommonJS. In an ES module''s top-level code, promise callbacks run first, because module evaluation itself runs as a microtask. Both queues drain before the loop continues.'
   skills: [node-event-loop]
 
 - id: microtask-starvation

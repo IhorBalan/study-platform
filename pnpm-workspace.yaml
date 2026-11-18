@@ -18,12 +18,27 @@ catalog:
 allowBuilds:
   '@swc/core': true
   esbuild: true
-  '@nestjs/core': true
   # Optional native speed-ups pulled in by testcontainers. Not needed, so not built.
   cpu-features: false
   ssh2: false
   protobufjs: false
 
+# Supply-chain policy. See docs/security-decisions.md (S-001 to S-004).
+# Wait one day before installing a newly published version, so hijacked releases are usually caught first.
+minimumReleaseAge: 1440
+# Refuse a version that was published with weaker evidence (no provenance or trusted publisher) than an earlier one.
+trustPolicy: no-downgrade
+# Transitive dependencies may only come from the registry, never from git URLs or tarballs.
+blockExoticSubdeps: true
+# Fail the install when a dependency wants to run an install script that allowBuilds does not mention.
+strictDepBuilds: true
+
+auditConfig:
+  ignoreGhsas:
+    # picomatch ReDoS: no fixed version exists. Only reached by dev build tooling with globs we write ourselves. S-005.
+    - GHSA-fc5q-39xc-vjpf
+
+# Temporary exceptions to minimumReleaseAge. Each entry must be removed once the version is older than the window. S-002.
 minimumReleaseAgeExclude:
   - '@turbo/darwin-64@2.11.12'
   - '@turbo/darwin-arm64@2.11.12'

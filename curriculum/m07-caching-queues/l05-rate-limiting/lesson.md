@@ -42,13 +42,14 @@ local now = tonumber(ARGV[3])
 local bucket = redis.call('HMGET', KEYS[1], 'tokens', 'at')
 local tokens = tonumber(bucket[1]) or capacity
 local at = tonumber(bucket[2]) or now
-tokens = math.min(capacity, tokens + (now - at) / 1000 * rate)
+local elapsed = math.max(0, now - at)
+tokens = math.min(capacity, tokens + elapsed / 1000 * rate)
 local allowed = 0
 if tokens >= 1 then
   tokens = tokens - 1
   allowed = 1
 end
-redis.call('HSET', KEYS[1], 'tokens', tostring(tokens), 'at', now)
+redis.call('HSET', KEYS[1], 'tokens', tostring(tokens), 'at', math.max(now, at))
 redis.call('PEXPIRE', KEYS[1], math.ceil(capacity / rate * 1000))
 local wait = 0
 if allowed == 0 then wait = math.ceil((1 - tokens) / rate * 1000) end
@@ -69,7 +70,7 @@ Ten quick calls succeed, the eleventh waits about half a second for the next tok
 
 With one API instance, a `Map` in memory works. With three instances behind a load balancer, each has its own `Map`, and every client gets three times the limit, more or less depending on how the balancer spreads requests. The state must live where all instances see it: Valkey is the usual answer, because it is fast, has TTLs, and runs the check-and-update atomically.
 
-Atomically is the important word. "Read the count, compare in Node, then increment" is two round trips, and two instances can both read 99 of 100 and both let a request through. Under a burst, dozens will. The decision has to be one command or one Lua script, as in the bucket above. Pass the time in as an argument (or read it with `TIME` inside the script) so that one clock decides; then your tests can pass a fake clock too.
+Atomically is the important word. "Read the count, compare in Node, then increment" is two round trips, and two instances can both read 99 of 100 and both let a request through. Under a burst, dozens will. The decision has to be one command or one Lua script, as in the bucket above. Reading `TIME` inside the script gives one clock for every instance. Passing `now` in, as above, makes the script testable with a fake clock, but then each instance's own clock decides. Keep the instances NTP-synced, and never let time run backwards: the `math.max` calls above stop a lagging clock from shrinking the bucket or moving `at` back.
 
 ## Where to enforce
 

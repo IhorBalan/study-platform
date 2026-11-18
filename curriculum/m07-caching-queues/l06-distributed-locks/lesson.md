@@ -16,6 +16,14 @@ import { Redis } from 'ioredis';
 const redis = new Redis(process.env.VALKEY_URL ?? 'redis://localhost:56379');
 const prefix = process.env.VALKEY_KEY_PREFIX ?? 'dev:';
 
+// Grant the lock and hand out the next fencing token in one atomic step.
+const ACQUIRE = `
+if redis.call('SET', KEYS[1], ARGV[1], 'NX', 'PX', ARGV[2]) then
+  return redis.call('INCR', KEYS[2])
+end
+return false
+`;
+
 const RELEASE = `
 if redis.call('GET', KEYS[1]) == ARGV[1] then
   return redis.call('DEL', KEYS[1])
@@ -30,14 +38,24 @@ end
 return 0
 `;
 
-export async function withLock<T>(name: string, ttlMs: number, work: (fence: number) => Promise<T>): Promise<T | null> {
+export async function withLock<T>(
+  name: string,
+  ttlMs: number,
+  work: (fence: number, lost: AbortSignal) => Promise<T>,
+): Promise<T | null> {
   const key = `${prefix}lock:${name}`;
   const token = randomUUID();
-  if ((await redis.set(key, token, 'PX', ttlMs, 'NX')) !== 'OK') return null; // someone else holds it
-  const fence = await redis.incr(`${prefix}fence:${name}`);
-  const renew = setInterval(() => void redis.eval(EXTEND, 1, key, token, ttlMs), ttlMs / 3);
+  const fence = (await redis.eval(ACQUIRE, 2, key, `${prefix}fence:${name}`, token, ttlMs)) as number | null;
+  if (fence === null) return null; // someone else holds it
+  const lost = new AbortController();
+  const renew = setInterval(() => {
+    redis.eval(EXTEND, 1, key, token, ttlMs).then(
+      (ok) => { if (ok === 0) lost.abort(); }, // the lock is gone: tell the work to stop
+      (err) => console.warn('lock renewal failed', err), // a blip: the next tick tries again
+    );
+  }, ttlMs / 3);
   try {
-    return await work(fence);
+    return await work(fence, lost.signal);
   } finally {
     clearInterval(renew);
     await redis.eval(RELEASE, 1, key, token);
@@ -45,11 +63,12 @@ export async function withLock<T>(name: string, ttlMs: number, work: (fence: num
 }
 ```
 
-Three details carry the weight:
+Four details carry the weight:
 
 - **`SET ... NX PX` in one command.** `SETNX` followed by `EXPIRE` leaves a moment in which a crash creates a lock that never expires.
+- **The grant and the fencing token in one script.** With a separate `INCR`, one process can take the lock and pause before its `INCR`. The lock expires, a second process takes it and gets 42, then the first wakes up and gets 43. The stale holder would then carry the higher number.
 - **A random token, checked on release.** Suppose your lock expired while you were slow and another process took it. A plain `DEL` would now delete *their* lock. Compare-and-delete must be atomic, hence the Lua script.
-- **Renewal while working.** The TTL must be short, so a crashed holder frees the lock soon, but the work may take longer than the TTL. A timer extends the lock while the work runs, again only if the token still matches.
+- **Renewal while working.** The TTL must be short, so a crashed holder frees the lock soon, but the work may take longer than the TTL. A timer extends the lock while the work runs, again only if the token still matches. A renewal that returns `0` means the lock is gone, so it aborts `lost` and the work can stop. A failed renewal is caught and logged: a bare `void redis.eval(...)` would turn one Valkey blip into an unhandled rejection, which ends the Node process.
 
 The `fence` number is explained below.
 

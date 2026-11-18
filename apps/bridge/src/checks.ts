@@ -206,7 +206,6 @@ export async function runChecks(
       config.DOCKER_BIN,
       [
         'run',
-        '--rm',
         '--name',
         name,
         '--network',
@@ -246,6 +245,14 @@ export async function runChecks(
     );
 
     resultsSize.stop();
+    // The container is kept until here (no --rm) so Docker can still say whether
+    // the kernel killed a process in it for exceeding the memory limit.
+    const inspected = await exec(
+      config.DOCKER_BIN,
+      ['inspect', '--format', '{{.State.OOMKilled}}', name],
+      { timeoutMs: 10_000 },
+    );
+    const outOfMemory = inspected.code === 0 && inspected.stdout.trim() === 'true';
     const read = await readResults(path.join(resultsDir, 'results.jsonl'));
     const log = `${run.stdout}${run.stderr ? `\n${run.stderr}` : ''}`.slice(-32_000);
 
@@ -266,6 +273,16 @@ export async function runChecks(
       return {
         status: 'failed',
         message: `The checks did not finish within ${timeoutSeconds} seconds and were stopped.`,
+        commitSha: sha,
+        results: matchCriteria(task, reported),
+        log,
+        durationMs: Date.now() - startedAt,
+      };
+    }
+    if (outOfMemory) {
+      return {
+        status: 'failed',
+        message: `The checks ran out of memory: the code used more than the ${memoryMb} MB this task allows, so part of the run was killed.`,
         commitSha: sha,
         results: matchCriteria(task, reported),
         log,
@@ -294,6 +311,7 @@ export async function runChecks(
       durationMs: Date.now() - startedAt,
     };
   } finally {
+    await exec(config.DOCKER_BIN, ['rm', '--force', name], { timeoutMs: 15_000 });
     await services.cleanup();
     await rm(temp, { recursive: true, force: true });
   }

@@ -454,6 +454,9 @@ Decisions made while building are appended below.
 ### D-126 · The Plan shows a getting-started panel until setup is done — 2026-11-18
 - **What:** above "Next up", three steps with their state: build the check images, create the lab repository and set its path, read a first lesson. Commands have a copy button. The panel goes away once the path is set and a lesson is done, or when the learner hides it (remembered in the browser).
 - **Why:** a new learner saw 20 modules and nothing about setup, and found out at the first code task. Found by the UX review.
+### D-127 · A check run says when it ran out of memory — 2026-11-18
+
+A submission that used more memory than its task allows had every criterion marked "stopped before this one reported a result", with nothing saying why. The test runner itself survives (the kernel kills the child process), so the exit code does not show it. The sandbox container is now started without `--rm`; after it exits the bridge reads `State.OOMKilled` from `docker inspect`, reports "The checks ran out of memory" with the task's limit, and removes the container itself. Checked with a suite that allocates without bound under a 128 MB limit.
 
 ---
 

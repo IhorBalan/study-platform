@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import path from 'node:path';
-import type { INestApplication } from '@nestjs/common';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { schema } from '@study/db';
@@ -10,12 +10,13 @@ import { eq } from 'drizzle-orm';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { AppModule } from '../src/app.module.js';
+import { JSON_BODY_LIMIT } from '../src/common/body-limit.js';
 import { QueueService } from '../src/queue/queue.service.js';
 import { DB, type Database } from '../src/database/database.module.js';
 
 describe('API (e2e, real Postgres)', () => {
   let container: StartedPostgreSqlContainer;
-  let app: INestApplication;
+  let app: NestExpressApplication;
   let bridge: Server;
   const bridgeReplies: unknown[] = [];
   /** How long the stand-in bridge takes to answer, to imitate a review in progress. */
@@ -65,7 +66,8 @@ describe('API (e2e, real Postgres)', () => {
     process.env.BRIDGE_SECRET = 'test-secret-that-is-long-enough-123';
 
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
-    app = moduleRef.createNestApplication();
+    app = moduleRef.createNestApplication<NestExpressApplication>({ bodyParser: false });
+    app.useBodyParser('json', { limit: JSON_BODY_LIMIT });
     app.setGlobalPrefix('api');
     await app.init();
   });
@@ -259,6 +261,25 @@ describe('API (e2e, real Postgres)', () => {
         status: 'error',
         error: 'The checks could not be queued. Submit again.',
       });
+    });
+
+    it('accepts an answer at the schema maximum in a non-Latin script', async () => {
+      // 50,000 Cyrillic letters are about 100 kB of JSON, more than the framework's default limit.
+      const body = 'я'.repeat(50_000);
+      const res = await http()
+        .post('/api/tasks/m00-demo/t01-explain/submissions')
+        .send({ type: 'text', body })
+        .expect(201);
+      expect(res.body.body).toHaveLength(50_000);
+      await app
+        .get<Database>(DB)
+        .delete(schema.submissions)
+        .where(eq(schema.submissions.id, res.body.id));
+
+      const tooLarge = await http()
+        .post('/api/tasks/m00-demo/t01-explain/submissions')
+        .send({ type: 'text', body: 'x'.repeat(1_100_000) });
+      expect(tooLarge.status).toBe(413);
     });
 
     it('rejects the wrong kind of submission for a task', async () => {

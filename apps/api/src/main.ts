@@ -1,10 +1,13 @@
 import 'reflect-metadata';
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module.js';
 import { ENV, type Env } from './config/env.js';
+import { JSON_BODY_LIMIT } from './common/body-limit.js';
 
-const app = await NestFactory.create(AppModule);
+const app = await NestFactory.create<NestExpressApplication>(AppModule, { bodyParser: false });
+app.useBodyParser('json', { limit: JSON_BODY_LIMIT });
 const env = app.get<Env>(ENV);
 
 app.setGlobalPrefix('api');

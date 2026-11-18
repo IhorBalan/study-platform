@@ -7,7 +7,7 @@ export class SearchController {
   constructor(private readonly searchService: SearchService) {}
 
   @Get()
-  search(@Query({ schema: SearchQuery }) query: SearchQuery): SearchResponse {
+  search(@Query({ schema: SearchQuery }) query: SearchQuery): Promise<SearchResponse> {
     return this.searchService.search(query.q);
   }
 }

@@ -542,6 +542,10 @@ Part 2 of notes. `GET /api/notes` walks the curriculum and returns the notes it 
 
 A count of cards does not say whether there is time for them before work. The review queue and the Plan's "Review cards" row now add an estimate ("32 due, 5 new · about 9 min"): cards times the median answer time of the last 14 days. The median ignores the one card left open during a coffee break, which a mean would not. Answers under half a second or over two minutes are left out, and with fewer than ten timed reviews the estimate uses 8 seconds per card. The figure comes from the API as `secondsPerCard` in the queue and in Next up.
 
+### D-146 · Search looks in notes too — 2026-11-18
+
+The last part of notes (D-143, D-144). `GET /api/search` reads the notes on every search and matches them by the words of the note, so a note is found the moment it is saved and there is no index to keep in step. A note result is marked `inNote`, links to its lesson or task, and ranks above an equal match in lesson text, because the learner's own words are what they are most likely looking for. The title of the page does not count for the note, or every titled match would appear twice.
+
 ---
 
 ## Product direction

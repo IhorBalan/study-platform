@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { schema } from '@study/db';
 import type { SearchResponse, SearchResult } from '@study/shared';
+import { InjectDb, type Database } from '../database/database.module.js';
 import { CurriculumService } from './curriculum.service.js';
 
 const MAX_RESULTS = 20;
@@ -16,7 +18,11 @@ interface Entry {
   text: string;
   titleLower: string;
   textLower: string;
+  inNote: boolean;
 }
+
+/** A match in the learner's own words ranks above the same words in a lesson. */
+const NOTE_BONUS = 50;
 
 /** Turns Markdown into plain text that reads well in a one-line snippet. */
 export function plainText(markdown: string): string {
@@ -41,18 +47,23 @@ function countOccurrences(haystack: string, needle: string): number {
 }
 
 /**
- * Finds lessons and tasks by words in their title or text.
+ * Finds lessons and tasks by words in their title or text, and the learner's
+ * notes by words in the note.
  *
  * The curriculum is a few hundred pages held in memory, so a plain scan is
- * fast enough and needs no index to keep in step with the files.
+ * fast enough and needs no index to keep in step with the files. Notes are
+ * read from the database on every search, so a note is found as soon as it is saved.
  */
 @Injectable()
 export class SearchService {
   private entries: Entry[] | null = null;
 
-  constructor(private readonly curriculum: CurriculumService) {}
+  constructor(
+    private readonly curriculum: CurriculumService,
+    @InjectDb() private readonly db: Database,
+  ) {}
 
-  search(query: string): SearchResponse {
+  async search(query: string): Promise<SearchResponse> {
     // One-letter words match almost every page, so they are ignored.
     const terms = [
       ...new Set(
@@ -65,10 +76,11 @@ export class SearchService {
     if (terms.length === 0) return { query, results: [] };
 
     const scored: { entry: Entry; score: number }[] = [];
-    for (const entry of this.index()) {
+    for (const entry of [...this.index(), ...(await this.noteEntries())]) {
       let score = 0;
       for (const term of terms) {
-        const inTitle = entry.titleLower.includes(term);
+        // A note is found by its own words only: its page already matches on the title.
+        const inTitle = !entry.inNote && entry.titleLower.includes(term);
         const inText = countOccurrences(entry.textLower, term);
         // Every word has to appear somewhere on the page.
         if (!inTitle && inText === 0) {
@@ -78,7 +90,7 @@ export class SearchService {
         // A title match outweighs any number of mentions in the text.
         score += (inTitle ? 100 : 0) + Math.min(inText, 20);
       }
-      if (score > 0) scored.push({ entry, score });
+      if (score > 0) scored.push({ entry, score: score + (entry.inNote ? NOTE_BONUS : 0) });
     }
 
     // The sort is stable, so equal scores stay in curriculum order.
@@ -91,6 +103,7 @@ export class SearchService {
         title: entry.title,
         moduleTitle: entry.moduleTitle,
         snippet: this.snippet(entry, terms),
+        inNote: entry.inNote,
       })),
     };
   }
@@ -126,10 +139,26 @@ export class SearchService {
           text,
           titleLower: page.title.toLowerCase(),
           textLower: text.toLowerCase(),
+          inNote: false,
         });
       }
     }
     this.entries = entries;
+    return entries;
+  }
+
+  /** One entry per note whose lesson or task still exists. */
+  private async noteEntries(): Promise<Entry[]> {
+    const rows = await this.db.select().from(schema.notes);
+    if (rows.length === 0) return [];
+    const pages = new Map(this.index().map((entry) => [entry.id, entry]));
+    const entries: Entry[] = [];
+    for (const row of rows) {
+      const page = pages.get(row.itemId);
+      if (!page) continue;
+      const text = plainText(row.body);
+      entries.push({ ...page, text, textLower: text.toLowerCase(), inNote: true });
+    }
     return entries;
   }
 }

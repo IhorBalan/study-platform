@@ -590,6 +590,8 @@ export const SearchResult = z.object({
   moduleTitle: z.string(),
   /** A short piece of the text around the first match. Empty when only the title matched. */
   snippet: z.string(),
+  /** True when the match is in the learner's own note on this lesson or task. */
+  inNote: z.boolean(),
 });
 export type SearchResult = z.infer<typeof SearchResult>;
 

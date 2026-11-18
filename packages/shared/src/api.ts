@@ -541,6 +541,20 @@ export const StatsResponse = z.object({
 export type StatsResponse = z.infer<typeof StatsResponse>;
 
 // ---------------------------------------------------------------------------
+// Notes
+
+export const NoteDto = z.object({
+  /** Empty when nothing has been written yet. */
+  body: z.string(),
+  updatedAt: z.string().nullable(),
+});
+export type NoteDto = z.infer<typeof NoteDto>;
+
+/** Saving an empty body removes the note. */
+export const SaveNote = z.object({ body: z.string().max(20_000) });
+export type SaveNote = z.infer<typeof SaveNote>;
+
+// ---------------------------------------------------------------------------
 // Search
 
 export const SearchQuery = z.object({ q: z.string().trim().max(100).default('') });

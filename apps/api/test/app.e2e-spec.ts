@@ -798,6 +798,32 @@ describe('API (e2e, real Postgres)', () => {
       expect(total).toBeGreaterThan(0);
     });
 
+    it('keeps one note per lesson or task', async () => {
+      const lessonId = 'm00-demo/l01-first';
+      const empty = await http().get(`/api/notes/${lessonId}`).expect(200);
+      expect(empty.body).toEqual({ body: '', updatedAt: null });
+
+      const saved = await http().put(`/api/notes/${lessonId}`).send({ body: 'First' }).expect(200);
+      expect(saved.body.body).toBe('First');
+      await http().put(`/api/notes/${lessonId}`).send({ body: 'Second **draft**' }).expect(200);
+      const read = await http().get(`/api/notes/${lessonId}`).expect(200);
+      expect(read.body.body).toBe('Second **draft**');
+      expect(read.body.updatedAt).toEqual(expect.any(String));
+
+      // An emptied note is removed, not stored as blank text.
+      await http().put(`/api/notes/${lessonId}`).send({ body: '   ' }).expect(200);
+      const gone = await http().get(`/api/notes/${lessonId}`).expect(200);
+      expect(gone.body).toEqual({ body: '', updatedAt: null });
+
+      await http().get('/api/notes/m00-demo/l99-missing').expect(404);
+      await http().put('/api/notes/m00-demo/l99-missing').send({ body: 'x' }).expect(404);
+      await http()
+        .put(`/api/notes/${lessonId}`)
+        .send({ body: 'x'.repeat(20_001) })
+        .expect(400);
+      await http().put(`/api/notes/${lessonId}`).send({}).expect(400);
+    });
+
     it('offers the page opened last, while it is unfinished', async () => {
       // The session test above opened the first lesson, which is done by now.
       const before = await http().get('/api/plan').expect(200);

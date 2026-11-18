@@ -340,6 +340,17 @@ export const reviewTasks = pgTable(
 );
 
 // ---------------------------------------------------------------------------
+// Notes: the learner's own words on a lesson or a task.
+// ---------------------------------------------------------------------------
+
+export const notes = pgTable('notes', {
+  /** "<module>/<slug>" of a lesson or a task. Not a foreign key: content lives in files. */
+  itemId: text('item_id').primaryKey(),
+  body: text('body').notNull(),
+  updatedAt,
+});
+
+// ---------------------------------------------------------------------------
 // Settings: a single row, id = 1.
 // ---------------------------------------------------------------------------
 

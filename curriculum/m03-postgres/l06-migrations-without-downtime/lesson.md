@@ -29,7 +29,8 @@ If the lock cannot be taken within 3 seconds, the migration fails instead of que
 | `set not null` on an existing column | Scans the whole table under an exclusive lock, unless a validated constraint already proves it. |
 | `create index` | Blocks all writes for the whole build. |
 | `create index concurrently` | Allows reads and writes. Slower, cannot run inside a transaction. |
-| Add a foreign key or check constraint | Scans the table while blocking writes, unless added `not valid` and validated separately. |
+| Add a check constraint | Scans the table under an `ACCESS EXCLUSIVE` lock, so no reads or writes, unless added `not valid` and validated separately. |
+| Add a foreign key | Scans the table while blocking writes on both tables, unless added `not valid` and validated separately. |
 | Change a column's type | Usually rewrites the table and its indexes. Some changes, such as `varchar(50)` to `text`, do not. |
 | Rename or drop a column | Instant in the database, and breaks every running instance of the old code. |
 
@@ -50,11 +51,12 @@ update orders o
 set region = c.region
 from customers c
 where c.id = o.customer_id
-  and o.id in (
-    select id from orders where region is null order by id limit 5000
-  );
--- repeat until it updates 0 rows
+  and o.id > $1
+  and o.id <= $1 + 5000;
+-- start with $1 = 0 and add 5000 each time, until $1 passes max(id)
 ```
+
+The loop walks the table by `id` and stops when it runs out of ids. Selecting "the next 5,000 rows where `region is null`" and repeating until nothing is updated looks simpler, but it never ends if some customers have no region: their orders are set to `NULL` again on every pass and are picked again. Decide what those rows get (a fallback value or a data fix) before step 3.
 
 Small batches keep each transaction short, so row locks are brief, autovacuum keeps up, and replicas do not fall far behind. A script or job runs the loop and pauses between batches.
 

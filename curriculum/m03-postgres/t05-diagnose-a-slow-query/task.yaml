@@ -8,7 +8,7 @@ hints:
   - "Ask how many rows each node reads in staging, and how that number changes when the whole table is twenty times larger."
   - "EXPLAIN ANALYZE does not only plan the statement. Think about what that means for a DELETE."
 rubric:
-  - { id: hot-spot, title: "Identifies the Parallel Seq Scan on order_items as the main cost, quoting its 500,000 rows per loop across 3 loops (1.5 million rows) to produce 72 joined rows, and its share of the execution time", skill: query-plans, max: 4 }
+  - { id: hot-spot, title: "Identifies the Parallel Seq Scan on order_items as the main cost, quoting its 500,000 rows per loop across 3 loops (1.5 million rows) to produce 216 joined rows (72 per loop) that aggregate to 72 orders, and its share of the execution time", skill: query-plans, max: 4 }
   - { id: wasted-work, title: "Identifies the bitmap scan on orders_status_idx as wasteful, quoting about 142,000 rows from the index and about 47,000 per loop removed by the customer_id filter to keep 72", skill: query-plans, max: 3 }
   - { id: causes, title: "Explains that the primary key (product_id, order_id) cannot serve a lookup by order_id because order_id is not its leading column, and that status has too few distinct values to be selective on its own", skill: sql-indexes, max: 4 }
   - { id: growth, title: "Explains that both scans grow with total table size rather than with the customer's own orders, so latency rises for everyone as data grows", skill: query-plans, max: 2 }

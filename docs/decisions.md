@@ -430,6 +430,10 @@ Decisions made while building are appended below.
 - **Why:** the API has no login and relies on being reachable from this machine only. A web page on a domain re-pointed at 127.0.0.1 (DNS rebinding) counts as the same origin as the API and could read settings, cards and answers. Writes were already protected by the Origin check. Found by the backend tester (BE-5).
 - **Full Docker mode:** nginx passes the browser's `Host` on, so the same rule holds there.
 
+### D-124 · A grade succeeds even if the weak-skill update fails — 2026-11-18
+- **What:** the grade endpoint logs a failure of the weak-skill evaluation and still answers with the saved grade. `review_tasks` has a partial unique index, one open refresh per skill, and the evaluation ignores a conflict.
+- **Why:** the evaluation runs after the grade is committed. If it failed, the client saw a 500, and a retry was refused because the card was no longer due. Two evaluations at once could also open two refreshes for the same skill. Found by the code review (R4).
+
 ---
 
 ## Agreed before this log

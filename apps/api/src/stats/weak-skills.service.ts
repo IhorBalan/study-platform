@@ -77,10 +77,14 @@ export class WeakSkillsService {
     const alreadyOpen = new Set(open.map((t) => t.skillId));
     for (const skill of weak.values()) {
       if (alreadyOpen.has(skill.skillId)) continue;
-      await this.db.insert(reviewTasks).values({
-        skillId: skill.skillId,
-        reason: `You remembered ${Math.round(skill.retention * 100)}% of ${skill.reviews} reviews in the last ${WEAK_WINDOW_DAYS} days.`,
-      });
+      await this.db
+        .insert(reviewTasks)
+        .values({
+          skillId: skill.skillId,
+          reason: `You remembered ${Math.round(skill.retention * 100)}% of ${skill.reviews} reviews in the last ${WEAK_WINDOW_DAYS} days.`,
+        })
+        // Another evaluation may have opened it in the meantime.
+        .onConflictDoNothing();
     }
   }
 

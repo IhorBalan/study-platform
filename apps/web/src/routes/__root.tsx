@@ -6,6 +6,7 @@ import { HealthBadge } from '../components/HealthBadge';
 const nav = [
   { to: '/', label: 'Plan' },
   { to: '/review', label: 'Review' },
+  { to: '/search', label: 'Search' },
   { to: '/stats', label: 'Stats' },
   { to: '/settings', label: 'Settings' },
 ] as const;

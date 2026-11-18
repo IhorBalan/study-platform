@@ -7,6 +7,7 @@ import {
   CardDto,
   CardListResponse,
   ReviewQueueResponse,
+  SearchResponse,
   BridgeStatusResponse,
   ReviewDto,
   SessionDto,
@@ -75,6 +76,7 @@ export const api = {
   lesson: (id: string) => request(`/lessons/${id}`, LessonDetail),
   setLessonProgress: (id: string, status: ProgressStatus) =>
     request(`/lessons/${id}/progress`, LessonProgressResponse, { method: 'PUT', body: { status } }),
+  search: (q: string) => request(`/search?q=${encodeURIComponent(q)}`, SearchResponse),
   task: (id: string) => request(`/tasks/${id}`, TaskDetail),
   submissions: (taskId: string) => request(`/tasks/${taskId}/submissions`, SubmissionListResponse),
   submit: (taskId: string, body: CreateSubmission) =>

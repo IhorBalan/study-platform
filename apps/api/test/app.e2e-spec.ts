@@ -183,6 +183,37 @@ describe('API (e2e, real Postgres)', () => {
         rubric: [{ id: 'clarity', max: 4 }],
       });
     });
+
+    it('finds lessons and tasks by words in the title or the text', async () => {
+      const byText = await http().get('/api/search?q=WORLD').expect(200);
+      expect(byText.body.results).toEqual([
+        {
+          kind: 'lesson',
+          id: 'm00-demo/l01-first',
+          title: 'First lesson',
+          moduleTitle: expect.any(String),
+          snippet: 'Hello world.',
+        },
+      ]);
+
+      const byTitle = await http().get('/api/search?q=lesson%20second').expect(200);
+      expect(byTitle.body.results.map((r: { id: string }) => r.id)).toEqual([
+        'm00-demo/l02-second',
+      ]);
+
+      const task = await http().get('/api/search?q=caching').expect(200);
+      expect(task.body.results).toMatchObject([{ kind: 'task', id: 'm00-demo/t01-explain' }]);
+    });
+
+    it('returns no results for an empty, one-letter or unmatched search', async () => {
+      for (const q of ['', 'e', 'kubernetes']) {
+        const res = await http().get(`/api/search?q=${q}`).expect(200);
+        expect(res.body.results).toEqual([]);
+      }
+      await http()
+        .get(`/api/search?q=${'x'.repeat(101)}`)
+        .expect(400);
+    });
   });
   describe('submissions', () => {
     it('stores a written answer without a check run', async () => {

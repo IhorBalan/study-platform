@@ -7,7 +7,7 @@
     "node": ">=24"
   },
   "scripts": {
-    "dev": "node scripts/ensure-env.mjs && pnpm infra:up && turbo run dev",
+    "dev": "node scripts/ensure-env.mjs && pnpm infra:up && node scripts/backup.mjs --daily && turbo run dev",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",

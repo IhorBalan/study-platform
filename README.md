@@ -34,7 +34,7 @@ pnpm backup                                        # writes backups/study-YYYY-M
 pnpm restore backups/study-2026-11-18-0900.dump    # replaces all current data with that backup
 ```
 
-`backups/` is not committed. Set `BACKUP_DIR` to write somewhere else, for example a synced folder. `pnpm restore` asks you to type "restore" first (`--yes` skips the question) and runs as one transaction, so a file that cannot be read leaves the current data untouched. Stop `pnpm dev` before restoring.
+`pnpm dev` also writes one backup when it starts, if the newest one is more than a day old. `backups/` is not committed. Set `BACKUP_DIR` to write somewhere else, for example a synced folder. `pnpm restore` asks you to type "restore" first (`--yes` skips the question) and runs as one transaction, so a file that cannot be read leaves the current data untouched. Stop `pnpm dev` before restoring.
 
 To move to a new machine: run `pnpm backup` on the old one, copy the `.dump` file and your lab repository across, then on the new one run `pnpm install`, `pnpm infra:up`, `pnpm restore <file>` and `pnpm dev`, and set the lab repository path again under Settings if it changed.
 

@@ -207,18 +207,21 @@ function NextUpPanel({ nextUp }: { nextUp: NextUp }) {
               </span>
             </li>
           )}
-          {nextUp.tasks.map((task) => (
-            <li key={task.id}>
-              <Link
-                to="/tasks/$moduleId/$taskSlug"
-                params={{ moduleId: splitId(task.id).moduleId, taskSlug: splitId(task.id).slug }}
-                className="font-medium hover:underline"
-              >
-                {task.title}
-              </Link>{' '}
-              <span className="text-zinc-500 dark:text-zinc-400">Task · {task.moduleTitle}</span>
-            </li>
-          ))}
+          {/* The task already offered as "Continue" is not listed a second time. */}
+          {nextUp.tasks
+            .filter((task) => task.id !== resume?.id)
+            .map((task) => (
+              <li key={task.id}>
+                <Link
+                  to="/tasks/$moduleId/$taskSlug"
+                  params={{ moduleId: splitId(task.id).moduleId, taskSlug: splitId(task.id).slug }}
+                  className="font-medium hover:underline"
+                >
+                  {task.title}
+                </Link>{' '}
+                <span className="text-zinc-500 dark:text-zinc-400">Task · {task.moduleTitle}</span>
+              </li>
+            ))}
           {nextUp.pendingCards > 0 && (
             <li>
               <Link to="/cards" className="font-medium hover:underline">

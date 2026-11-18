@@ -1,0 +1,66 @@
+- id: authn-vs-authz
+  type: comparison
+  front: Authentication vs authorisation
+  back: "Authentication establishes who the caller is. Authorisation decides whether that caller may do this action to this resource now."
+  skills: [access-control]
+- id: 401-vs-403
+  type: comparison
+  front: 401 vs 403
+  back: "401: no valid credentials, the server does not know who you are. 403: it knows who you are and refuses."
+  skills: [access-control]
+- id: rbac-vs-abac
+  type: comparison
+  front: "Interview: RBAC vs ABAC?"
+  back: "RBAC grants permissions through roles and cannot say which object. ABAC evaluates rules over user, resource and context attributes, such as owner, tenant or status."
+  skills: [access-control]
+- id: permissions-not-roles
+  type: concept
+  front: "Why check `can(user, 'invoice:refund')` rather than `user.role === 'admin'` in handlers?"
+  back: "The role-to-permission mapping stays in one place, so adding or changing a role does not mean editing every handler."
+  skills: [access-control]
+- id: bola
+  type: term
+  front: BOLA (broken object-level authorisation)
+  back: "An API returns or changes an object by id without checking the caller may access that object. Example: `GET /invoices/812` returns anyone's invoice. API1:2023."
+  skills: [access-control]
+- id: bola-fix
+  type: snippet
+  front: Load an invoice so that another user's id behaves like a missing one.
+  back: |-
+    ```sql
+    SELECT ... FROM invoices WHERE id = $1 AND owner_id = $2;
+    ```
+  skills: [access-control]
+- id: uuids-not-a-fix
+  type: concept
+  front: Do random UUIDs fix BOLA?
+  back: "No. Ids leak through URLs, logs and shared links. They slow guessing; the ownership check is still required."
+  skills: [access-control]
+- id: guard-vs-service
+  type: concept
+  front: "Why does an ownership check belong in the service or query, not in a NestJS guard?"
+  back: "A guard runs before the record is loaded and sees only the request. In the service, every caller of that data gets the same rule."
+  skills: [access-control]
+- id: deny-by-default
+  type: concept
+  front: What does "deny by default" look like in a NestJS app?
+  back: "A global authentication guard that every route passes through, with an explicit `@Public()` to opt out. A forgotten annotation leaves a route closed."
+  skills: [access-control]
+- id: guard-order
+  type: concept
+  front: Two global guards, RolesGuard registered before AuthGuard. What do anonymous callers get on an admin route?
+  back: "403 instead of 401. RolesGuard runs first, finds no user and refuses. Register authentication first."
+  skills: [access-control]
+- id: getalloverride
+  type: snippet
+  front: Read `@Roles()` metadata in a guard, from the method or else its controller.
+  back: |-
+    ```ts
+    this.reflector.getAllAndOverride(Roles, [ctx.getHandler(), ctx.getClass()]);
+    ```
+  skills: [access-control]
+- id: bfla
+  type: term
+  front: Broken function-level authorisation
+  back: "A caller reaches an operation their role should not have, because only the UI hides it. Example: a member calls `DELETE /users/7`. API5:2023."
+  skills: [access-control]

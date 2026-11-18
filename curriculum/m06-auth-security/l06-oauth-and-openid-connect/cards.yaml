@@ -1,0 +1,64 @@
+- id: oauth-vs-oidc
+  type: comparison
+  front: "Interview: OAuth 2 vs OpenID Connect?"
+  back: "OAuth delegates access: a token that lets a client call an API. OIDC adds identity on top: an ID token saying who signed in to the client."
+  skills: [oauth-oidc]
+- id: oauth-roles
+  type: concept
+  front: Name the four OAuth roles.
+  back: "Resource owner (the user), client (the app), authorisation server (issues tokens), resource server (the API that accepts them)."
+  skills: [oauth-oidc]
+- id: public-client
+  type: term
+  front: Public client
+  back: "An OAuth client that cannot keep a secret because its code runs on users' devices. Examples: a single-page app, a mobile app."
+  skills: [oauth-oidc]
+- id: oauth21-removed
+  type: concept
+  front: Which two grants does OAuth 2.1 remove?
+  back: "The implicit grant (tokens in the redirect URL) and the resource owner password grant (the app collects the password)."
+  skills: [oauth-oidc]
+- id: pkce-challenge
+  type: snippet
+  front: Create a PKCE verifier and its S256 challenge in Node.
+  back: |-
+    ```ts
+    const verifier = randomBytes(32).toString('base64url');
+    const challenge = createHash('sha256').update(verifier).digest('base64url');
+    ```
+  skills: [oauth-oidc]
+- id: pkce-flow
+  type: concept
+  front: "Interview: walk through the authorisation code flow with PKCE."
+  back: "Client makes verifier and challenge, redirects with challenge and state; user logs in; server redirects back with code; client checks state and posts code plus verifier to /token; server checks the hash and returns tokens."
+  skills: [oauth-oidc]
+- id: pkce-protects
+  type: concept
+  front: What does an attacker who intercepts the authorisation code still lack, thanks to PKCE?
+  back: "The code verifier. The token endpoint refuses the code without the verifier whose hash was sent at the start."
+  skills: [oauth-oidc]
+- id: state-param
+  type: concept
+  front: "What does the `state` parameter protect against?"
+  back: "A callback the user did not start (login CSRF). The client rejects a callback whose state differs from the one it stored."
+  skills: [oauth-oidc]
+- id: id-vs-access-token
+  type: comparison
+  front: ID token vs access token
+  back: "The ID token is for the client and says who signed in; its audience is the client_id. The access token is for the API and says what the bearer may do."
+  skills: [oauth-oidc]
+- id: link-by-sub
+  type: concept
+  front: How should your app identify a user who signed in with an external OIDC provider?
+  back: "By the pair (iss, sub), not by email. Emails change and are not always verified."
+  skills: [oauth-oidc]
+- id: sign-in-with-x
+  type: concept
+  front: What does your backend do after "Sign in with Google" completes?
+  back: "Verifies the ID token, finds or creates the local user for (iss, sub), and starts its own session. Google's tokens are not your session."
+  skills: [oauth-oidc]
+- id: oidc-discovery
+  type: cloze
+  front: "An OIDC provider lists its endpoints and JWKS URL at {{/.well-known/openid-configuration}}."
+  back: /.well-known/openid-configuration
+  skills: [oauth-oidc]

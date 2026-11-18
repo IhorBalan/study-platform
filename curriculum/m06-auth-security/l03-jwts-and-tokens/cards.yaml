@@ -1,0 +1,60 @@
+- id: jwt-not-encrypted
+  type: concept
+  front: Can anyone who holds a signed JWT read its payload?
+  back: "Yes. The payload is base64url-encoded, not encrypted. Never put secrets or sensitive personal data in it."
+  skills: [token-auth]
+- id: hs256-vs-es256
+  type: comparison
+  front: HS256 vs ES256 for JWTs
+  back: "HS256 uses one shared secret, so every verifier can also forge tokens. ES256 signs with a private key and verifies with a public one, so verifiers cannot issue."
+  skills: [token-auth]
+- id: alg-confusion
+  type: concept
+  front: How does the JWT algorithm confusion attack work?
+  back: "The server expects RS256. The attacker sends alg HS256, signed with HMAC using the server's public key as the secret, and a verifier that lets the header pick the algorithm accepts it."
+  skills: [token-auth]
+- id: claims-to-check
+  type: cloze
+  front: "Besides the signature, verification must check {{exp, aud and iss}} against fixed expected values."
+  back: "exp, aud and iss"
+  skills: [token-auth]
+- id: why-jose
+  type: concept
+  front: Why use a library such as jose instead of your own JWT code in production?
+  back: "It gets algorithm allow-lists, JWKS caching, key rotation, claim checks and years of edge-case fixes right. Hand-written code has none of that history."
+  skills: [token-auth]
+- id: sessions-vs-jwt
+  type: comparison
+  front: "Interview: server-side sessions vs JWTs?"
+  back: "Sessions: a lookup per request, instant revocation, best for a browser app on its own site. JWTs: verified with a key, no lookup, hard to revoke, best across services and organisations."
+  skills: [token-auth]
+- id: revoke-jwt
+  type: concept
+  front: "Interview: how do you revoke a JWT before it expires?"
+  back: "Keep state: short expiry with revocable refresh tokens, a jti denylist kept until exp, or a per-user token version checked on each request."
+  skills: [token-auth]
+- id: refresh-rotation
+  type: concept
+  front: "Interview: what are refresh token rotation and reuse detection?"
+  back: "Each refresh returns a new refresh token and invalidates the old one. If an already-used one comes back, someone copied it, so revoke the whole token family."
+  skills: [token-auth]
+- id: access-token-lifetime
+  type: concept
+  front: Why should a JWT access token live only minutes?
+  back: "It cannot be revoked cheaply, so its lifetime is how long a stolen or logged-out token keeps working."
+  skills: [token-auth]
+- id: browser-token-storage
+  type: concept
+  front: "Interview: where should a browser app keep its auth token?"
+  back: "Not localStorage, where any script can read it. Prefer an HttpOnly, Secure, SameSite cookie, ideally a BFF that keeps the tokens on the server."
+  skills: [token-auth]
+- id: bff
+  type: term
+  front: Backend for frontend (BFF) in OAuth
+  back: "A server-side component that holds the tokens and gives the browser only a session cookie. RFC 10017 ranks it as the most secure option for browser apps."
+  skills: [token-auth]
+- id: decode-vs-verify
+  type: concept
+  front: What is wrong with reading the user id from a JWT with a library's decode function?
+  back: "decode skips the signature check, so anyone can write any user id into a token and be believed."
+  skills: [token-auth]

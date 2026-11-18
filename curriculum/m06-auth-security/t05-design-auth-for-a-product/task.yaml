@@ -1,0 +1,15 @@
+title: Design auth for a product
+type: text
+skills: [session-auth, token-auth, oauth-oidc]
+hints:
+  - Start from who calls the API (a browser on your domain, a mobile app, other companies' servers) and decide per caller, not once for the whole product.
+  - "For each choice, ask: how do I log one person out of one device right now, and how long does that take to work?"
+  - "Where a token sits decides what XSS can steal. A cookie the page cannot read is a different risk from a token in localStorage."
+  - Walk through PKCE as if you were the attacker who copied the authorisation code. What do you still not have?
+rubric:
+  - { id: web-choice, title: "Chooses server-side sessions in an HttpOnly, Secure, SameSite cookie (or a BFF that keeps tokens server-side) for the web app, and justifies it with revocation and XSS exposure", skill: session-auth, max: 4 }
+  - { id: cookie-and-csrf, title: "Names the cookie attributes (HttpOnly, Secure, SameSite, Path or __Host- prefix) and states how CSRF is prevented for state-changing requests", skill: session-auth, max: 3 }
+  - { id: mobile-tokens, title: "For the mobile app: short-lived access tokens, refresh tokens in the platform's secure storage, rotation on every use, and what happens when a used refresh token comes back (reuse detection revokes the family)", skill: token-auth, max: 4 }
+  - { id: revocation, title: "Explains concretely how the 'log out everywhere' and 'disable this employee now' requirements are met for both clients, including how long a still-valid access token can be used", skill: token-auth, max: 4 }
+  - { id: pkce-walkthrough, title: "Walks the authorisation code flow with PKCE in the right order (verifier and challenge, redirect with state, code, token request with verifier) and explains what an attacker who intercepts the code cannot do", skill: oauth-oidc, max: 4 }
+  - { id: id-vs-access, title: "States that the ID token proves who signed in to the client and is not sent to the API, while the access token is what the API checks", skill: oauth-oidc, max: 2 }

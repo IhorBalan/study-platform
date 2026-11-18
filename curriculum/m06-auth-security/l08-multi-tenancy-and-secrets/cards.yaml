@@ -1,0 +1,59 @@
+- id: tenancy-models
+  type: concept
+  front: Name the three common ways to keep tenants' data apart in a relational database.
+  back: "Shared tables with a tenant_id column, a schema per tenant, or a database per tenant."
+  skills: [tenant-isolation]
+- id: tenant-from-session
+  type: concept
+  front: "Interview: how do you keep one tenant from seeing another tenant's data?"
+  back: "Every query filters by tenant_id taken from the authenticated session, never from the request, with keys, caches and files scoped too, and RLS as a safety net."
+  skills: [tenant-isolation]
+- id: composite-fk
+  type: concept
+  front: "Why include `tenant_id` in foreign keys, such as `(tenant_id, customer_id)`?"
+  back: "So a row can never reference another tenant's row, even if the application passes the wrong id."
+  skills: [tenant-isolation]
+- id: rls-policy
+  type: snippet
+  front: Write an RLS policy that limits invoices to the tenant in the setting `app.tenant_id`.
+  back: |-
+    ```sql
+    CREATE POLICY t ON invoices
+      USING (tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid);
+    ```
+  skills: [tenant-isolation]
+- id: set-config-local
+  type: concept
+  front: "Why set the tenant with `set_config('app.tenant_id', $1, true)` inside a transaction?"
+  back: "The true makes it transaction-local. A session-level SET would stay on the pooled connection and leak into the next request."
+  skills: [tenant-isolation]
+- id: rls-bypass
+  type: concept
+  front: Which database roles are not restricted by an RLS policy?
+  back: "Superusers, roles with BYPASSRLS, and the table owner unless FORCE ROW LEVEL SECURITY is set."
+  skills: [tenant-isolation]
+- id: secrets-where
+  type: concept
+  front: "Interview: how do you manage application secrets?"
+  back: "Never in git; a secret manager injected at runtime in production; separate secrets per environment and purpose; least privilege, rotation, scanning, and no secrets in logs."
+  skills: [secrets-management]
+- id: leaked-key-first-step
+  type: concept
+  front: "Interview: a production API key was pushed to git. What do you do first?"
+  back: "Rotate or revoke it at the provider immediately. Then check for misuse, move it to the secret manager, and add scanning so it cannot happen again."
+  skills: [secrets-management]
+- id: history-rewrite
+  type: concept
+  front: Is rewriting git history enough after a secret leaks?
+  back: "No. Clones, forks and scrapers already have it. Rotation is the fix; rewriting only limits future exposure."
+  skills: [secrets-management]
+- id: rotation-two-keys
+  type: concept
+  front: How do you rotate a token-signing key without logging everyone out?
+  back: "Accept the old and new keys for a while (kid in JWT headers, a list of cookie secrets), sign only with the new one, then drop the old."
+  skills: [secrets-management]
+- id: env-file
+  type: cloze
+  front: "Node loads a local `.env` file without any package via {{--env-file=.env}}."
+  back: "--env-file=.env"
+  skills: [secrets-management]

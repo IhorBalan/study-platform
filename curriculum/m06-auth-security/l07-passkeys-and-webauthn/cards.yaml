@@ -1,0 +1,55 @@
+- id: passkey-term
+  type: term
+  front: Passkey
+  back: "A WebAuthn public-key credential bound to one site's RP ID; the private key stays on the authenticator. Example: a credential for ledgerly.example unlocked with Touch ID."
+  skills: [passkeys]
+- id: why-phishing-resistant
+  type: concept
+  front: Why can a phishing site not use a victim's passkey?
+  back: "The browser only uses a credential on its RP ID and puts the real origin into the signed client data. A look-alike domain gets nothing usable."
+  skills: [passkeys]
+- id: server-stores
+  type: concept
+  front: What does the server store for each passkey?
+  back: "Credential id, public key, user id, signature counter, transports, backup flags, plus a name and timestamps for the user."
+  skills: [passkeys]
+- id: db-leak-passkeys
+  type: concept
+  front: What does an attacker gain from a leaked table of passkey credentials?
+  back: "Nothing that logs anyone in. It holds only public keys, which verify signatures but cannot create them."
+  skills: [passkeys]
+- id: registration-steps
+  type: concept
+  front: What happens in a WebAuthn registration ceremony?
+  back: "Server sends a challenge and options; navigator.credentials.create makes a key pair after user verification; server checks challenge, origin, RP ID hash and flags, then stores the public key."
+  skills: [passkeys]
+- id: authentication-verify
+  type: concept
+  front: What does the server check in a WebAuthn authentication response?
+  back: "Type webauthn.get, its own unused challenge, its origin, the RP ID hash, the user-present and user-verified flags, and the signature with the stored public key."
+  skills: [passkeys]
+- id: synced-vs-bound
+  type: comparison
+  front: Synced passkey vs device-bound passkey
+  back: "A synced passkey is backed up and copied across the user's devices by a platform or password manager. A device-bound one lives only on one authenticator, such as a security key."
+  skills: [passkeys]
+- id: conditional-mediation
+  type: cloze
+  front: "Passkeys appear in the browser's autofill when `navigator.credentials.get` is called with {{mediation: 'conditional'}}."
+  back: "mediation: 'conditional'"
+  skills: [passkeys]
+- id: attestation-none
+  type: concept
+  front: Why do most consumer apps request attestation "none"?
+  back: "Attestation only proves the authenticator model. That matters for regulated hardware policies, not for ordinary sign-in."
+  skills: [passkeys]
+- id: passkey-recovery
+  type: concept
+  front: Once users have passkeys, which part of your auth becomes the weakest door?
+  back: "Account recovery. Email links, support resets and backup codes must be designed as carefully as login."
+  skills: [passkeys]
+- id: counter-zero
+  type: concept
+  front: Should you reject a passkey login when the signature counter stays at 0?
+  back: "No. Synced passkeys often report 0. A counter that goes backwards on a device-bound key is the signal worth investigating."
+  skills: [passkeys]

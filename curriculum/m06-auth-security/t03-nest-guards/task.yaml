@@ -1,0 +1,26 @@
+title: Guards and ownership in NestJS
+type: repo
+skills: [access-control, token-auth]
+services: []
+runner: nest
+hints:
+  - "Register the guards with { provide: APP_GUARD, useClass: ... } in a module. Global guards run in the order they are registered, so authentication comes first."
+  - "reflector.getAllAndOverride(IS_PUBLIC_KEY, [context.getHandler(), context.getClass()]) finds @Public() on either the method or the controller. The same call works with the Roles decorator object."
+  - "Put only the user id in the token and load the user in the guard. Then a role change takes effect on the next request."
+  - "A guard sees the request, not the document. The ownership rule belongs where the document is loaded."
+  - "The list route needs the same rule as the single-item routes. Filter by owner; do not return everything and hope the client hides it."
+criteria:
+  - { id: compiles, title: The project compiles with tsc }
+  - { id: public-routes, title: "Health and login work without a token, and a wrong password gets 401" }
+  - { id: requires-auth, title: Every other route answers 401 without a valid bearer token }
+  - { id: current-user, title: "GET /me returns the user from the token, and request headers cannot change who that is" }
+  - { id: role-guard, title: "/admin/users is 403 for members, 200 for admins and 401 for anonymous callers" }
+  - { id: owner-access, title: "Owners can create, list, read, update and delete their own documents" }
+  - { id: bola-blocked, title: "Another member cannot see, list, change or delete a document, and gets 404" }
+  - { id: admin-override, title: An admin can read and delete any document }
+rubric:
+  - { id: deny-by-default, title: "AuthGuard is registered globally and routes opt out with @Public(), so a new route without annotations is protected", skill: access-control, max: 4 }
+  - { id: guard-order, title: "Authentication runs before the role check, and RolesGuard reads roles from metadata with Reflector rather than hard-coding routes", skill: access-control, max: 3 }
+  - { id: ownership-location, title: "The ownership rule is written once, next to the data (service or query), and is used by list, read, update and delete alike", skill: access-control, max: 4 }
+  - { id: readme-reasoning, title: "README explains why a foreign document gets 404 rather than 403, and why the ownership check is not in a guard", skill: access-control, max: 3 }
+limits: { timeoutSeconds: 120 }

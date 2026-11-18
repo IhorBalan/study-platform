@@ -1,0 +1,28 @@
+title: Signed tokens by hand
+type: repo
+skills: [token-auth]
+services: []
+runner: node
+hints:
+  - "Order matters: check the shape, then the algorithm, then the signature, and only then read claims such as exp and aud."
+  - "Never pass the header's alg to createHmac. Compare it with the one value you accept."
+  - "Buffer.from(segment, 'base64url') decodes without throwing even for junk, so validate the characters yourself and wrap JSON.parse."
+  - "crypto.timingSafeEqual throws when the lengths differ. Compare lengths first and treat a mismatch as a bad signature."
+  - "exp is in seconds, not milliseconds. A token is expired when now >= exp."
+criteria:
+  - { id: issue-format, title: A token is header.payload.signature with HS256 and an HMAC-SHA256 signature }
+  - { id: verify-valid, title: "A valid token returns its payload, including tokens signed by another HS256 implementation" }
+  - { id: tamper, title: "A changed payload, a wrong secret or a damaged signature is rejected as bad-signature" }
+  - { id: alg-check, title: "Only HS256 is accepted, whatever the header asks for" }
+  - { id: expiry, title: exp is required and a token is expired from the second exp names }
+  - { id: audience, title: "When an audience is expected, a token for another audience or none is rejected" }
+  - { id: malformed, title: Garbage input is rejected as malformed and never with another kind of error }
+  - { id: timing-safe, title: Signatures are compared with crypto.timingSafeEqual }
+  - { id: weak-secret, title: A secret shorter than 32 bytes is refused with a RangeError }
+  - { id: own-tests, title: Your tests pass and catch a verifyToken that skips the signature check }
+rubric:
+  - { id: check-order, title: "verifyToken checks shape, algorithm and signature before it reads any claim, and the code makes that order obvious", skill: token-auth, max: 4 }
+  - { id: errors, title: "Every failure is a TokenError with one of the five codes, raised in one place per kind, with no stack traces or secrets in the messages", skill: token-auth, max: 3 }
+  - { id: alg-explanation, title: "README explains why the server, not the header, picks the algorithm, and describes the none or HS256-with-public-key attack correctly", skill: token-auth, max: 4 }
+  - { id: library-case, title: "README names at least two concrete things a maintained library such as jose adds (for example JWKS, kid and rotation, asymmetric algorithms, iss and nbf checks)", skill: token-auth, max: 3 }
+limits: { timeoutSeconds: 60 }

@@ -1,5 +1,6 @@
-import { queryOptions, useSuspenseQuery } from '@tanstack/react-query';
+import { queryOptions, useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
+import { useEffect } from 'react';
 import { Markdown } from '../../components/Markdown';
 import { SubmitPanel } from '../../components/SubmitPanel';
 import { api } from '../../lib/api';
@@ -16,10 +17,51 @@ export const Route = createFileRoute('/tasks/$moduleId/$taskSlug')({
 
 const typeLabel = { repo: 'Code task', text: 'Written answer', diagram: 'Diagram' } as const;
 
+const statusLabel = {
+  not_started: 'Not started',
+  in_progress: 'In progress',
+  done: 'Done',
+} as const;
+const statusTone = {
+  not_started: 'text-zinc-500 dark:text-zinc-400',
+  in_progress: 'text-amber-700 dark:text-amber-400',
+  done: 'text-emerald-700 dark:text-emerald-400',
+} as const;
+
+const splitId = (id: string) => {
+  const [moduleId = '', taskSlug = ''] = id.split('/');
+  return { moduleId, taskSlug };
+};
+
 function TaskPage() {
   const { moduleId, taskSlug } = Route.useParams();
   const { data: task } = useSuspenseQuery(taskQuery(`${moduleId}/${taskSlug}`));
   useStudySession('task', task.id);
+
+  // The plan knows this task's status and its neighbours in the module.
+  const queryClient = useQueryClient();
+  const plan = useQuery({ queryKey: ['plan'], queryFn: api.plan });
+  const siblings = plan.data?.modules.find((m) => m.id === task.moduleId)?.tasks ?? [];
+  const index = siblings.findIndex((t) => t.id === task.id);
+  const current = siblings[index];
+  const previous = index > 0 ? siblings[index - 1] : undefined;
+  const next = index >= 0 ? siblings[index + 1] : undefined;
+
+  // A finished check run or review can change the status, so ask for the plan again
+  // whenever the list of submissions is refreshed and no run is in flight.
+  const submissions = useQuery({
+    queryKey: ['submissions', task.id],
+    queryFn: () => api.submissions(task.id),
+  });
+  const busy = submissions.data?.submissions.some(
+    (s) =>
+      s.runs.some((r) => r.status === 'queued' || r.status === 'running') ||
+      s.review?.status === 'running',
+  );
+  const settledAt = submissions.isFetching || busy ? 0 : submissions.dataUpdatedAt;
+  useEffect(() => {
+    if (settledAt > 0) void queryClient.invalidateQueries({ queryKey: ['plan'] });
+  }, [settledAt, queryClient]);
 
   return (
     <article>
@@ -29,7 +71,18 @@ function TaskPage() {
         </Link>{' '}
         / {task.moduleTitle} / {typeLabel[task.type]}
       </p>
-      <h1 className="mt-1 mb-6 text-3xl font-semibold">{task.title}</h1>
+      <h1 className="mt-1 text-3xl font-semibold">{task.title}</h1>
+      <p className={`mt-1 mb-6 text-sm font-medium ${current ? statusTone[current.status] : ''}`}>
+        {current ? statusLabel[current.status] : '\u00a0'}
+        {current?.status === 'done' && next && (
+          <>
+            {' · '}
+            <Link to="/tasks/$moduleId/$taskSlug" params={splitId(next.id)} className="underline">
+              Next: {next.title}
+            </Link>
+          </>
+        )}
+      </p>
 
       <Markdown>{task.markdown}</Markdown>
 
@@ -77,6 +130,34 @@ function TaskPage() {
       )}
 
       <SubmitPanel task={task} />
+
+      {(previous || next) && (
+        <nav
+          className="mt-10 flex justify-between gap-4 border-t border-zinc-200 pt-4 text-sm dark:border-zinc-800"
+          aria-label="Tasks in this module"
+        >
+          {previous ? (
+            <Link
+              to="/tasks/$moduleId/$taskSlug"
+              params={splitId(previous.id)}
+              className="hover:underline"
+            >
+              ← {previous.title}
+            </Link>
+          ) : (
+            <span />
+          )}
+          {next && (
+            <Link
+              to="/tasks/$moduleId/$taskSlug"
+              params={splitId(next.id)}
+              className="text-right hover:underline"
+            >
+              {next.title} →
+            </Link>
+          )}
+        </nav>
+      )}
     </article>
   );
 }

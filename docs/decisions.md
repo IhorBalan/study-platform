@@ -502,6 +502,10 @@ The backend tester showed that `pnpm restore --yes` ran while the API was writin
 
 `g` then `p`, `r`, `c`, `s` or `e` goes to Plan, Review, Cards, Stats or Settings; `/` goes to Search (or focuses the search field); `?` shows the list. Letters are matched on `event.code`, not `event.key`, so they work when the keyboard is in a Ukrainian or other non-Latin layout. Shortcuts are ignored inside fields, with Ctrl, Cmd or Alt held, and while the help dialog is open. `g` waits 1.5 seconds for its second key. The logic is a pure function (`lib/shortcuts.ts`) with unit tests; the help is a native `<dialog>`, which brings focus trapping and Escape for free. Settings is `e` because `s` is Stats.
 
+### D-136 · `pnpm curriculum:verify` proves the checks against solution and starter — 2026-11-18
+
+D-079 says each task's checks pass on `solution/` and fail on `starter/`, but nothing ran that (code review R5). `pnpm curriculum:verify [task or module id…]` builds a throwaway git repository per task, commits `solution/` and then `starter/` into the task folder, and runs each through the bridge's own `runChecks`, so the sandbox flags, limits and services are exactly the learner's. A task is wrong when the solution fails a check, the starter passes all of them, or the checks cannot run. A task whose practice services are not running is reported as skipped, with the `pnpm lab up` command. `VERIFY_JOBS` (default 2, at most 4) sets how many tasks run at once. First full run: all 53 tasks correct (31 without services, 22 with postgres, valkey, aws and mailpit up). Running it in CI is a separate step.
+
 ---
 
 ## Product direction

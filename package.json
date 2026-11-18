@@ -21,6 +21,7 @@
     "db:generate": "pnpm --filter @study/db generate",
     "db:migrate": "pnpm --filter @study/db migrate",
     "curriculum:check": "pnpm --filter @study/curriculum build && pnpm --filter @study/curriculum check",
+    "curriculum:verify": "turbo run build --filter=@study/bridge --output-logs=errors-only --log-prefix=none >/dev/null && node apps/bridge/dist/verify.js",
     "lab": "turbo run build --filter=@study/lab-cli --output-logs=errors-only --log-prefix=none >/dev/null && node packages/lab-cli/dist/cli.js",
     "full:up": "node scripts/ensure-env.mjs && docker compose --env-file .env -f infra/compose/full.compose.yaml up -d --build --wait",
     "full:down": "docker compose --env-file .env -f infra/compose/full.compose.yaml down",

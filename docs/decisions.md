@@ -466,6 +466,36 @@ A submission that used more memory than its task allows had every criterion mark
 
 ---
 
+## Product direction
+
+Feature proposals for a local, single-user study tool. The full ranked list is in the project's `ux/feature-proposals.md`. These entries are numbered from D-200 so they don't collide with the build log.
+
+### D-200 · Feature work stays local and single-user — 2026-11-18
+- **Chosen:** propose only features that help one learner on one machine. Accounts, hosting, sharing, sync and SEO are left out.
+- **Why:** Ihor said the platform is for local self-study and won't be published at this stage. It matches spec section 9.
+- **Revisit if:** the platform is going to be published.
+
+### D-201 · Backup and restore come first — 2026-11-18
+- **Chosen:** `pnpm backup` and `pnpm restore`, using `pg_dump` and `pg_restore` of the platform database, plus one automatic backup a day when `pnpm dev` starts.
+- **Why:** all progress lives in one Docker volume, and nothing else on the list protects against losing months of work. The cost is small.
+- **Alternatives:** a bind mount instead of a named volume (it still needs a copy to be a backup); a JSON export of each table (more code, and harder to restore).
+
+### D-202 · Pace through a workload forecast, not goals or dates — 2026-11-18
+- **Chosen:** show the cards due over the next 30 days and an estimate of review time. Don't add a weekly hours goal or a target date.
+- **Why:** Ihor removed the weekly hour budget and the projected finish date before this log started (see "Agreed before this log"). A forecast shows what completing lessons will cost without bringing back a schedule.
+- **Revisit if:** Ihor wants a goal or a target date. That is a small PR.
+
+### D-203 · Practice-ahead reviews don't reschedule cards — 2026-11-18
+- **Chosen:** in a review scoped to one module or to weak skills, cards that aren't due yet can be practised. Those grades are stored as practice and don't change the FSRS schedule.
+- **Why:** reviewing early with real grades distorts FSRS intervals. Anki's filtered decks handle it the same way.
+- **Alternatives:** reschedule from early reviews (it skews the memory model); allow only due cards (it doesn't help the night before an interview).
+
+### D-204 · Proposals left out — 2026-11-18
+- **Left out:** a PWA or offline mode (it already runs on localhost), sync across machines (backup covers moving machines), badges or XP, a Pomodoro timer, and opening the app to the LAN for phone review (it would undo the host guard, D-123).
+- **Revisit if:** studying on the phone becomes important. A one-way cards CSV export for Anki is the low-risk option.
+
+---
+
 ## Agreed before this log
 
 These were agreed with Ihor in the session before this log existed. They are copied from the handoff document as they were written.

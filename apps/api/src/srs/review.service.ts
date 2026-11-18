@@ -110,7 +110,7 @@ export class ReviewService {
     const settings = await this.settings.get();
 
     return this.db.transaction(async (tx) => {
-      // Lock the schedule row so two tabs cannot grade the same card twice.
+      // Lock the schedule row so concurrent grades for one card run one after the other.
       const [row] = await tx
         .select()
         .from(cards)
@@ -120,6 +120,11 @@ export class ReviewService {
       if (!row) throw new NotFoundException(`Card "${cardId}" does not exist`);
       if (row.cards.status !== 'active') {
         throw new ConflictException(`Card is ${row.cards.status} and cannot be reviewed`);
+      }
+      // A second request for the same card (another tab, a retry) arrives here
+      // after the first one moved the due date forward, and is refused.
+      if (row.card_schedules.state !== 'new' && row.card_schedules.due > now) {
+        throw new ConflictException('Card is not due yet. It may have been graded already.');
       }
 
       const fsrsCard = await loadCard(

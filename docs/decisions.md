@@ -331,3 +331,14 @@ Decisions made while building are appended below.
 - **Not verified:** the containers reaching the host bridge at `host.docker.internal`. That name exists on Docker Desktop and OrbStack for macOS, not in the Linux environment this was built in. If checks show "bridge not running" in full mode while `pnpm bridge` is up, tell me.
 - **The curriculum is baked into the API image,** so a content change needs a rebuild in full mode. Dev mode reads the files directly.
 - **Web server:** an unprivileged nginx image that serves the built files and passes `/api` to the API container.
+
+## D-102: Second round of QA fixes (2026-11-18)
+
+**Decided:** Fixed the seven findings from the second QA pass.
+
+- A card that is not new and not yet due cannot be graded (`409`). This stops a second tab or a retry from recording a second grade. Alternative: send the expected `reps` with the grade. Rejected because "not due" needs no client change and also blocks grading cards outside the queue.
+- Writes to the API must carry `application/json`, and an `Origin` header, when present, must be `WEB_ORIGIN` (or its `localhost` / `127.0.0.1` twin). Requests with no `Origin`, such as curl, still work. Alternative: a CSRF token. Rejected as more moving parts than a single-user local app needs.
+- Settings accept only the review modes that exist (`copy_paste`, `bridge`) and an absolute lab path or none.
+- A lesson or task address that does not exist shows "Page not found" inside the normal layout.
+- An emptied number field on Settings no longer saves 0, and the Cards form says so when the text is only spaces.
+- `apps/web/.tanstack/` is ignored by git.

@@ -220,7 +220,16 @@ export const SettingsDto = z.object({
 });
 export type SettingsDto = z.infer<typeof SettingsDto>;
 
-export const UpdateSettings = SettingsDto.partial();
+/** Only what the platform can act on: the two review modes that exist and an absolute lab path. */
+export const UpdateSettings = SettingsDto.extend({
+  reviewMode: z.enum(['copy_paste', 'bridge']),
+  labRepoPath: z
+    .string()
+    .trim()
+    .max(1000)
+    .regex(/^(\/|[A-Za-z]:[\\/])/, 'Use an absolute path, for example /Users/you/code/backend-lab')
+    .nullable(),
+}).partial();
 export type UpdateSettings = z.infer<typeof UpdateSettings>;
 
 // ---------------------------------------------------------------------------

@@ -1,9 +1,18 @@
-import { BadRequestException, Module, StandardSchemaValidationPipe } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Module,
+  StandardSchemaValidationPipe,
+  type MiddlewareConsumer,
+  type NestModule,
+} from '@nestjs/common';
 import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 import { BridgeController } from './bridge/bridge.controller.js';
 import { ProblemDetailsFilter } from './common/problem-details.filter.js';
+import { writeGuard } from './common/write-guard.middleware.js';
 import { CurriculumModule } from './curriculum/curriculum.module.js';
 import { ConfigModule } from './config/config.module.js';
+import { ENV, type Env } from './config/env.js';
 import { DatabaseModule } from './database/database.module.js';
 import { HealthController } from './health/health.controller.js';
 import { PlanController } from './plan/plan.controller.js';
@@ -66,4 +75,10 @@ import { SrsController } from './srs/srs.controller.js';
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  constructor(@Inject(ENV) private readonly env: Env) {}
+
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(writeGuard(this.env.WEB_ORIGIN)).forRoutes('*path');
+  }
+}

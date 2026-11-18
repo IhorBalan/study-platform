@@ -5,9 +5,12 @@ import path from 'node:path';
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
+import { schema } from '@study/db';
+import { eq } from 'drizzle-orm';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
+import { DB, type Database } from '../src/database/database.module.js';
 
 describe('API (e2e, real Postgres)', () => {
   let container: StartedPostgreSqlContainer;
@@ -15,6 +18,14 @@ describe('API (e2e, real Postgres)', () => {
   let bridge: Server;
   const bridgeReplies: unknown[] = [];
   const http = () => request(app.getHttpServer());
+  /** Moves a card's due date into the past, as if its interval had elapsed. */
+  const makeDue = async (cardId: string) => {
+    await app
+      .get<Database>(DB)
+      .update(schema.cardSchedules)
+      .set({ due: new Date(Date.now() - 60_000) })
+      .where(eq(schema.cardSchedules.cardId, cardId));
+  };
 
   beforeAll(async () => {
     container = await new PostgreSqlContainer('postgres:18-alpine').start();
@@ -69,6 +80,33 @@ describe('API (e2e, real Postgres)', () => {
     const res = await http().get('/api/nope').expect(404);
     expect(res.headers['content-type']).toContain('application/problem+json');
     expect(res.body).toMatchObject({ status: 404, title: 'Not found' });
+  });
+
+  describe('write protection', () => {
+    it('refuses writes from another origin and form-encoded bodies', async () => {
+      const foreign = await http()
+        .post('/api/cards')
+        .set('Origin', 'https://evil.example')
+        .send({ type: 'term', front: 'planted', back: 'x', skills: [] });
+      expect(foreign.status).toBe(403);
+      expect(foreign.headers['content-type']).toContain('application/problem+json');
+
+      const form = await http()
+        .post('/api/cards')
+        .type('form')
+        .send('type=term&front=planted&back=x');
+      expect(form.status).toBe(415);
+
+      const list = await http().get('/api/cards').expect(200);
+      expect(list.body.cards.some((c: { front: string }) => c.front === 'planted')).toBe(false);
+    });
+
+    it('accepts JSON writes from the web app on localhost and 127.0.0.1', async () => {
+      for (const origin of ['http://localhost:5173', 'http://127.0.0.1:5173']) {
+        const res = await http().patch('/api/settings').set('Origin', origin).send({});
+        expect(res.status).toBe(200);
+      }
+    });
   });
 
   describe('curriculum', () => {
@@ -417,13 +455,26 @@ describe('API (e2e, real Postgres)', () => {
     it('survives a second review of the same card (stored state round-trips)', async () => {
       const list = await http().get('/api/cards').expect(200);
       const reviewed = list.body.cards.find((c: { reps: number }) => c.reps === 1);
+
+      // Not due yet: a repeated or concurrent grade is refused and changes nothing.
+      const early = await http().post(`/api/review/${reviewed.id}`).send({ grade: 'again' });
+      expect(early.status).toBe(409);
+
+      await makeDue(reviewed.id);
+      const [first, second] = await Promise.all([
+        http().post(`/api/review/${reviewed.id}`).send({ grade: 'good' }),
+        http().post(`/api/review/${reviewed.id}`).send({ grade: 'again' }),
+      ]);
+      expect([first.status, second.status].toSorted()).toEqual([200, 409]);
+
+      await makeDue(reviewed.id);
       const res = await http()
         .post(`/api/review/${reviewed.id}`)
         .send({ grade: 'again' })
         .expect(200);
       expect(['learning', 'relearning', 'review']).toContain(res.body.state);
       const again = await http().get('/api/cards').expect(200);
-      expect(again.body.cards.find((c: { id: string }) => c.id === reviewed.id).reps).toBe(2);
+      expect(again.body.cards.find((c: { id: string }) => c.id === reviewed.id).reps).toBe(3);
     });
 
     it('respects the daily limit for new cards', async () => {
@@ -446,6 +497,16 @@ describe('API (e2e, real Postgres)', () => {
     it('validates settings', async () => {
       const res = await http().patch('/api/settings').send({ desiredRetention: 1.5 });
       expect(res.status).toBe(400);
+      for (const body of [
+        { reviewMode: 'api' },
+        { labRepoPath: '' },
+        { labRepoPath: 'some/dir' },
+      ]) {
+        const bad = await http().patch('/api/settings').send(body);
+        expect(bad.status).toBe(400);
+      }
+      await http().patch('/api/settings').send({ labRepoPath: '/tmp/lab' }).expect(200);
+      await http().patch('/api/settings').send({ labRepoPath: null }).expect(200);
     });
   });
 

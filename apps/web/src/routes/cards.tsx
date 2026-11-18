@@ -18,6 +18,7 @@ function CardsPage() {
   const [type, setType] = useState<CardType>('concept');
   const [front, setFront] = useState('');
   const [back, setBack] = useState('');
+  const [blank, setBlank] = useState(false);
 
   const create = useMutation({
     mutationFn: () => api.createCard({ type, front, back, skills: [] }),
@@ -39,7 +40,12 @@ function CardsPage() {
 
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
-    if (front.trim() && back.trim()) create.mutate();
+    if (front.trim() && back.trim()) {
+      setBlank(false);
+      create.mutate();
+    } else {
+      setBlank(true);
+    }
   };
 
   const all = cards.data?.cards ?? [];
@@ -79,7 +85,12 @@ function CardsPage() {
           <Button type="submit" disabled={create.isPending}>
             Add card
           </Button>
-          {create.isError && (
+          {blank && (
+            <span role="alert" className="text-sm text-red-600">
+              The front and the back both need some text.
+            </span>
+          )}
+          {!blank && create.isError && (
             <span role="alert" className="text-sm text-red-600">
               {create.error.message}
             </span>

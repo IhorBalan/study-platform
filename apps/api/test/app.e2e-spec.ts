@@ -10,6 +10,7 @@ import { and, eq, ne } from 'drizzle-orm';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { AppModule } from '../src/app.module.js';
+import { DeckSyncService } from '../src/curriculum/deck-sync.service.js';
 import { JSON_BODY_LIMIT } from '../src/common/body-limit.js';
 import { QueueService } from '../src/queue/queue.service.js';
 import { WeakSkillsService } from '../src/stats/weak-skills.service.js';
@@ -890,6 +891,60 @@ describe('API (e2e, real Postgres)', () => {
         .patch('/api/sessions/00000000-0000-4000-8000-000000000000')
         .send({ activeSeconds: 5 });
       expect(res.status).toBe(404);
+    });
+  });
+
+  describe('curriculum updates', () => {
+    it('brings the cards of finished lessons up to date and respects the learner', async () => {
+      const db = app.get<Database>(DB);
+      const decks = app.get(DeckSyncService);
+      const key = (id: string) => `m00-demo/l01-first#${id}`;
+      const card = async (id: string) =>
+        (
+          await db
+            .select()
+            .from(schema.cards)
+            .where(eq(schema.cards.sourceKey, key(id)))
+        )[0];
+      const schedule = async (cardId: string) =>
+        (
+          await db
+            .select()
+            .from(schema.cardSchedules)
+            .where(eq(schema.cardSchedules.cardId, cardId))
+        )[0];
+      await decks.sync();
+
+      // As if the first card had different wording when the lesson was finished,
+      // and the second card was written after that.
+      const first = await card('c1');
+      if (!first) throw new Error('fixture card missing');
+      await db
+        .update(schema.cards)
+        .set({ front: 'Old wording' })
+        .where(eq(schema.cards.id, first.id));
+      await db.delete(schema.cards).where(eq(schema.cards.sourceKey, key('c2')));
+      const scheduleBefore = await schedule(first.id);
+
+      expect(await decks.sync()).toEqual({ updated: 1, added: 1 });
+      expect((await card('c1'))?.front).toBe('Q1');
+      // Only the text changes: the card keeps its place in the schedule.
+      expect(await schedule(first.id)).toEqual(scheduleBefore);
+      const second = await card('c2');
+      expect(second).toMatchObject({ front: 'Q2', status: 'active', source: 'lesson' });
+      expect(await decks.sync()).toEqual({ updated: 0, added: 0 });
+
+      // A card the learner reworded, and one they deleted, are left alone.
+      await http().patch(`/api/cards/${first.id}`).send({ front: 'My wording' }).expect(200);
+      await http().delete(`/api/cards/${second?.id}`).expect(204);
+      expect(await decks.sync()).toEqual({ updated: 0, added: 0 });
+      expect((await card('c1'))?.front).toBe('My wording');
+      expect(await card('c2')).toBeUndefined();
+      const again = await http()
+        .put('/api/lessons/m00-demo/l01-first/progress')
+        .send({ status: 'done' })
+        .expect(200);
+      expect(again.body.cardsAdded).toBe(0);
     });
   });
 });

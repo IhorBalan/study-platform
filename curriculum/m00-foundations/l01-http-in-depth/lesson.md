@@ -57,6 +57,34 @@ The first digit is the family: `2xx` success, `3xx` further action needed, `4xx`
 
 **Cookies.** The server sends `Set-Cookie: sid=abc; HttpOnly; Secure; SameSite=Lax; Path=/`. The browser returns `Cookie: sid=abc` on matching requests. `HttpOnly` hides the cookie from JavaScript, `Secure` restricts it to HTTPS, and `SameSite` controls whether it travels on cross-site requests.
 
+## CORS from the server's side
+
+You have met CORS as a red error in the browser console. On the backend you are the one who answers it. Three facts explain most of it:
+
+- **The browser enforces it, not the server.** By default a page on `https://app.example.com` may send a request to `https://api.example.com`, but its JavaScript may not read the response. CORS headers are how the server tells the browser to relax that rule. `curl`, a mobile app or another server never look at them.
+- **Simple requests go straight through.** A `GET`, `HEAD` or `POST` with only basic headers and a form or plain-text content type is sent at once, with an `Origin` header. The server has already run it by the time the browser decides whether the page may see the answer.
+- **Everything else is asked about first.** A `PUT`, `PATCH` or `DELETE`, a JSON body (`Content-Type: application/json`) or a custom header such as `Authorization` triggers a **preflight**: the browser sends an `OPTIONS` request and only sends the real one if the reply allows it.
+
+```http
+OPTIONS /projects/42 HTTP/1.1
+Origin: https://app.example.com
+Access-Control-Request-Method: PATCH
+Access-Control-Request-Headers: authorization, content-type
+
+HTTP/1.1 204 No Content
+Access-Control-Allow-Origin: https://app.example.com
+Access-Control-Allow-Methods: GET, PATCH, DELETE
+Access-Control-Allow-Headers: authorization, content-type
+Access-Control-Max-Age: 600
+Vary: Origin
+```
+
+`Access-Control-Max-Age` lets the browser remember the answer, here for ten minutes, so it does not preflight every call. The real response must carry `Access-Control-Allow-Origin` too.
+
+For cookies or other credentials, the server must also send `Access-Control-Allow-Credentials: true`, and then `Access-Control-Allow-Origin` must name one exact origin. The wildcard `*` is not accepted together with credentials. Servers that allow several origins check the request's `Origin` against a list, echo the one that matches, and send `Vary: Origin` so a cache does not hand one origin's answer to another.
+
+CORS is not authentication and does not protect an API. It only decides which web pages may read your responses in a browser. Anyone can call the API without a browser, so every request still needs its own authentication and authorization (module 5).
+
 ## HTTP/1.1, HTTP/2 and HTTP/3
 
 The semantics above are the same in all three. What changes is how bytes travel.
@@ -82,6 +110,8 @@ Lines starting with `*` are curl's notes about DNS, TCP and TLS. Lines starting 
 - Mixing up `401` (who are you?) and `403` (I know who you are; no).
 - Believing `no-cache` means "do not cache". That is `no-store`.
 - Varying a response by a header without listing it in `Vary`, so a shared cache serves the wrong variant.
+- Answering the preflight `OPTIONS` with `401` because it carries no token. Browsers never send credentials on a preflight, so it must pass without them.
+- Treating a CORS allow-list as security. It limits browsers, not callers.
 
 ## Go deeper
 
@@ -90,3 +120,4 @@ Lines starting with `*` are curl's notes about DNS, TCP and TLS. Lines starting 
 - [MDN: HTTP](https://developer.mozilla.org/en-US/docs/Web/HTTP): readable reference pages for every header and status code.
 - [RFC 9114: HTTP/3](https://www.rfc-editor.org/rfc/rfc9114): how the same semantics map onto QUIC streams.
 - [curl man page](https://curl.se/docs/manpage.html): every flag, including `-v`, `-i`, `-H` and `--http2`.
+- [MDN: Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS): simple requests, preflights and credentials, with examples.

@@ -57,3 +57,21 @@
   front: 'What problem of HTTP/2 does HTTP/3 remove by running over QUIC instead of TCP?'
   back: 'One lost packet stalls every stream on an HTTP/2 connection. QUIC streams are independent, so loss only delays the stream it hit.'
   skills: [http-versions]
+
+- id: cors-preflight-trigger
+  type: concept
+  front: 'What makes a browser send a CORS preflight `OPTIONS` request before the real one?'
+  back: 'A method other than `GET`, `HEAD` or `POST`, a non-form content type such as `application/json`, or a custom header such as `Authorization`.'
+  skills: [http-semantics]
+
+- id: cors-wildcard-credentials
+  type: concept
+  front: 'Can a response with `Access-Control-Allow-Origin: *` be read by a page that sent cookies with the request?'
+  back: 'No. With credentials the server must name one exact origin and send `Access-Control-Allow-Credentials: true`.'
+  skills: [http-semantics]
+
+- id: cors-not-security
+  type: concept
+  front: 'Does a strict CORS policy stop `curl` or another server from calling your API?'
+  back: 'No. Only browsers enforce CORS. It decides which web pages may read a response; the API still needs authentication.'
+  skills: [http-semantics]

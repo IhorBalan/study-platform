@@ -30,3 +30,10 @@ export function lessonParams(lessonId: string): { moduleId: string; lessonSlug: 
   const [moduleId = '', lessonSlug = ''] = lessonId.split('/');
   return { moduleId, lessonSlug };
 }
+
+/** "about 9 min" for a number of cards at a typical pace. Empty when there are no cards. */
+export function reviewEstimate(cards: number, secondsPerCard: number): string {
+  if (cards <= 0) return '';
+  const minutes = Math.max(1, Math.round((cards * secondsPerCard) / 60));
+  return `about ${minutes} min`;
+}

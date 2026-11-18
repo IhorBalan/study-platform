@@ -588,6 +588,8 @@ describe('API (e2e, real Postgres)', () => {
       expect(after.body.counts.reviewedToday).toBe(1);
       // The card just graded is the only one scheduled, so it is the next one due.
       expect(after.body.nextDue).toBe(res.body.due);
+      // Too few timed reviews to measure a pace, so the default stands.
+      expect(after.body.secondsPerCard).toBe(8);
     });
 
     it('survives a second review of the same card (stored state round-trips)', async () => {

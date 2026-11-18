@@ -17,11 +17,11 @@ const runLabel: Record<RunDto['status'], string> = {
 
 const runTone: Record<RunDto['status'], string> = {
   queued: 'text-zinc-500 dark:text-zinc-400',
-  running: 'text-sky-600 dark:text-sky-400',
-  passed: 'text-emerald-600 dark:text-emerald-400',
+  running: 'text-sky-700 dark:text-sky-400',
+  passed: 'text-emerald-700 dark:text-emerald-400',
   failed: 'text-red-600 dark:text-red-400',
-  error: 'text-amber-600 dark:text-amber-400',
-  not_run: 'text-amber-600 dark:text-amber-400',
+  error: 'text-amber-700 dark:text-amber-400',
+  not_run: 'text-amber-700 dark:text-amber-400',
 };
 
 const isActive = (s: SubmissionDto) =>
@@ -145,7 +145,7 @@ export function SubmitPanel({ task }: { task: TaskDetail }) {
               {task.type === 'repo' ? 'Run checks' : 'Save answer'}
             </Button>
             {submit.isError && (
-              <span role="alert" className="text-sm text-red-600">
+              <span role="alert" className="text-sm text-red-600 dark:text-red-400">
                 {submit.error.message}
               </span>
             )}
@@ -216,7 +216,7 @@ function SubmissionCard({ submission, open }: { submission: SubmissionDto; open:
                 <span
                   className={
                     check.passed
-                      ? 'text-emerald-600 dark:text-emerald-400'
+                      ? 'text-emerald-700 dark:text-emerald-400'
                       : 'text-red-600 dark:text-red-400'
                   }
                 >

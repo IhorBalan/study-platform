@@ -121,12 +121,12 @@ function SettingsPage() {
             Save
           </Button>
           {save.isSuccess && (
-            <span role="status" className="text-sm text-emerald-600">
+            <span role="status" className="text-sm text-emerald-700 dark:text-emerald-400">
               Saved
             </span>
           )}
           {save.isError && (
-            <span role="alert" className="text-sm text-red-600">
+            <span role="alert" className="text-sm text-red-600 dark:text-red-400">
               {save.error instanceof ApiError && save.error.errors.length > 0
                 ? save.error.errors.join('. ')
                 : save.error.message}

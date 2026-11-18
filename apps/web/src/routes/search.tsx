@@ -63,7 +63,7 @@ function SearchPage() {
 
       <div className="mt-6" aria-live="polite">
         {search.isError && (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-sm text-red-600 dark:text-red-400">
             Search failed: {search.error.message}
           </p>
         )}

@@ -98,12 +98,12 @@ function CardsPage() {
             Add card
           </Button>
           {blank && (
-            <span role="alert" className="text-sm text-red-600">
+            <span role="alert" className="text-sm text-red-600 dark:text-red-400">
               The front and the back both need some text.
             </span>
           )}
           {!blank && create.isError && (
-            <span role="alert" className="text-sm text-red-600">
+            <span role="alert" className="text-sm text-red-600 dark:text-red-400">
               {create.error.message}
             </span>
           )}

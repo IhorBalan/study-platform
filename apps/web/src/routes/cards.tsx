@@ -1,7 +1,8 @@
 import { CardType, type CardDto } from '@study/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { useState, type FormEvent } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
+import { Markdown } from '../components/Markdown';
 import { Button, Field, Input, PageHeader, Select, Textarea } from '../components/ui';
 import { filterCards } from '../lib/filterCards';
 import { lessonParams } from '../lib/format';
@@ -194,6 +195,25 @@ function CardsPage() {
   );
 }
 
+const sourceLabel = { lesson: 'from a lesson', manual: 'your own', claude: 'suggested' } as const;
+
+/** In the list a cloze card shows its hidden part, marked, instead of raw braces. */
+function listFront(card: CardDto): string {
+  return card.type === 'cloze' ? card.front.replaceAll(/\{\{(.*?)\}\}/g, '**$1**') : card.front;
+}
+
+/** Lesson titles by id, from the plan the app already has cached. */
+function useLessonTitles(): Map<string, string> {
+  const plan = useQuery({ queryKey: ['plan'], queryFn: api.plan });
+  return useMemo(
+    () =>
+      new Map(
+        (plan.data?.modules ?? []).flatMap((m) => m.lessons.map((l) => [l.id, l.title] as const)),
+      ),
+    [plan.data],
+  );
+}
+
 function CardList({
   title,
   cards,
@@ -207,6 +227,7 @@ function CardList({
   tools?: React.ReactNode;
   children: (card: CardDto) => React.ReactNode;
 }) {
+  const lessonTitles = useLessonTitles();
   return (
     <section className="mt-8">
       <h2 className="text-sm font-semibold">{title}</h2>
@@ -218,10 +239,14 @@ function CardList({
           {cards.map((card) => (
             <li key={card.id} className="flex flex-wrap items-start justify-between gap-3 p-3">
               <div className="min-w-0 flex-1 text-sm">
-                <p className="font-medium break-words">{card.front}</p>
-                <p className="mt-1 break-words text-zinc-600 dark:text-zinc-300">{card.back}</p>
+                <div className="break-words [&_p]:font-medium">
+                  <Markdown compact>{listFront(card)}</Markdown>
+                </div>
+                <div className="mt-1 break-words text-zinc-600 dark:text-zinc-300">
+                  <Markdown compact>{card.back}</Markdown>
+                </div>
                 <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                  {card.type} · {card.source} ·{' '}
+                  {card.type} · {sourceLabel[card.source]} ·{' '}
                   {card.status === 'suspended' ? 'suspended' : card.state}
                   {card.lessonId && (
                     <>
@@ -231,7 +256,7 @@ function CardList({
                         params={lessonParams(card.lessonId)}
                         className="underline"
                       >
-                        lesson
+                        {lessonTitles.get(card.lessonId) ?? 'lesson'}
                       </Link>
                     </>
                   )}

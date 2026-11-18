@@ -39,9 +39,20 @@ function headingIds(ids: string[]) {
  * Renders lesson and task Markdown with GitHub tables and highlighted code.
  * `sectionIds` are the ids for its second-level headings, from `lessonOutline`.
  */
-export function Markdown({ children, sectionIds }: { children: string; sectionIds?: string[] }) {
+export function Markdown({
+  children,
+  sectionIds,
+  compact = false,
+}: {
+  children: string;
+  sectionIds?: string[];
+  /** Smaller type and tighter spacing, for lists of short texts such as cards. */
+  compact?: boolean;
+}) {
   return (
-    <div className="prose prose-zinc prose-h2:scroll-mt-4 dark:prose-invert prose-code:before:content-none prose-code:after:content-none prose-pre:border prose-pre:border-zinc-200 prose-pre:bg-zinc-50 dark:prose-pre:border-zinc-800 dark:prose-pre:bg-zinc-900 max-w-none">
+    <div
+      className={`prose prose-zinc prose-h2:scroll-mt-4 ${compact ? 'prose-sm prose-p:my-1 prose-pre:my-2' : ''} dark:prose-invert prose-code:before:content-none prose-code:after:content-none prose-pre:border prose-pre:border-zinc-200 prose-pre:bg-zinc-50 dark:prose-pre:border-zinc-800 dark:prose-pre:bg-zinc-900 max-w-none`}
+    >
       <MarkdownHooks
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[

@@ -1,0 +1,28 @@
+{
+  "name": "study-platform",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.28.12",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "pnpm infra:up && turbo run dev",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "lint": "oxlint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "infra:up": "docker compose -f infra/compose/compose.yaml up -d --wait",
+    "infra:down": "docker compose -f infra/compose/compose.yaml down",
+    "db:generate": "pnpm --filter @study/db generate",
+    "db:migrate": "pnpm --filter @study/db migrate"
+  },
+  "devDependencies": {
+    "oxlint": "catalog:",
+    "prettier": "catalog:",
+    "turbo": "catalog:",
+    "typescript": "catalog:"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react", "vitest"],
+  "categories": { "correctness": "error", "suspicious": "warn" },
+  "rules": {
+    "react/react-in-jsx-scope": "off",
+    "typescript/no-extraneous-class": ["warn", { "allowWithDecorator": true }]
+  },
+  "ignorePatterns": ["dist", "packages/db/drizzle", "**/routeTree.gen.ts"]
+}

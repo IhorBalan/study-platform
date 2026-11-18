@@ -19,7 +19,7 @@ The platform is built with the stack it teaches (React, NestJS, PostgreSQL), so 
 | # | Draft v0 | v1 | Reason |
 |---|---|---|---|
 | 1 | Week-by-week plan at 10 h/week, projected finish date, hours logged vs planned | Recommended order, S/M/L effort per module, time actually spent | Self-paced (handoff) |
-| 2 | 13 modules | 17 modules, each marked core or optional | Missing topics, industry check |
+| 2 | 13 modules | 18 modules (0–17), each marked core or optional | Missing topics, industry check |
 | 3 | Platform and lab share the AWS emulator | Platform stores files on local disk; the lab has its own emulator | A lab exercise could destroy platform data |
 | 4 | Redis/Valkey in the core stack | Core is web + API + worker + one Postgres; jobs use pg-boss | Low-RAM machines |
 | 5 | Worker launches sandboxes and calls the Claude CLI | A native host bridge is the only process that does either | Full mode runs the worker in Docker; the socket must stay out of it |
@@ -148,9 +148,11 @@ No week estimates. Effort is relative: S is roughly a third of M, L roughly doub
 | 12 | Observability: structured logs, metrics, traces, dashboards, alerting concepts | Core | M | observability stack |
 | 13 | CI/CD: pipelines for lint, typecheck, test, build and images; running workflows locally with `act` | Core | S | none |
 | 14 | Infrastructure as code: OpenTofu against the emulator, state, environments | Core | M | lab AWS emulator |
-| 15 | Kubernetes with `kind`: pods, deployments, services, config, probes | Optional, recommended for a job switch | M | kind |
-| 16 | Event streaming: logs vs queues, partitions, consumer groups, delivery guarantees | Optional | S | none (concepts first) |
+| 15 | Kubernetes: what it solves, pods, deployments, services, config and secrets, probes, scaling, and when it is and is not worth using | Core, theory | M | none (optional self-practice with `kind`) |
+| 16 | Kafka and event streaming: logs vs queues, topics, partitions, consumer groups, delivery guarantees, and where it fits next to SQS and BullMQ | Core, theory | S | none (optional self-practice) |
 | 17 | System design and capstone: design reviews, then a SaaS with auth, uploads, subscriptions, jobs, observability, CI and IaC | Core | L | most of the above |
+
+Modules 15 and 16 are theory modules: lessons, card decks and written tasks (design questions reviewed by Claude), with no practice environment in Docker. Each ends with a short "practise on your own" section for learners who want hands-on time later.
 
 Every lesson ships with a card deck. Testing is introduced in module 5 and then required in the checks of every later code task.
 
@@ -247,6 +249,6 @@ None of these block the build. Each has a default that is recorded in the decisi
 
 1. **One-click review needs a test on your Mac.** I cannot verify from here that `claude -p`, started by a background Node process, can read your Claude login from the macOS Keychain. Default: build it, and you try it once.
 2. **Stripe account.** A persistent sandbox needs a free Stripe signup. Default: lessons assume you create one when you reach module 10.
-3. **Kubernetes and Kafka** are optional. About a third of backend postings name Kubernetes and a fifth name Kafka. Default: optional, with Kubernetes marked recommended.
+3. ~~Kubernetes and Kafka optional or core?~~ Resolved 2026-11-18: both are core, taught as theory with practical guidance on where to use them, and no Docker practice environment.
 4. **Prisma vs Drizzle.** Drizzle is the platform's ORM and the main one taught. Default: Prisma gets one comparison lesson and one task.
 5. **Repository default branch.** The repo has no `main`. Default: I keep working on the thread branch and open a pull request when step 1 of the build runs.

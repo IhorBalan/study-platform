@@ -151,7 +151,12 @@ Decisions agreed with Ihor before this log existed are in [`HANDOFF.md`](./HANDO
 ### D-062 · Curriculum additions from the industry check — Accepted
 - **Added:** Docker as its own module; a Kafka and log-based messaging lesson (optional); GraphQL and gRPC as one comparison lesson.
 - **Changed:** Kubernetes stays optional but is marked "recommended for a job switch", because about a third of backend postings name it.
-- **Revisit if:** you want Kubernetes or Kafka in the core path.
+- **Superseded in part by D-064** for Kubernetes and Kafka.
+
+### D-064 · Kubernetes and Kafka are core, taught as theory — Accepted, 2026-11-18 (Ihor's call)
+- **Chosen:** both modules are in the core path. They cover what each tool is, how it works, and when and where to use it in practice. Tasks are written design questions reviewed by Claude. There is no Docker practice environment; each module ends with a "practise on your own" section.
+- **Why:** Ihor asked for both in the learning path and said hands-on practice can be left to the learner.
+- **Replaces:** the "optional" status in D-062, and the `kind` elective in the stack table.
 
 ### D-063 · Order of the build — Accepted
 1. Monorepo, Compose core tier, database schema, API and web shell.
@@ -169,3 +174,29 @@ Decisions agreed with Ihor before this log existed are in [`HANDOFF.md`](./HANDO
 ## Build log
 
 Decisions made while building are appended below.
+
+### D-070 · API dev loop is `tsc --watch` plus `node --watch` — Accepted, 2026-11-18
+- **Why:** TypeScript 7 compiles the API in well under a second, and it emits decorator metadata itself. That removes the need for SWC, Rspack or `nest start` in the dev path, so there is one less tool to understand.
+- **Alternatives:** `nest start --watch` (adds the Nest CLI and its builder choice); SWC builder (faster than old `tsc`, no advantage over TS 7).
+- **Note:** tests still use SWC through `unplugin-swc`, because Vitest's transformer does not emit decorator metadata. Verified: the e2e test injects providers correctly with it.
+
+### D-071 · Migrations run when the API starts — Accepted, 2026-11-18
+- **Why:** one user and one instance, so there is no race, and `pnpm dev` works on an empty volume.
+- **Alternatives:** a separate `pnpm db:migrate` step (kept as a script, and the pattern a team would use in production; module 3 explains the difference).
+
+### D-072 · Workspace packages are consumed as built output (`dist`) — Accepted, 2026-11-18
+- **Why:** plain Node ESM resolution with no path aliases, which TypeScript 7 no longer supports through `baseUrl` anyway. Turborepo builds dependencies first.
+- **Alternatives:** TypeScript project references; importing `.ts` sources directly with a bundler.
+
+### D-073 · Vite proxies `/api` to the API in dev — Accepted, 2026-11-18
+- **Why:** the browser sees one origin, so no CORS configuration is needed for normal use. The API still sets CORS for the web origin, for the case where the proxy is bypassed.
+
+### D-074 · API and web bind to 127.0.0.1 only — Accepted, 2026-11-18
+- **Why:** the platform has no authentication (single user, local), so it must not be reachable from the network.
+
+### D-075 · UI components are hand-written with Tailwind for now — Provisional, 2026-11-18
+- **Why:** the shell needs four small components. shadcn/ui components get added when a screen needs a dialog, tabs or a form.
+- **Revisit if:** the UI grows faster than expected.
+
+### D-076 · Build scripts are allow-listed in `pnpm-workspace.yaml` — Accepted, 2026-11-18
+- **Why:** pnpm 11 blocks dependency install scripts unless listed. `@swc/core` and `esbuild` are allowed; the optional native speed-ups that Testcontainers pulls in (`ssh2`, `cpu-features`, `protobufjs`) are explicitly declined.

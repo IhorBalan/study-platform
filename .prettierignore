@@ -1,0 +1,6 @@
+pnpm-lock.yaml
+dist
+.turbo
+packages/db/drizzle
+docs
+curriculum

@@ -37,7 +37,7 @@ The reasoning and the alternatives behind each row live in [`decisions.md`](./de
 | Claude verification | Copy-paste, `claude -p` headless, Anthropic API | **Copy for Claude** (default) and **one-click through the host bridge**. API provider stays an interface slot. | Claude Code CLI ≥ 2.1.302 | `claude -p --output-format json --json-schema` returns validated JSON in `structured_output`. Signed in with a plan, `claude -p` still draws from subscription limits. [S20] | Anthropic announced and then paused moving `claude -p` to a separate credit; it could return. `--bare` skips subscription login and is slated to become the `-p` default. | Claude Pro (already assumed) |
 | Sandbox | dockerode, docker CLI | **Host bridge shells out to the `docker` CLI** | — | The exact flags are visible and teachable: `--network lab-net --memory --cpus --pids-limit --cap-drop ALL --security-opt no-new-privileges --read-only --tmpfs --user`. | Only the bridge may start containers. | No |
 | Spaced repetition | SM-2, FSRS | **FSRS via `ts-fsrs`** | 6.0.0 (npm, MIT) | FSRS-6 beats SM-2 for 99.6% of users in the 10k-user benchmark. Every review is stored, and `reschedule()` rebuilds state from logs. [S21] | ts-fsrs 6 needs Node ≥ 24 and its docs now default to FSRS-7 with a renamed API. Default parameters are fine until there is enough history to optimise. | No |
-| Kubernetes (elective) | kind, k3d, minikube | **kind** | — | Runs on any Docker runtime with no account. | *Not researched in depth; chosen from experience and to be verified when that module is written.* | No |
+| Kubernetes and Kafka | Practice environments (kind, k3d, single-node broker) vs theory only | **Theory modules in the core path, no practice environment** | — | Ihor's decision on 2026-11-18. Both appear often in postings (Kubernetes about 34%, Kafka about 21%). [S15] | Hands-on practice is left to the learner; lessons point to `kind` and a local broker for that. | No |
 
 ## 2. What the research changed in the plan
 
@@ -58,10 +58,10 @@ Sources: Stack Overflow Developer Survey 2026 (30,903 responses), State of JS 20
 | PostgreSQL usage | 58% of developers (SO 2026, #1 database); 29–36% of backend postings | The Postgres module stays the largest. |
 | AWS | 42–55% of backend postings | Emulated AWS stays core. |
 | Docker | 32–48% of backend postings | Docker moves from "Foundations" into its own hands-on thread. |
-| Kubernetes | 34–35% of backend postings, 20% of Node postings | **Higher than I expected for an elective.** It stays optional because it is heavy locally, but it is flagged "recommended for a job switch". |
+| Kubernetes | 34–35% of backend postings, 20% of Node postings | Core theory module (decided with Ihor). |
 | CI/CD | 37% of backend postings | Core. |
 | Microservices | 30–42% of backend postings | Covered in the reliability and system-design modules. |
-| Kafka | 21–22% of backend postings | **New optional lesson** on log-based messaging vs queues. Concepts first, hands-on with a single-node Kafka-compatible broker is optional. |
+| Kafka | 21–22% of backend postings | Core theory module (decided with Ihor). |
 | APIs / REST | 39% / 23% | Confirms the new API design module. GraphQL (9–15%) gets one comparison lesson. |
 | Observability / monitoring | 21–22% | Core. |
 | Terraform | 8% | IaC stays core but short. |

@@ -12,7 +12,7 @@ import {
 import { StartSession, UpdateSession, type StatsResponse } from '@study/shared';
 import { SessionsService } from './sessions.service.js';
 import { StatsService } from './stats.service.js';
-import { WeakSkillsService } from './weak-skills.service.js';
+import { WeakSkillsService } from '../srs/weak-skills.service.js';
 
 @Controller()
 export class StatsController {

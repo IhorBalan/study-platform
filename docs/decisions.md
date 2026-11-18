@@ -570,6 +570,10 @@ Going Back to a long lesson, or reloading it, landed at the top, because the Mar
 
 A lesson's deck is copied into the database when the lesson is completed (D-077: the queue should hold only what was read). The copy never changed afterwards, so a card corrected by a content review, or added to a lesson later, never reached a learner who had finished that lesson. At start-up the API now compares the learner's lesson cards with the files. Where the type, front or back differ, the text is replaced and the schedule is kept. Cards that are new in a finished lesson are added as new cards. Two things belong to the learner and are respected: a card whose text they changed (`cards.edited_at`) is not overwritten, and a lesson card they deleted (`removed_lesson_cards`) is not added again, also not when the lesson is completed a second time. A card that leaves the curriculum stays with the learner, who may be half-way through learning it. Skill links of existing cards are not re-synced.
 
+### D-153 · The API is grouped into feature modules — 2026-11-18
+
+`AppModule` listed every controller and provider itself, so nothing said which feature may use which (code review R10). There is now one module per feature: `SettingsModule`, `SrsModule`, `PlanModule`, `StatsModule`, `NotesModule` and `SubmissionsModule` (submissions, the checks queue and Claude review). Each exports only what others use, and the imports form a line without cycles: Stats uses Plan, Plan uses Srs, Srs uses Settings. `WeakSkillsService` moved from `stats/` to `srs/`, because grading a card calls it and Stats only reads from it; leaving it in Stats would have made the two modules import each other. Config, the database and the curriculum stay global. It is a pure refactor, and it makes the platform's own code an example of what the NestJS modules lesson teaches.
+
 ---
 
 ## Product direction

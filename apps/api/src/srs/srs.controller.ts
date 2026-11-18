@@ -25,7 +25,7 @@ import {
 import { z } from 'zod';
 import { CurriculumService } from '../curriculum/curriculum.service.js';
 import { CardsService } from './cards.service.js';
-import { WeakSkillsService } from '../stats/weak-skills.service.js';
+import { WeakSkillsService } from './weak-skills.service.js';
 import { ReviewService } from './review.service.js';
 
 const ListQuery = z.object({ status: CardStatus.optional(), lessonId: z.string().optional() });

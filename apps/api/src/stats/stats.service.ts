@@ -6,7 +6,7 @@ import { InjectDb, type Database } from '../database/database.module.js';
 import { PlanService } from '../plan/plan.service.js';
 import { SettingsService } from '../settings/settings.service.js';
 import { addLocalDays, localDayKey, localDayKeys, startOfLocalDay } from '../srs/time.js';
-import { WeakSkillsService } from './weak-skills.service.js';
+import { WeakSkillsService } from '../srs/weak-skills.service.js';
 
 /** Cards with an interval of three weeks or more count as mature, as in Anki. */
 const MATURE_DAYS = 21;

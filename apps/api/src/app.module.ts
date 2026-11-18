@@ -11,55 +11,34 @@ import { BridgeController } from './bridge/bridge.controller.js';
 import { hostGuard } from './common/host-guard.middleware.js';
 import { ProblemDetailsFilter } from './common/problem-details.filter.js';
 import { writeGuard } from './common/write-guard.middleware.js';
-import { CurriculumModule } from './curriculum/curriculum.module.js';
 import { ConfigModule } from './config/config.module.js';
 import { ENV, type Env } from './config/env.js';
+import { CurriculumModule } from './curriculum/curriculum.module.js';
 import { DatabaseModule } from './database/database.module.js';
 import { HealthController } from './health/health.controller.js';
-import { PlanController } from './plan/plan.controller.js';
-import { NotesController } from './notes/notes.controller.js';
-import { NotesService } from './notes/notes.service.js';
-import { PlanService } from './plan/plan.service.js';
-import { QueueService } from './queue/queue.service.js';
-import { SubmissionReviewController } from './review/review.controller.js';
-import { SubmissionReviewService } from './review/review.service.js';
-import { SettingsController } from './settings/settings.controller.js';
-import { SettingsService } from './settings/settings.service.js';
-import { SessionsService } from './stats/sessions.service.js';
-import { StatsController } from './stats/stats.controller.js';
-import { StatsService } from './stats/stats.service.js';
-import { WeakSkillsService } from './stats/weak-skills.service.js';
-import { SubmissionsController } from './submissions/submissions.controller.js';
-import { SubmissionsService } from './submissions/submissions.service.js';
-import { CardsService } from './srs/cards.service.js';
-import { ReviewService } from './srs/review.service.js';
-import { SrsController } from './srs/srs.controller.js';
+import { NotesModule } from './notes/notes.module.js';
+import { PlanModule } from './plan/plan.module.js';
+import { SettingsModule } from './settings/settings.module.js';
+import { SrsModule } from './srs/srs.module.js';
+import { StatsModule } from './stats/stats.module.js';
+import { SubmissionsModule } from './submissions/submissions.module.js';
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, CurriculumModule],
-  controllers: [
-    HealthController,
-    PlanController,
-    SettingsController,
-    SrsController,
-    SubmissionsController,
-    SubmissionReviewController,
-    BridgeController,
-    StatsController,
-    NotesController,
+  imports: [
+    // Global infrastructure, visible to every feature without an import.
+    ConfigModule,
+    DatabaseModule,
+    CurriculumModule,
+    // One module per feature. Each exports only what other features use.
+    SettingsModule,
+    SrsModule,
+    PlanModule,
+    StatsModule,
+    NotesModule,
+    SubmissionsModule,
   ],
+  controllers: [HealthController, BridgeController],
   providers: [
-    PlanService,
-    SettingsService,
-    CardsService,
-    ReviewService,
-    QueueService,
-    SubmissionsService,
-    SubmissionReviewService,
-    StatsService,
-    NotesService,
-    SessionsService,
-    WeakSkillsService,
     { provide: APP_FILTER, useClass: ProblemDetailsFilter },
     {
       // Validates every parameter declared with a `schema` option, e.g.

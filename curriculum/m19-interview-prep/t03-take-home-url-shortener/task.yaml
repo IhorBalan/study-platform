@@ -1,0 +1,27 @@
+title: "Take-home: a rate-limited link shortener in 90 minutes"
+type: repo
+skills: [interview-take-home, interview-algorithms]
+services: []
+runner: node
+hints:
+  - Write the README's assumptions section in the first ten minutes. It forces you to decide the vague parts before you code them.
+  - "A token bucket needs two numbers per client: tokens left and when you last updated them. Refill lazily on each call: tokens = min(capacity, tokens + elapsedSeconds * refillPerSecond)."
+  - "retryAfterSeconds is how long until tokens reaches 1: (1 - tokens) / refillPerSecond, rounded up."
+  - "URL.canParse and new URL give you the protocol. Compare it with 'http:' and 'https:' rather than matching the string with a regex."
+  - crypto.randomInt picks an unbiased index into the 62-character alphabet. Loop until the code is not already taken.
+  - Map errors to status codes in one function at the HTTP layer. The core should not know about HTTP.
+  - "Inject the clock in your tests (let now = 0; clock: () => now) instead of waiting for real time to pass."
+criteria:
+  - { id: validation, title: "Invalid urls (non-http schemes, relative, over 2048 characters), aliases and client ids are rejected with ValidationError" }
+  - { id: codes, title: "Generated codes are 7-character base62 and unique; aliases are used as codes and never reused" }
+  - { id: resolve-stats, title: resolve counts hits and stats reports them with createdAt from the clock; unknown codes give null }
+  - { id: rate-limit, title: "A token bucket per client refills, caps at capacity, reports retryAfterSeconds and charges invalid requests too" }
+  - { id: http-api, title: "The HTTP API returns 201, 302, 200, 400, 404, 409 and 429 with Retry-After, with problem documents for errors" }
+  - { id: own-tests, title: Your tests pass and catch a shortener that never rate-limits }
+rubric:
+  - { id: structure, title: "Rules live in the core with no HTTP in it, the HTTP layer only parses, calls the core and maps errors to status codes in one place, and the clock is injected rather than read globally", skill: interview-take-home, max: 4 }
+  - { id: tests, title: "Own tests cover each rule in the brief with a happy path and its main failure, including the bucket refill and cap with an injected clock and at least one HTTP-level test, and are named after behaviour", skill: interview-take-home, max: 4 }
+  - { id: readme, title: "README says how to run and test, lists at least two assumptions and two trade-offs with what each costs (for example in-memory storage, per-instance buckets), names next steps, and states the time spent", skill: interview-take-home, max: 4 }
+  - { id: robustness, title: "Edge cases a reviewer would probe are handled without a 500: malformed JSON, a non-object body, a large body, a malformed percent-encoding in the path; unknown errors return a generic 500 without a stack trace", skill: interview-take-home, max: 3 }
+  - { id: scope, title: "The submission does what was asked and no more: no unrequested features or dependencies, and anything skipped is listed in the README rather than half-built", skill: interview-take-home, max: 3 }
+limits: { timeoutSeconds: 90 }

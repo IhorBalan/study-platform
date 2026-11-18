@@ -1,0 +1,17 @@
+title: Interview prep
+summary: >-
+  You can walk into a startup interview loop knowing what each round judges: run a 45-minute
+  system design that stays right-sized, ship a time-boxed take-home with tests and a README,
+  review a pull request out loud, tell specific behavioural stories, solve the light algorithm
+  questions that still come up, and answer the most-asked backend questions in a few sentences.
+kind: optional
+effort: M
+services: []
+skills:
+  - { id: interview-loop, title: How startup interview loops work }
+  - { id: interview-system-design, title: Running a system design interview }
+  - { id: interview-take-home, title: Take-homes and pair programming }
+  - { id: interview-code-review, title: Reviewing code in an interview }
+  - { id: interview-behavioural, title: Behavioural answers and a story bank }
+  - { id: interview-algorithms, title: Light algorithms and complexity }
+  - { id: interview-core-questions, title: The most-asked backend questions }

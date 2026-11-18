@@ -1,0 +1,55 @@
+- id: review-pass-order
+  type: concept
+  front: In which order do you read a seeded pull request?
+  back: Context, then correctness, security, data, concurrency, tests, and readability last.
+  skills: [interview-code-review]
+- id: severity-first
+  type: concept
+  front: Why not review a seeded PR top to bottom, line by line?
+  back: You spend the time on nits and miss the injection. Interviewers score finding what loses data, money or trust first.
+  skills: [interview-code-review]
+- id: unawaited-query
+  type: concept
+  front: "A handler calls `db.query('UPDATE ...')` without `await`. What can go wrong?"
+  back: The response can go out before the write happens, and if the query fails the rejection is unhandled and nobody knows.
+  skills: [interview-code-review]
+- id: conditional-update
+  type: snippet
+  front: Debit a balance only if funds suffice, safe against concurrent transfers, in one SQL statement.
+  back: "`UPDATE accounts SET balance = balance - $1 WHERE user_id = $2 AND balance >= $1` and treat a row count of 0 as insufficient funds."
+  skills: [interview-code-review]
+- id: missing-code
+  type: concept
+  front: Which problems are easiest to miss in a code review?
+  back: "The ones that are absent from the diff: no tests, no transaction, no auth or ownership check, no migration, no error handling."
+  skills: [interview-code-review]
+- id: bola-in-review
+  type: concept
+  front: "A transfer endpoint takes `from` from the body. What security question do you ask?"
+  back: Is the caller allowed to act on account `from`? Without an ownership check it is broken object-level authorisation.
+  skills: [interview-code-review]
+- id: label-severity
+  type: concept
+  front: Why label review comments as blocking or non-blocking?
+  back: The author knows what must change before merge and what is taste. It also shows the interviewer your sense of priority.
+  skills: [interview-code-review]
+- id: comment-shape
+  type: concept
+  front: What three parts make a strong blocking review comment?
+  back: The problem, its concrete consequence (what an attacker or a crash does), and a suggested fix.
+  skills: [interview-code-review]
+- id: code-not-author
+  type: comparison
+  front: '"You forgot the transaction" vs "These two updates run without a transaction"'
+  back: The second talks about the code, not the person, and reads as collaboration. Tone is scored in review rounds.
+  skills: [interview-code-review]
+- id: question-label
+  type: concept
+  front: When should a review comment be a question instead of an issue?
+  back: When you cannot see enough to be sure, for example validation that may live in middleware outside the diff.
+  skills: [interview-code-review]
+- id: review-summary
+  type: concept
+  front: How should you end an interview code review?
+  back: A verdict and summary first (request changes, N blocking issues), then non-blocking suggestions, then one genuine piece of praise.
+  skills: [interview-code-review]

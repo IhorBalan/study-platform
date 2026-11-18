@@ -1,0 +1,50 @@
+- id: first-thing-checked
+  type: concept
+  front: What is the first thing a take-home reviewer checks?
+  back: Whether it runs from the README in a couple of minutes. If it does not, everything else is read with suspicion.
+  skills: [interview-take-home]
+- id: readme-sections
+  type: concept
+  front: Which four sections should a take-home README have?
+  back: How to run (install, test, start), assumptions, trade-offs, and what you did not do but would do next. Add the time spent.
+  skills: [interview-take-home]
+- id: time-box-honesty
+  type: concept
+  front: Why not quietly spend 12 hours on a "4 hour" take-home?
+  back: It hides how you prioritise, and reviewers often compare at equal effort. Respect the box and list what you would do next.
+  skills: [interview-take-home]
+- id: logic-out-of-handlers
+  type: concept
+  front: Why keep business logic out of route handlers in a take-home?
+  back: Pure logic can be tested without starting a server, and the reviewer finds the core rules in one file.
+  skills: [interview-take-home]
+- id: inject-the-clock
+  type: concept
+  front: How do you test a rate limit or expiry rule without `sleep`?
+  back: Inject a clock function (`clock = () => now`) and advance `now` in the test.
+  skills: [interview-take-home]
+- id: errors-in-one-place
+  type: concept
+  front: Where should domain errors become HTTP status codes?
+  back: In one mapping at the HTTP layer (ValidationError to 400, ConflictError to 409, unknown to 500), not scattered through the logic.
+  skills: [interview-take-home]
+- id: test-the-test
+  type: concept
+  front: How do you check that your tests would catch a real bug?
+  back: Break one rule on purpose, for example make the limiter never limit, and confirm a test fails. Then restore it.
+  skills: [interview-take-home]
+- id: over-scoping
+  type: concept
+  front: What is the most common way a strong candidate sinks a take-home?
+  back: Over-scoping. Docker, auth and a UI nobody asked for, while the core rule is untested and the README is missing.
+  skills: [interview-take-home]
+- id: pairing-narrate
+  type: comparison
+  front: 'Pairing: narrating decisions vs narrating keystrokes'
+  back: '"I check the limit before validation so abusive clients cost less" gives the interviewer evidence. "Now I type a loop" gives none.'
+  skills: [interview-take-home]
+- id: ai-in-take-home
+  type: concept
+  front: How should you use AI coding tools in a take-home or pairing round, if they are allowed?
+  back: For boilerplate and lookup, reading every line before running it. You must be able to explain all of it on the follow-up call.
+  skills: [interview-take-home]

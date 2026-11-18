@@ -1,0 +1,17 @@
+title: "Mock design: a notification system in 45 minutes"
+type: text
+skills: [interview-system-design]
+hints:
+  - Spend the first five minutes on requirements only. Quiet hours and batching are features; delivery latency and "never lose an in-app notification" are non-functional requirements that shape the design.
+  - Do the numbers before the boxes. If your peak is a few hundred notifications per second, a Postgres table and a job queue are enough.
+  - "Separate the event (a comment was created) from the deliveries it causes (one row per recipient per channel). Most failure questions become easy once deliveries have their own state."
+  - Batching a burst of comments is a delay plus a grouping key, for example one digest per user per task per 10 minutes.
+  - For "the same event processed twice", ask what makes a delivery unique and put a constraint on it.
+rubric:
+  - { id: requirements, title: "Lists functional and non-functional requirements (at least delivery latency per channel and durability of in-app notifications), states an explicit out-of-scope item, and writes down at least two clarifying questions with assumed answers", skill: interview-system-design, max: 4 }
+  - { id: numbers, title: "Estimates events per day, peak notifications per second and storage per year with visible arithmetic, and draws a conclusion from them that the design then follows (for example that Postgres plus a queue suffices)", skill: interview-system-design, max: 3 }
+  - { id: api, title: "Defines endpoints for the in-app list with cursor pagination, mark as read (one and all), unread count and preferences, with methods and main status codes", skill: interview-system-design, max: 3 }
+  - { id: data-model, title: "Gives tables for notifications or deliveries, per-user per-channel preferences and device tokens, with keys, a uniqueness constraint that prevents duplicate deliveries, and an index that serves the unread list", skill: interview-system-design, max: 4 }
+  - { id: design, title: "Shows a box diagram where the request only records the event and enqueues work, workers fan out to recipients and channels after checking preferences and quiet hours, and bursts are batched into a digest by a stated key and delay", skill: interview-system-design, max: 4 }
+  - { id: failure-handling, title: "Covers at least three failures concretely: provider outage (retries with backoff and a dead-letter state), worker crash mid-batch (per-delivery state so work resumes), duplicate processing (constraint or idempotency key), plus invalid push tokens being removed", skill: interview-system-design, max: 4 }
+  - { id: trade-offs, title: "Names at least two decisions with what each costs (for example digest delay vs immediacy, Postgres-backed queue vs a separate broker), says what breaks first at 10x, and keeps the design buildable by five engineers without new infrastructure that no requirement forces", skill: interview-system-design, max: 4 }

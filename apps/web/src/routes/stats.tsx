@@ -13,7 +13,7 @@ function StatsPage() {
   if (stats.isPending) return <p className="text-sm text-zinc-500 dark:text-zinc-400">Loading…</p>;
   if (stats.isError) {
     return (
-      <p role="alert" className="text-sm text-red-600">
+      <p role="alert" className="text-sm text-red-600 dark:text-red-400">
         Could not load statistics: {stats.error.message}
       </p>
     );

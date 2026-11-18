@@ -7,7 +7,7 @@ import { Button } from './ui';
 
 const severityTone = {
   high: 'text-red-600 dark:text-red-400',
-  medium: 'text-amber-600 dark:text-amber-400',
+  medium: 'text-amber-700 dark:text-amber-400',
   low: 'text-zinc-500 dark:text-zinc-400',
 } as const;
 
@@ -54,7 +54,7 @@ export function ReviewPanel({ submission }: { submission: SubmissionDto }) {
       <h3 className="font-semibold">Claude review</h3>
       {!review && startButtons}
       {start.isError && (
-        <p role="alert" className="mt-2 text-red-600">
+        <p role="alert" className="mt-2 text-red-600 dark:text-red-400">
           {start.error.message}
         </p>
       )}
@@ -124,7 +124,7 @@ function PasteStep({
             Copy prompt
           </Button>
           {copied && (
-            <span role="status" className="text-xs text-emerald-600">
+            <span role="status" className="text-xs text-emerald-700 dark:text-emerald-400">
               Copied
             </span>
           )}
@@ -154,7 +154,7 @@ function PasteStep({
           </Button>
         </div>
         {save.isError && (
-          <div role="alert" className="mt-2 text-red-600">
+          <div role="alert" className="mt-2 text-red-600 dark:text-red-400">
             <p>{save.error.message}</p>
             {errors.length > 0 && (
               <ul className="mt-1 list-disc pl-5 text-xs">

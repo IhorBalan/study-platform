@@ -10,7 +10,7 @@ export const Route = createFileRoute('/')({
   loader: ({ context }) => context.queryClient.ensureQueryData(planQuery),
   component: PlanPage,
   errorComponent: ({ error }) => (
-    <p role="alert" className="text-sm text-red-600">
+    <p role="alert" className="text-sm text-red-600 dark:text-red-400">
       Could not load the plan: {error instanceof Error ? error.message : String(error)}
     </p>
   ),

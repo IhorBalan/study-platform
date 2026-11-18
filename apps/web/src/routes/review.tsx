@@ -107,7 +107,7 @@ function ReviewPage() {
   if (queue.isPending) return <p className="text-sm text-zinc-500 dark:text-zinc-400">Loading…</p>;
   if (queue.isError) {
     return (
-      <p role="alert" className="text-sm text-red-600">
+      <p role="alert" className="text-sm text-red-600 dark:text-red-400">
         Could not load the review queue: {queue.error.message}
       </p>
     );
@@ -189,11 +189,12 @@ function ReviewPage() {
               Show answer
             </Button>
           )}
-          <p className="mt-3 text-center text-xs text-zinc-500 dark:text-zinc-400">
+          {/* Key hints mean nothing on a touch screen. */}
+          <p className="mt-3 text-center text-xs text-zinc-500 pointer-coarse:hidden dark:text-zinc-400">
             Space shows the answer. Keys 1–4 grade it.
           </p>
           {submit.isError && (
-            <p role="alert" className="mt-2 text-center text-sm text-red-600">
+            <p role="alert" className="mt-2 text-center text-sm text-red-600 dark:text-red-400">
               Could not save the review: {submit.error.message}
             </p>
           )}
@@ -211,11 +212,13 @@ function ReviewPage() {
           >
             Undo
           </button>{' '}
-          <span className="text-xs text-zinc-500 dark:text-zinc-400">(key Z)</span>
+          <span className="text-xs text-zinc-500 pointer-coarse:hidden dark:text-zinc-400">
+            (key Z)
+          </span>
         </p>
       )}
       {undo.isError && (
-        <p role="alert" className="mt-2 text-center text-sm text-red-600">
+        <p role="alert" className="mt-2 text-center text-sm text-red-600 dark:text-red-400">
           Could not undo: {undo.error.message}
         </p>
       )}

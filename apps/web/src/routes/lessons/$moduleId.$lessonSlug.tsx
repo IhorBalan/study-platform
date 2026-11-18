@@ -85,7 +85,7 @@ function LessonPage() {
 
       <div className="mt-10 flex flex-wrap items-center gap-4 border-t border-zinc-200 pt-6 dark:border-zinc-800">
         {lesson.status === 'done' ? (
-          <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
+          <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
             Completed
           </span>
         ) : (
@@ -137,7 +137,7 @@ function LessonPage() {
           </span>
         )}
         {progress.isError && (
-          <span role="alert" className="text-sm text-red-600">
+          <span role="alert" className="text-sm text-red-600 dark:text-red-400">
             Could not save progress: {progress.error.message}
           </span>
         )}

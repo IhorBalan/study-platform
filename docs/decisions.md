@@ -410,6 +410,11 @@ Decisions made while building are appended below.
 - **Alternatives:** retrying the job. A check run is cheap to submit again, and a retry could run checks against a commit the learner has already moved past.
 - **Limits:** assumes one worker. With several, a start-up sweep would fail runs another worker is still processing.
 
+### D-117 · A submission whose checks cannot be queued gets a failed run — 2026-11-18
+- **What:** if putting the check job on the queue fails, the run is marked as an error with "The checks could not be queued. Submit again." and the submission is returned as usual.
+- **Why:** the run row is saved before the job is sent. When sending failed, the request answered 500 but the run stayed `queued` with no job behind it. Found by the code review (R2b).
+- **Alternatives:** sending the job inside the same transaction through pg-boss's `db` option. It needs an adapter between pg-boss and the Drizzle transaction, which is more code than this failure deserves.
+
 ---
 
 ## Agreed before this log

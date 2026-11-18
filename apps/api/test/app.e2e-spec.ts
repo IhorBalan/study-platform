@@ -8,8 +8,9 @@ import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testconta
 import { schema } from '@study/db';
 import { eq } from 'drizzle-orm';
 import request from 'supertest';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { AppModule } from '../src/app.module.js';
+import { QueueService } from '../src/queue/queue.service.js';
 import { DB, type Database } from '../src/database/database.module.js';
 
 describe('API (e2e, real Postgres)', () => {
@@ -242,6 +243,22 @@ describe('API (e2e, real Postgres)', () => {
 
       const list = await http().get('/api/tasks/m00-demo/t02-code/submissions').expect(200);
       expect(list.body.submissions).toHaveLength(1);
+    });
+
+    it('reports a run whose checks could not be queued, so it does not wait for ever', async () => {
+      const enqueue = vi
+        .spyOn(app.get(QueueService), 'enqueueChecks')
+        .mockRejectedValueOnce(new Error('queue is down'));
+      const res = await http()
+        .post('/api/tasks/m00-demo/t02-code/submissions')
+        .send({ type: 'repo' })
+        .expect(201);
+      enqueue.mockRestore();
+      expect(res.body.runs).toHaveLength(1);
+      expect(res.body.runs[0]).toMatchObject({
+        status: 'error',
+        error: 'The checks could not be queued. Submit again.',
+      });
     });
 
     it('rejects the wrong kind of submission for a task', async () => {

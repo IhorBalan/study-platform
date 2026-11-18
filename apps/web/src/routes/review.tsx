@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Markdown } from '../components/Markdown';
-import { Button, PageHeader } from '../components/ui';
+import { Button, PageHeader, Select } from '../components/ui';
 import { api } from '../lib/api';
 import { lessonParams, reviewEstimate, untilLabel } from '../lib/format';
 import { useStudySession } from '../lib/useStudySession';
@@ -18,7 +18,13 @@ function untilDue(iso: string): string {
   return format.format(Math.round(hours / 24), 'day');
 }
 
-export const Route = createFileRoute('/review')({ component: ReviewPage });
+export const Route = createFileRoute('/review')({
+  // "?module=m07-queues" reviews the cards of one module only. It lives in the
+  // address so a reload or Back keeps the choice.
+  validateSearch: (search: Record<string, unknown>): { module?: string } =>
+    typeof search.module === 'string' && search.module ? { module: search.module } : {},
+  component: ReviewPage,
+});
 
 const grades: { grade: Grade; label: string; key: string; tone: string }[] = [
   { grade: 'again', label: 'Again', key: '1', tone: 'border-red-300 dark:border-red-900' },
@@ -35,7 +41,13 @@ function renderFront(card: QueueCard): string {
 function ReviewPage() {
   const queryClient = useQueryClient();
   useStudySession('review', null);
-  const queue = useQuery({ queryKey: ['review-queue'], queryFn: api.reviewQueue });
+  const { module: moduleId } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const plan = useQuery({ queryKey: ['plan'], queryFn: api.plan });
+  const queue = useQuery({
+    queryKey: ['review-queue', moduleId ?? null],
+    queryFn: () => api.reviewQueue(moduleId),
+  });
   // Remember which card was revealed, so the next card starts hidden without a reset.
   const [revealedId, setRevealedId] = useState<string | null>(null);
   const shownAt = useRef(0);
@@ -128,21 +140,49 @@ function ReviewPage() {
         {counts.pendingApproval > 0 && <> ({counts.pendingApproval} waiting for approval)</>}
       </PageHeader>
 
+      <label className="mb-4 flex max-w-md items-center gap-2 text-sm">
+        <span className="shrink-0 text-zinc-600 dark:text-zinc-300">Cards from</span>
+        <Select
+          value={moduleId ?? ''}
+          onChange={(event) =>
+            void navigate({
+              search: event.target.value ? { module: event.target.value } : {},
+              replace: true,
+            })
+          }
+        >
+          <option value="">All modules</option>
+          {(plan.data?.modules ?? []).map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.title}
+            </option>
+          ))}
+        </Select>
+      </label>
+
       {!card ? (
         <div className="rounded-lg border border-dashed border-zinc-300 p-8 text-center dark:border-zinc-700">
           <p className="font-medium">
-            {counts.reviewedToday > 0
-              ? `Done for now: ${counts.reviewedToday} ${counts.reviewedToday === 1 ? 'card' : 'cards'} reviewed today.`
-              : 'Nothing due right now.'}
+            {moduleId
+              ? 'Nothing due in this module right now.'
+              : counts.reviewedToday > 0
+                ? `Done for now: ${counts.reviewedToday} ${counts.reviewedToday === 1 ? 'card' : 'cards'} reviewed today.`
+                : 'Nothing due right now.'}
           </p>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
             {queue.data.nextDue
               ? `The next card is due ${untilDue(queue.data.nextDue)}.`
               : 'Finish a lesson to add its cards, or add your own under Manage cards.'}
           </p>
-          <Link to="/" className="mt-4 inline-block text-sm font-medium underline">
-            Back to the plan
-          </Link>
+          {moduleId ? (
+            <Link to="/review" className="mt-4 inline-block text-sm font-medium underline">
+              Review cards from all modules
+            </Link>
+          ) : (
+            <Link to="/" className="mt-4 inline-block text-sm font-medium underline">
+              Back to the plan
+            </Link>
+          )}
         </div>
       ) : (
         <div className="mx-auto max-w-2xl">

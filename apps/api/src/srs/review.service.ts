@@ -8,7 +8,7 @@ import type {
   SubmitReviewResponse,
 } from '@study/shared';
 import { CardState } from '@study/shared';
-import { and, asc, count, desc, eq, gt, gte, lte, min, ne, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gt, gte, like, lte, min, ne, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { InjectDb, type Database } from '../database/database.module.js';
 import { SettingsService } from '../settings/settings.service.js';
@@ -56,8 +56,11 @@ export class ReviewService {
   /**
    * Due cards first (oldest due date first), then new cards up to the daily
    * limit. Both limits count from local midnight.
+   *
+   * With a module id the queue holds only cards from that module's lessons.
+   * The daily limits still apply, and they count every review of the day.
    */
-  async queue(now = new Date()): Promise<ReviewQueueResponse> {
+  async queue(now = new Date(), moduleId?: string): Promise<ReviewQueueResponse> {
     const settings = await this.settings.get();
     const dayStart = startOfLocalDay(now);
 
@@ -69,7 +72,10 @@ export class ReviewService {
     const newAllowance = Math.max(0, settings.newCardsPerDay - todayNew);
     const reviewAllowance = Math.max(0, settings.reviewsPerDay - todaySeen);
 
-    const active = eq(cards.status, 'active');
+    // Lesson ids are "<module>/<slug>". Module ids have no LIKE wildcards in them.
+    const active = moduleId
+      ? and(eq(cards.status, 'active'), like(cards.lessonId, `${moduleId}/%`))
+      : eq(cards.status, 'active');
     const base = () =>
       this.db.select().from(cards).innerJoin(cardSchedules, eq(cardSchedules.cardId, cards.id));
 

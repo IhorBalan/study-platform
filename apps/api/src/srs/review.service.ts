@@ -45,6 +45,9 @@ const MAX_ANSWER_MS = 120_000;
 /** How many cards one queue request returns. The client asks again when it runs out. */
 const BATCH = 20;
 
+/** The queue's numbers, without the cards. */
+export type ReviewSummary = Omit<ReviewQueueResponse, 'cards'>;
+
 @Injectable()
 export class ReviewService {
   constructor(
@@ -53,46 +56,42 @@ export class ReviewService {
     private readonly cardsService: CardsService,
   ) {}
 
-  /**
-   * Due cards first (oldest due date first), then new cards up to the daily
-   * limit. Both limits count from local midnight.
-   *
-   * With a module id the queue holds only cards from that module's lessons.
-   * The daily limits still apply, and they count every review of the day.
-   */
-  async queue(now = new Date(), moduleId?: string): Promise<ReviewQueueResponse> {
+  /** What is left of today's limits. Both count from local midnight. */
+  private async allowances(now: Date) {
     const settings = await this.settings.get();
     const dayStart = startOfLocalDay(now);
-
-    const [todayNew, todaySeen, pending] = await Promise.all([
+    const [todayNew, todaySeen] = await Promise.all([
       this.countReviews(dayStart, true),
       this.countReviews(dayStart, false),
-      this.db.select({ n: count() }).from(cards).where(eq(cards.status, 'pending')),
     ]);
-    const newAllowance = Math.max(0, settings.newCardsPerDay - todayNew);
-    const reviewAllowance = Math.max(0, settings.reviewsPerDay - todaySeen);
+    return {
+      settings,
+      reviewedToday: todayNew + todaySeen,
+      newAllowance: Math.max(0, settings.newCardsPerDay - todayNew),
+      reviewAllowance: Math.max(0, settings.reviewsPerDay - todaySeen),
+    };
+  }
 
+  /** Active cards, of one module's lessons when a module is given. */
+  private activeCards(moduleId?: string) {
     // Lesson ids are "<module>/<slug>". Module ids have no LIKE wildcards in them.
-    const active = moduleId
+    return moduleId
       ? and(eq(cards.status, 'active'), like(cards.lessonId, `${moduleId}/%`))
       : eq(cards.status, 'active');
-    const base = () =>
-      this.db.select().from(cards).innerJoin(cardSchedules, eq(cardSchedules.cardId, cards.id));
+  }
 
-    const [dueRows, dueCount, newRows, newCount, upcoming] = await Promise.all([
-      base()
-        .where(and(active, ne(cardSchedules.state, 'new'), lte(cardSchedules.due, now)))
-        .orderBy(asc(cardSchedules.due))
-        .limit(Math.min(BATCH, reviewAllowance)),
+  private async summaryWith(
+    now: Date,
+    moduleId: string | undefined,
+    limits: Awaited<ReturnType<ReviewService['allowances']>>,
+  ): Promise<ReviewSummary> {
+    const active = this.activeCards(moduleId);
+    const [dueCount, newCount, upcoming, pending, secondsPerCard] = await Promise.all([
       this.db
         .select({ n: count() })
         .from(cards)
         .innerJoin(cardSchedules, eq(cardSchedules.cardId, cards.id))
         .where(and(active, ne(cardSchedules.state, 'new'), lte(cardSchedules.due, now))),
-      base()
-        .where(and(active, eq(cardSchedules.state, 'new')))
-        .orderBy(asc(cards.createdAt), asc(cards.sourceKey))
-        .limit(Math.min(BATCH, newAllowance)),
       this.db
         .select({ n: count() })
         .from(cards)
@@ -103,6 +102,53 @@ export class ReviewService {
         .from(cards)
         .innerJoin(cardSchedules, eq(cardSchedules.cardId, cards.id))
         .where(and(active, ne(cardSchedules.state, 'new'), gt(cardSchedules.due, now))),
+      this.db.select({ n: count() }).from(cards).where(eq(cards.status, 'pending')),
+      this.secondsPerCard(now),
+    ]);
+    return {
+      counts: {
+        due: Math.min(dueCount[0]?.n ?? 0, limits.reviewAllowance),
+        newAvailable: Math.min(newCount[0]?.n ?? 0, limits.newAllowance),
+        reviewedToday: limits.reviewedToday,
+        pendingApproval: pending[0]?.n ?? 0,
+      },
+      nextDue: upcoming[0]?.due?.toISOString() ?? null,
+      secondsPerCard,
+    };
+  }
+
+  /**
+   * The numbers of the queue without its cards. The Plan and Stats pages show
+   * only these, so they do not pay for loading cards and previewing every grade.
+   */
+  async summary(now = new Date(), moduleId?: string): Promise<ReviewSummary> {
+    return this.summaryWith(now, moduleId, await this.allowances(now));
+  }
+
+  /**
+   * Due cards first (oldest due date first), then new cards up to the daily
+   * limit.
+   *
+   * With a module id the queue holds only cards from that module's lessons.
+   * The daily limits still apply, and they count every review of the day.
+   */
+  async queue(now = new Date(), moduleId?: string): Promise<ReviewQueueResponse> {
+    const limits = await this.allowances(now);
+    const { settings } = limits;
+    const active = this.activeCards(moduleId);
+    const base = () =>
+      this.db.select().from(cards).innerJoin(cardSchedules, eq(cardSchedules.cardId, cards.id));
+
+    const [dueRows, newRows, summary] = await Promise.all([
+      base()
+        .where(and(active, ne(cardSchedules.state, 'new'), lte(cardSchedules.due, now)))
+        .orderBy(asc(cardSchedules.due))
+        .limit(Math.min(BATCH, limits.reviewAllowance)),
+      base()
+        .where(and(active, eq(cardSchedules.state, 'new')))
+        .orderBy(asc(cards.createdAt), asc(cards.sourceKey))
+        .limit(Math.min(BATCH, limits.newAllowance)),
+      this.summaryWith(now, moduleId, limits),
     ]);
 
     const rows = [...dueRows, ...newRows].slice(0, BATCH);
@@ -127,17 +173,7 @@ export class ReviewService {
       }),
     );
 
-    return {
-      cards: queueCards,
-      counts: {
-        due: Math.min(dueCount[0]?.n ?? 0, reviewAllowance),
-        newAvailable: Math.min(newCount[0]?.n ?? 0, newAllowance),
-        reviewedToday: todayNew + todaySeen,
-        pendingApproval: pending[0]?.n ?? 0,
-      },
-      nextDue: upcoming[0]?.due?.toISOString() ?? null,
-      secondsPerCard: await this.secondsPerCard(now),
-    };
+    return { cards: queueCards, ...summary };
   }
 
   /** Applies a grade: appends a review row and replaces the card's schedule, atomically. */

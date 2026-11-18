@@ -64,7 +64,7 @@ export class PlanService {
           .innerJoin(skills, eq(skills.id, reviewTasks.skillId))
           .where(eq(reviewTasks.status, 'open'))
           .orderBy(asc(reviewTasks.createdAt)),
-        this.review.queue(now),
+        this.review.summary(now),
         // The page opened last. Review sessions have no item and are skipped.
         this.db
           .select({ activity: studySessions.activity, itemId: studySessions.itemId })

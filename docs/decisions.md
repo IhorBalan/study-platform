@@ -506,6 +506,10 @@ The backend tester showed that `pnpm restore --yes` ran while the API was writin
 
 D-079 says each task's checks pass on `solution/` and fail on `starter/`, but nothing ran that (code review R5). `pnpm curriculum:verify [task or module id…]` builds a throwaway git repository per task, commits `solution/` and then `starter/` into the task folder, and runs each through the bridge's own `runChecks`, so the sandbox flags, limits and services are exactly the learner's. A task is wrong when the solution fails a check, the starter passes all of them, or the checks cannot run. A task whose practice services are not running is reported as skipped, with the `pnpm lab up` command. `VERIFY_JOBS` (default 2, at most 4) sets how many tasks run at once. First full run: all 53 tasks correct (31 without services, 22 with postgres, valkey, aws and mailpit up). Running it in CI is a separate step.
 
+### D-137 · CI runs the task checks only when they could change — 2026-11-18
+
+A second workflow, `Curriculum checks`, builds the two sandbox images, starts the four practice services and runs `pnpm curriculum:verify --no-skip`. It runs on pull requests and pushes to `main` that touch `curriculum/`, the runner images, the lab compose file, the bridge, or the curriculum and lab-cli packages; other changes cannot affect the result and skip the several minutes it takes. `--no-skip` turns "skipped: service not running" into a failure, so CI cannot pass by quietly checking fewer tasks. Images are not cached yet: the build takes about two minutes and caching can come later if the job proves slow.
+
 ---
 
 ## Product direction

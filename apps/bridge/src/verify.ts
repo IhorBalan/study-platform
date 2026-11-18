@@ -1,9 +1,11 @@
 /**
- * pnpm curriculum:verify [task id or module id ...]
+ * pnpm curriculum:verify [--no-skip] [task id or module id ...]
  *
  * Proves what the task format promises: each task's hidden checks pass against
  * its `solution/` and fail against its `starter/`. Every run goes through the
  * same `runChecks` a learner's submission does, from a throwaway git repository.
+ * With --no-skip (used in CI) a task that cannot run because its practice
+ * services are down counts as wrong instead of skipped.
  */
 import { cp, mkdir, mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';
@@ -107,7 +109,8 @@ async function verifyTask(task: LoadedTask): Promise<Outcome> {
   }
 }
 
-const wanted = process.argv.slice(2);
+const noSkip = process.argv.includes('--no-skip');
+const wanted = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const curriculum = await loadCurriculum(config.CURRICULUM_DIR);
 if (curriculum.issues.length > 0) {
   for (const issue of curriculum.issues) console.error(`${issue.file}: ${issue.message}`);
@@ -150,4 +153,4 @@ const count = (state: Outcome['state']) => outcomes.filter((o) => o.state === st
 console.log(
   `\n${count('ok')} correct, ${count('wrong')} wrong, ${count('skipped')} skipped, of ${tasks.length} tasks with checks.`,
 );
-process.exit(count('wrong') > 0 ? 1 : 0);
+process.exit(count('wrong') > 0 || (noSkip && count('skipped') > 0) ? 1 : 0);

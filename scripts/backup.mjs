@@ -13,6 +13,40 @@ import {
   KEEP,
 } from './backup-lib.mjs';
 
+// --daily is how "pnpm dev" calls this: at most one backup a day, and never a reason
+// for the platform not to start.
+const daily = process.argv.includes('--daily');
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+if (daily) {
+  const names = await readdir(backupDir).catch(() => []);
+  const newest = names
+    .filter((name) => FILE_PATTERN.test(name))
+    .sort()
+    .at(-1);
+  const age = newest
+    ? Date.now() - (await stat(path.join(backupDir, newest))).mtimeMs
+    : Number.POSITIVE_INFINITY;
+  if (age < DAY_MS) process.exit(0);
+
+  // A database that has never been migrated has nothing to keep yet.
+  const probe = inDatabase(
+    [
+      'psql',
+      '-U',
+      'study',
+      '-d',
+      'study',
+      '-Atc',
+      "select to_regclass('public.cards') is not null",
+    ],
+    ['ignore', 'pipe', 'ignore'],
+  );
+  let answer = '';
+  probe.stdout.on('data', (chunk) => (answer += chunk));
+  if ((await finished(probe)) !== 0 || answer.trim() !== 't') process.exit(0);
+}
+
 const pad = (n) => String(n).padStart(2, '0');
 const now = new Date();
 const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
@@ -32,6 +66,10 @@ const [code] = await Promise.all([
 ]);
 if (code !== 0) {
   await rm(partial, { force: true });
+  if (daily) {
+    console.warn('The daily backup could not be written. Run "pnpm backup" to see why.');
+    process.exit(0);
+  }
   console.error(`\nNo backup was written. ${IF_DATABASE_DOWN}`);
   process.exit(1);
 }
@@ -43,6 +81,8 @@ const old = all.slice(0, Math.max(0, all.length - KEEP));
 for (const name of old) await rm(path.join(backupDir, name));
 
 const { size } = await stat(file);
-console.log(`Backup written: ${file} (${(size / 1024).toFixed(0)} KB).`);
+console.log(
+  `${daily ? 'Daily backup' : 'Backup'} written: ${file} (${(size / 1024).toFixed(0)} KB).`,
+);
 if (old.length > 0)
   console.log(`Removed ${old.length} older backup(s); the newest ${KEEP} are kept.`);

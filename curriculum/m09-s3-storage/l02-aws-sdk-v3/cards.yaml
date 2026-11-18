@@ -1,0 +1,55 @@
+- id: client-command
+  type: snippet
+  front: Upload a string to S3 with the SDK v3.
+  back: "`await new S3Client({}).send(new PutObjectCommand({ Bucket, Key, Body: 'hi', ContentType: 'text/plain' }))`"
+  skills: [s3-sdk]
+- id: reuse-client
+  type: concept
+  front: Why create one S3Client and reuse it instead of one per request?
+  back: "The client holds a pool of keep-alive connections. A new client per request pays for new connections every time."
+  skills: [s3-sdk]
+- id: credential-chain
+  type: concept
+  front: How does a container in production get AWS credentials without a key in the code?
+  back: "The SDK's default provider chain ends with the container or instance metadata service, which hands out short-lived credentials for the IAM role attached to the workload."
+  skills: [s3-sdk]
+- id: endpoint-env
+  type: cloze
+  front: "The SDK sends requests to an emulator when the environment variable {{AWS_ENDPOINT_URL}} is set."
+  back: AWS_ENDPOINT_URL
+  skills: [s3-sdk]
+- id: force-path-style
+  type: concept
+  front: "What does `forcePathStyle: true` change, and why do emulators need it?"
+  back: "The bucket goes in the URL path instead of the host name. `bucket.localhost` does not resolve, so emulators and most S3-compatible stores need path style."
+  skills: [s3-sdk]
+- id: getobject-body
+  type: concept
+  front: What is `GetObject`'s `Body` in Node, and what must you always do with it?
+  back: "A Readable stream (`http.IncomingMessage`). Consume it or call `destroy()`, or its socket stays out of the 50-socket pool."
+  skills: [s3-sdk]
+- id: transform-to-string
+  type: snippet
+  front: Read a small text object's body as a string.
+  back: "`const text = await res.Body!.transformToString();`"
+  skills: [s3-sdk]
+- id: head-notfound
+  type: concept
+  front: Why does a missing key on `HeadObject` arrive as `NotFound`, not `NoSuchKey`?
+  back: "HEAD responses have no body, so S3 cannot send the error code. You only get the 404 status."
+  skills: [s3-sdk]
+- id: translate-errors
+  type: concept
+  front: Why should a storage module map `NoSuchKey` to its own error but rethrow `NoSuchBucket` unchanged?
+  back: "A missing key is a normal 404 for the user. A missing bucket is a configuration fault that someone should be alerted to."
+  skills: [s3-sdk]
+- id: sdk-retries
+  type: concept
+  front: Should you wrap S3 calls in your own retry loop?
+  back: "No. The SDK already retries throttling and transient errors with backoff (3 attempts by default). Raise `maxAttempts` if you need more."
+  skills: [s3-sdk]
+- id: list-pagination
+  type: concept
+  front: How many keys does one `ListObjectsV2` call return at most, and how do you get the rest?
+  back: "1,000. Pass `NextContinuationToken` back as `ContinuationToken`, or use `paginateListObjectsV2`."
+  skills: [s3-sdk]

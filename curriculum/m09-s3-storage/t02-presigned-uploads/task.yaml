@@ -1,0 +1,27 @@
+title: Direct uploads with presigned URLs
+type: repo
+skills: [presigned-urls, s3-sdk]
+services: [aws]
+runner: nest
+hints:
+  - "getSignedUrl from @aws-sdk/s3-request-presigner turns a PutObjectCommand or GetObjectCommand into a URL. expiresIn is in seconds."
+  - "Setting ContentType on the command is not enough: by default the SDK leaves content-type out of the signature. Pass signableHeaders: new Set(['content-type', 'content-length']) as an option to getSignedUrl."
+  - "Look for x-amz-checksum-crc32 in your upload URL. If it is there, create the client with requestChecksumCalculation: 'WHEN_REQUIRED'."
+  - "Generate the key on the server (users/<userId>/<uuid>.<ext>) and remember what you issued. A Map is enough here; in a real app it is a row in a files table with a status column."
+  - "A HEAD after the upload tells you the size and content type that actually arrived. A GET with Range: 'bytes=0-7' gives you the first bytes without downloading the file."
+  - "The emulator does not check signatures, so the checks upload wrong files on purpose. Your complete step is what catches them, as it would catch a client that bypassed your rules in production."
+criteria:
+  - { id: compiles, title: The project compiles with tsc }
+  - { id: validates-request, title: POST /uploads accepts only allowed types and sizes up to 10 MiB }
+  - { id: upload-url, title: "The presigned PUT is scoped to a fresh key in the user namespace, signs type and length, and expires within 5 minutes" }
+  - { id: complete, title: "A valid upload is confirmed with its key, size and content type" }
+  - { id: ownership, title: "Another user cannot complete or download your key, and unknown keys are 404" }
+  - { id: not-uploaded, title: "Completing before the upload is 404, and an uncompleted upload cannot be downloaded" }
+  - { id: rejects-mismatch, title: "An upload whose size, type or content differs from the request is refused and deleted" }
+  - { id: download-url, title: A completed file gets a presigned GET that works and expires within 60 seconds }
+rubric:
+  - { id: key-design, title: "Keys are generated on the server from the user id, a random id and an extension from the allow-list; no client-supplied name or path reaches the key", skill: presigned-urls, max: 3 }
+  - { id: signature-scope, title: "The upload URL's signature covers content type and length, its lifetime is short, and a comment or the README says what the signature does and does not protect", skill: presigned-urls, max: 4 }
+  - { id: verify-after-upload, title: "The complete step trusts only what is in the bucket (HEAD and the first bytes), deletes anything that fails, and marks a file ready only after every check passes", skill: presigned-urls, max: 4 }
+  - { id: readme-production, title: "README names what is still missing for production: at least two of malware scanning, a bucket CORS rule, cleaning up issued but never completed uploads, and image re-encoding", skill: presigned-urls, max: 3 }
+limits: { timeoutSeconds: 120 }

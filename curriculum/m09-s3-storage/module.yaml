@@ -1,0 +1,14 @@
+title: File storage with S3
+summary: >-
+  You can decide where files belong, use the AWS SDK v3 against S3 or an S3-compatible store, let
+  browsers upload and download directly with presigned URLs that you validate afterwards, move large
+  files with multipart upload, and keep a bucket private, tidy and cheap with lifecycle rules.
+kind: core
+effort: S
+services: [aws]
+skills:
+  - { id: object-storage, title: "Object storage: buckets, keys and when to use it" }
+  - { id: s3-sdk, title: Using S3 from Node with the AWS SDK v3 }
+  - { id: presigned-urls, title: Direct uploads and downloads with presigned URLs }
+  - { id: multipart-uploads, title: Multipart upload for large files }
+  - { id: storage-operations, title: "Bucket security, lifecycle and cost" }

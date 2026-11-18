@@ -1,0 +1,29 @@
+title: A storage module over S3
+type: repo
+skills: [s3-sdk, object-storage]
+services: [aws]
+runner: nest
+hints:
+  - "The SDK reads AWS_REGION, AWS_ENDPOINT_URL and the credentials from the environment. The emulator also needs forcePathStyle: true, or the SDK puts the bucket name in the host name."
+  - "GetObject on a missing key fails with error.name 'NoSuchKey'. HeadObject has no response body, so the same situation arrives as 'NotFound' with $metadata.httpStatusCode 404."
+  - "A missing bucket is NoSuchBucket. Translate only the missing-key case; anything else should reach the caller unchanged."
+  - "In Node, GetObject's Body is an http.IncomingMessage, which is a Readable. Return it as it is; do not call transformToByteArray() and buffer the whole object."
+  - "ListObjectsV2 takes MaxKeys and ContinuationToken and returns IsTruncated and NextContinuationToken. An async generator (async function*) turns that loop into something callers can for-await."
+  - "DeleteObjects takes up to 1000 keys and can answer 200 while listing per-key failures in Errors."
+  - "In your tests, name the bucket `${process.env.AWS_RESOURCE_PREFIX}something-unique` and empty and delete it in after()."
+criteria:
+  - { id: typechecks, title: tsc reports no type errors }
+  - { id: client, title: "createS3Client() uses path-style addressing and reaches the emulator from the environment" }
+  - { id: put-head, title: "put stores the content type (with a default) and metadata, and head reports them" }
+  - { id: get-stream, title: "getStream returns a Node.js Readable with the exact bytes, size and content type" }
+  - { id: not-found, title: "A missing key is ObjectNotFoundError for head and getStream, and other errors are not" }
+  - { id: list-pages, title: list returns one page of at most pageSize items and a cursor for the next }
+  - { id: list-all, title: "listAll yields every object under the prefix, fetching page by page" }
+  - { id: delete, title: delete is idempotent and deleteMany removes keys in batches of at most 1000 }
+  - { id: own-tests, title: Your tests pass and catch a wrong not-found error and a list that ignores the cursor }
+rubric:
+  - { id: error-mapping, title: "Missing-key errors are recognised in one place by the SDK error's name (and status for HEAD), wrapped with the original as cause, and every other error is rethrown unchanged", skill: s3-sdk, max: 4 }
+  - { id: streaming, title: "getStream never buffers the body, and the code or README says that the caller must consume or destroy the stream and why", skill: s3-sdk, max: 3 }
+  - { id: pagination, title: "list exposes an opaque cursor rather than S3's own field names, and listAll fetches the next page only when the caller needs it", skill: s3-sdk, max: 3 }
+  - { id: readme-placement, title: "README answers both questions: what the app stores in Postgres next to each object, and one reason (with a number or a limit) not to keep the files in a bytea column", skill: object-storage, max: 4 }
+limits: { timeoutSeconds: 120 }

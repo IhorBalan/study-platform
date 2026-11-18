@@ -1,0 +1,27 @@
+title: Multipart upload and lifecycle rules
+type: repo
+skills: [multipart-uploads, storage-operations]
+services: [aws]
+runner: nest
+hints:
+  - "The three calls are CreateMultipartUpload (gives an UploadId), UploadPart (gives an ETag per part) and CompleteMultipartUpload (takes every PartNumber with its ETag, in ascending order)."
+  - "Chunks from the source can be any size. Collect them in a list until you have partSize bytes, then cut exactly partSize off with subarray and keep the rest for the next part."
+  - "For bounded concurrency, keep a Set of in-flight promises. Before reading the next part, wait with Promise.race until the set has a free slot."
+  - "A rejected part promise that nobody awaits yet becomes an unhandled rejection. Catch it where you create it, remember the error, and rethrow it from the main loop."
+  - "In the catch block, wait for the parts still running (Promise.allSettled) before AbortMultipartUpload, then rethrow the original error."
+  - "PutBucketLifecycleConfiguration replaces the bucket's whole configuration. Send both rules in one call."
+criteria:
+  - { id: typechecks, title: tsc reports no type errors }
+  - { id: completes, title: A 12 MiB body arrives intact as a 3-part upload with its content type }
+  - { id: part-boundaries, title: "Every part except the last is exactly partSize, numbered from 1, whatever the chunk sizes" }
+  - { id: small-body, title: A body smaller than one part is stored correctly }
+  - { id: min-part-size, title: partSize under 5 MiB is rejected with a RangeError before any request }
+  - { id: bounded, title: "At most `concurrency` parts are in flight, in parallel, and the source is not read far ahead" }
+  - { id: aborts, title: "A failure in the source or in S3 aborts the upload, leaves nothing behind and rethrows the error" }
+  - { id: lifecycle, title: applyHousekeeping aborts incomplete uploads after 1 day and expires tmp/ after 7 days }
+rubric:
+  - { id: low-level, title: "uploadLarge uses the multipart commands directly (not lib-storage's Upload), and Complete receives the parts sorted by number", skill: multipart-uploads, max: 3 }
+  - { id: failure-path, title: "There is exactly one place that aborts, it waits for running parts first, an abort failure does not hide the original error, and no part rejection can go unhandled", skill: multipart-uploads, max: 4 }
+  - { id: memory, title: "Memory stays proportional to partSize times concurrency, and a comment or the README says why that matters for a 5 GB file", skill: multipart-uploads, max: 3 }
+  - { id: readme-lib-storage, title: "README says when you would use lib-storage's Upload instead, and names one other thing a lifecycle rule should do for this bucket in production (for example noncurrent version expiry or a storage class transition) with a reason", skill: storage-operations, max: 4 }
+limits: { timeoutSeconds: 120 }

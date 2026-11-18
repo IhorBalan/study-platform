@@ -1,4 +1,6 @@
 import 'reflect-metadata';
+import { createServer, type Server } from 'node:http';
+import type { AddressInfo } from 'node:net';
 import path from 'node:path';
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
@@ -10,14 +12,40 @@ import { AppModule } from '../src/app.module.js';
 describe('API (e2e, real Postgres)', () => {
   let container: StartedPostgreSqlContainer;
   let app: INestApplication;
+  let bridge: Server;
+  const bridgeReplies: unknown[] = [];
   const http = () => request(app.getHttpServer());
 
   beforeAll(async () => {
     container = await new PostgreSqlContainer('postgres:18-alpine').start();
     process.env.DATABASE_URL = container.getConnectionUri();
     process.env.CURRICULUM_DIR = path.join(import.meta.dirname, 'fixtures/curriculum');
-    // Nothing listens here, so the bridge counts as offline in these tests.
-    process.env.BRIDGE_URL = 'http://127.0.0.1:9';
+    // A stand-in bridge: it has no health route (so it counts as offline for
+    // checks) and answers review requests with whatever a test queued.
+    bridge = createServer((req, res) => {
+      if (req.method === 'POST' && req.url === '/review/run') {
+        req.resume();
+        req.on('end', () => {
+          res.writeHead(200, { 'content-type': 'application/json' });
+          res.end(
+            JSON.stringify(
+              bridgeReplies.shift() ?? {
+                status: 'error',
+                message: 'no reply queued',
+                output: '',
+                model: null,
+                costUsd: null,
+                durationMs: 1,
+              },
+            ),
+          );
+        });
+        return;
+      }
+      res.writeHead(404).end();
+    });
+    await new Promise<void>((resolve) => bridge.listen(0, '127.0.0.1', resolve));
+    process.env.BRIDGE_URL = `http://127.0.0.1:${(bridge.address() as AddressInfo).port}`;
     process.env.BRIDGE_SECRET = 'test-secret-that-is-long-enough-123';
 
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
@@ -29,6 +57,7 @@ describe('API (e2e, real Postgres)', () => {
   afterAll(async () => {
     await app?.close();
     await container?.stop();
+    bridge?.close();
   });
 
   it('reports a healthy database', async () => {
@@ -181,7 +210,10 @@ describe('API (e2e, real Postgres)', () => {
           .send({ type: 'text', body: 'Caches store responses.' })
           .expect(201);
         submissionId = created.body.id;
-        const res = await http().post(`/api/submissions/${submissionId}/reviews`).expect(201);
+        const res = await http()
+          .post(`/api/submissions/${submissionId}/reviews`)
+          .send({})
+          .expect(201);
         runId = res.body.runId;
         expect(res.body).toMatchObject({ status: 'queued', mode: 'copy_paste', result: null });
         expect(res.body.prompt).toContain('Explain it');
@@ -250,9 +282,74 @@ describe('API (e2e, real Postgres)', () => {
       });
     });
 
+    describe('Claude review in one click', () => {
+      const ok = (output: string) => ({
+        status: 'ok',
+        message: null,
+        output,
+        model: 'claude-test',
+        costUsd: null,
+        durationMs: 5,
+      });
+      const valid = JSON.stringify({
+        scores: [{ rubricId: 'clarity', score: 4, comment: 'Clear.' }],
+        strengths: [],
+        issues: [],
+        securityConcerns: [],
+        nextStep: 'Move on.',
+        suggestedCards: [],
+      });
+
+      async function reviewAndWait(): Promise<{ status: string; error: string | null }> {
+        const created = await http()
+          .post('/api/tasks/m00-demo/t01-explain/submissions')
+          .send({ type: 'text', body: 'An answer.' })
+          .expect(201);
+        const started = await http()
+          .post(`/api/submissions/${created.body.id}/reviews`)
+          .send({ mode: 'bridge' })
+          .expect(201);
+        expect(started.body).toMatchObject({ mode: 'bridge' });
+        for (let i = 0; i < 50; i += 1) {
+          const res = await http().get(`/api/reviews/${started.body.runId}`).expect(200);
+          if (res.body.status !== 'running') return res.body;
+          await new Promise((resolve) => setTimeout(resolve, 50));
+        }
+        throw new Error('the review never finished');
+      }
+
+      it('retries once when the first reply is unusable, then stores the result', async () => {
+        bridgeReplies.push(ok('I think it is fine.'), ok(valid));
+        const review = await reviewAndWait();
+        expect(review).toMatchObject({ status: 'passed', error: null });
+        expect(bridgeReplies).toHaveLength(0);
+      });
+
+      it('gives up after two unusable replies and says what to do', async () => {
+        bridgeReplies.push(ok('nope'), ok('still nope'));
+        const review = await reviewAndWait();
+        expect(review.status).toBe('error');
+        expect(review.error).toContain('copy and paste');
+      });
+
+      it('passes on the reason when the CLI is not signed in', async () => {
+        bridgeReplies.push({
+          status: 'error',
+          message: 'Claude could not complete the review: Not logged in.',
+          output: '',
+          model: null,
+          costUsd: null,
+          durationMs: 3,
+        });
+        const review = await reviewAndWait();
+        expect(review).toMatchObject({ status: 'error' });
+        expect(review.error).toContain('Not logged in');
+      });
+    });
+
     it('reports the bridge as unreachable when it is not running', async () => {
       const res = await http().get('/api/bridge').expect(200);
-      expect(res.body).toEqual({ reachable: false, docker: false, runners: [] });
+      expect(res.body).toEqual({ reachable: false, docker: false, runners: [], claude: false });
     });
   });
 
@@ -388,8 +485,9 @@ describe('API (e2e, real Postgres)', () => {
       ]);
       expect(learning.studyStreakDays).toBe(1);
       expect(learning.tasksDone).toBe(1);
+      // Two stored reviews of the same skill: 3 of 4 and 4 of 4.
       expect(learning.rubricBySkill).toEqual([
-        { skillId: 'http-basics', title: 'HTTP basics', average: 0.75, reviews: 1 },
+        { skillId: 'http-basics', title: 'HTTP basics', average: 0.875, reviews: 2 },
       ]);
       expect(memory.reviewStreakDays).toBe(1);
       expect(memory.desiredRetention).toBe(0.9);

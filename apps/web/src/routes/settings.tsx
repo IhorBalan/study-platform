@@ -2,7 +2,7 @@ import type { SettingsDto } from '@study/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, type FormEvent } from 'react';
-import { Button, Field, Input, PageHeader } from '../components/ui';
+import { Button, Field, Input, PageHeader, Select } from '../components/ui';
 import { api } from '../lib/api';
 
 export const Route = createFileRoute('/settings')({ component: SettingsPage });
@@ -69,6 +69,20 @@ function SettingsPage() {
             value={form.desiredRetention}
             onChange={(e) => set('desiredRetention', Number(e.target.value))}
           />
+        </Field>
+        <Field
+          label="Claude review"
+          hint="One click runs the Claude CLI on this computer with read-only tools, using your own Claude plan. It needs Claude Code installed and signed in. Copy and paste always works."
+        >
+          <Select
+            value={form.reviewMode}
+            onChange={(e) =>
+              set('reviewMode', e.target.value === 'bridge' ? 'bridge' : 'copy_paste')
+            }
+          >
+            <option value="copy_paste">Copy and paste</option>
+            <option value="bridge">One click</option>
+          </Select>
         </Field>
         <Field
           label="Lab repository path"

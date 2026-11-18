@@ -12,6 +12,7 @@ const ConfigSchema = z.object({
   /** Docker network the sandboxes join. It must have no route to the internet. */
   LAB_NETWORK: z.string().default('lab-net'),
   DOCKER_BIN: z.string().default('docker'),
+  CLAUDE_BIN: z.string().default('claude'),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;

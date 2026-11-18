@@ -9,6 +9,9 @@ export interface ExecResult {
 
 export interface ExecOptions {
   cwd?: string;
+  /** Written to the program's standard input. */
+  input?: string;
+  env?: NodeJS.ProcessEnv;
   timeoutMs?: number;
   /** Keep only this many trailing bytes of each stream. */
   maxOutputBytes?: number;
@@ -28,14 +31,22 @@ function tail(buffer: Buffer[], limit: number): string {
 export function exec(file: string, args: string[], options: ExecOptions = {}): Promise<ExecResult> {
   const limit = options.maxOutputBytes ?? 64 * 1024;
   return new Promise((resolve) => {
-    const child = spawn(file, args, { cwd: options.cwd, stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn(file, args, {
+      cwd: options.cwd,
+      env: options.env,
+      stdio: [options.input === undefined ? 'ignore' : 'pipe', 'pipe', 'pipe'],
+    });
+    if (options.input !== undefined && child.stdin) {
+      child.stdin.on('error', () => undefined);
+      child.stdin.end(options.input);
+    }
     const out: Buffer[] = [];
     const err: Buffer[] = [];
     let timedOut = false;
     let spawnError: Error | null = null;
 
-    child.stdout.on('data', (chunk: Buffer) => out.push(chunk));
-    child.stderr.on('data', (chunk: Buffer) => err.push(chunk));
+    child.stdout?.on('data', (chunk: Buffer) => out.push(chunk));
+    child.stderr?.on('data', (chunk: Buffer) => err.push(chunk));
     child.on('error', (error) => {
       spawnError = error;
     });

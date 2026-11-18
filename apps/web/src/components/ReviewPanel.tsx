@@ -1,5 +1,5 @@
 import type { ReviewDto, SubmissionDto } from '@study/shared';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import { ApiError, api } from '../lib/api';
@@ -19,38 +19,67 @@ export function ReviewPanel({ submission }: { submission: SubmissionDto }) {
   const review = submission.review;
   const checksBusy = submission.runs.some((r) => r.status === 'queued' || r.status === 'running');
 
+  const settings = useQuery({ queryKey: ['settings'], queryFn: api.settings });
+  const oneClick = settings.data?.reviewMode === 'bridge';
   const start = useMutation({
-    mutationFn: () => api.startReview(submission.id),
+    mutationFn: (mode: 'copy_paste' | 'bridge') => api.startReview(submission.id, mode),
     onSuccess: refresh,
   });
+  const failed = review?.status === 'error';
+
+  const startButtons = (
+    <div className="mt-2 flex flex-wrap items-center gap-3">
+      {oneClick && (
+        <Button disabled={checksBusy || start.isPending} onClick={() => start.mutate('bridge')}>
+          {failed ? 'Try again' : 'Review with Claude'}
+        </Button>
+      )}
+      <Button
+        variant="secondary"
+        disabled={checksBusy || start.isPending}
+        onClick={() => start.mutate('copy_paste')}
+      >
+        {oneClick ? 'Use copy and paste instead' : 'Prepare review'}
+      </Button>
+      {!oneClick && (
+        <span className="text-xs text-zinc-500 dark:text-zinc-400">
+          Builds a prompt you paste into Claude. Uses your own Claude plan.
+        </span>
+      )}
+    </div>
+  );
 
   return (
     <div className="mt-4 border-t border-zinc-200 pt-4 dark:border-zinc-800">
       <h3 className="font-semibold">Claude review</h3>
-      {!review && (
-        <div className="mt-2 flex flex-wrap items-center gap-3">
-          <Button
-            variant="secondary"
-            disabled={checksBusy || start.isPending}
-            onClick={() => start.mutate()}
-          >
-            Prepare review
-          </Button>
-          <span className="text-xs text-zinc-500 dark:text-zinc-400">
-            Builds a prompt you paste into Claude. Uses your own Claude plan.
-          </span>
-        </div>
-      )}
+      {!review && startButtons}
       {start.isError && (
         <p role="alert" className="mt-2 text-red-600">
           {start.error.message}
         </p>
       )}
-      {review && review.status !== 'passed' && (
+      {review?.status === 'running' && (
+        <p role="status" className="mt-2 text-sky-700 dark:text-sky-400">
+          Claude is reviewing. This usually takes a minute or two.
+        </p>
+      )}
+      {failed && (
+        <>
+          <p role="alert" className="mt-2 text-amber-700 dark:text-amber-400">
+            {review.error ?? 'The review could not run.'}
+          </p>
+          {startButtons}
+        </>
+      )}
+      {review?.status === 'queued' && (
         <PasteStep review={review} isRepo={submission.type === 'repo'} onDone={refresh} />
       )}
       {review?.status === 'passed' && review.result && (
-        <ReviewResultView review={review} onAgain={() => start.mutate()} busy={start.isPending} />
+        <ReviewResultView
+          review={review}
+          onAgain={() => start.mutate(oneClick ? 'bridge' : 'copy_paste')}
+          busy={start.isPending}
+        />
       )}
     </div>
   );

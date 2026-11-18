@@ -316,3 +316,11 @@ Decisions made while building are appended below.
 - **Order on the plan page:** card reviews, skills that need a refresh, the next lesson (core modules first, optional modules never block), open tasks of modules already started, cards waiting for approval.
 - **Weak skill:** as defined in the spec (at least 10 qualifying reviews in 30 days and retention more than 10 points under the target). It is re-evaluated after every card review. A refresh item links to the first lesson that teaches the skill, closes by itself when retention recovers, and can be dismissed.
 - **Statistics definitions:** "young" and "mature" split at a 21-day interval, as in Anki. Streaks count local days and stay alive until the end of the following day.
+
+### D-100 · One-click review: how the Claude CLI is run — Accepted, 2026-11-18, needs a test on your Mac
+- **Follows:** security rule S-011. The CLI runs with `--setting-sources user`, an empty MCP configuration with `--strict-mcp-config`, tools limited to `Read,Grep,Glob`, `Bash,Edit,Write,WebFetch,WebSearch` disallowed, `--permission-mode dontAsk`, and no saved session. Its working directory is a temporary export of the task folder at the submitted commit, with `.claude/`, `.mcp.json` and `CLAUDE.md` removed. The prompt goes in on standard input.
+- **Why:** project settings in a folder can define hooks that run shell commands on the host. The folder under review must not be able to steer the reviewer.
+- **Orchestration:** the API starts the review and calls the bridge in the background, because the API owns the rubric validation. One retry on an unusable reply, then a clear message and the copy-paste option.
+- **What is verified:** every flag exists in the CLI's help text (version 2.1.327), and the whole flow passes with a stand-in program in place of the CLI.
+- **What is not verified:** a real run with your Claude login. I did not run the real CLI here, because it would have used this session's credentials. The setting is off by default (Settings, "Claude review"). Please try it once on a task; if the CLI answers in a different shape, the page shows the error and copy-paste still works.
+- **Dropped:** `--max-turns`, which this CLI version does not list. The bridge stops a review after 6 minutes instead.

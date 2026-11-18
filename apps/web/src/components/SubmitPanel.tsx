@@ -25,7 +25,8 @@ const runTone: Record<RunDto['status'], string> = {
 };
 
 const isActive = (s: SubmissionDto) =>
-  s.runs.some((r) => r.status === 'queued' || r.status === 'running');
+  s.runs.some((r) => r.status === 'queued' || r.status === 'running') ||
+  s.review?.status === 'running';
 
 /** Submitting a task and reading the result of its automated checks. */
 export function SubmitPanel({ task }: { task: TaskDetail }) {

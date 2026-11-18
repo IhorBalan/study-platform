@@ -48,7 +48,7 @@ async function ensureNetwork(config: Config): Promise<string | null> {
 }
 
 /** `git archive <sha> <folder> | tar -x -C <dest>`, without a shell. */
-function exportFolder(
+export function exportFolder(
   repo: string,
   sha: string,
   folder: string,

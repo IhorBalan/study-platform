@@ -1,11 +1,18 @@
 import { timingSafeEqual } from 'node:crypto';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import type { Curriculum, LoadedTask } from '@study/curriculum';
-import { RunChecksRequest, type BridgeHealth, type RunChecksResponse } from '@study/shared';
+import {
+  RunChecksRequest,
+  RunReviewRequest,
+  type BridgeHealth,
+  type RunChecksResponse,
+  type RunReviewResponse,
+} from '@study/shared';
 import { dockerAvailable, imageExists, runChecks, runnerImage } from './checks.js';
 import type { Config } from './config.js';
+import { claudeAvailable, runReview } from './review.js';
 
-const MAX_BODY_BYTES = 64 * 1024;
+const MAX_BODY_BYTES = 512 * 1024;
 /** Names the bridge answers to. Anything else is a page trying DNS rebinding. */
 const ALLOWED_HOSTS = new Set(['localhost', '127.0.0.1', 'host.docker.internal']);
 
@@ -45,13 +52,19 @@ export interface BridgeDeps {
   curriculum: Curriculum;
   /** Replaceable in tests. */
   run?: typeof runChecks;
+  review?: typeof runReview;
 }
 
 /**
  * The bridge accepts a fixed set of operations. It never takes a command, an
  * image name or a mount path from a request: those come from the curriculum.
  */
-export function createBridgeServer({ config, curriculum, run = runChecks }: BridgeDeps): Server {
+export function createBridgeServer({
+  config,
+  curriculum,
+  run = runChecks,
+  review = runReview,
+}: BridgeDeps): Server {
   const tasks = new Map<string, LoadedTask>(
     curriculum.modules.flatMap((m) => m.tasks.map((t) => [t.id, t] as const)),
   );
@@ -82,7 +95,12 @@ export function createBridgeServer({ config, curriculum, run = runChecks }: Brid
           if (await imageExists(config, runnerImage(runner))) runners.push(runner);
         }
       }
-      const body: BridgeHealth = { status: 'ok', docker, runners };
+      const body: BridgeHealth = {
+        status: 'ok',
+        docker,
+        runners,
+        claude: await claudeAvailable(config),
+      };
       return send(res, 200, body);
     }
 
@@ -102,6 +120,25 @@ export function createBridgeServer({ config, curriculum, run = runChecks }: Brid
       const task = tasks.get(parsed.data.taskId);
       if (!task) return problem(res, 404, 'Not Found', `Unknown task ${parsed.data.taskId}.`);
       const result: RunChecksResponse = await inTurn(() => run(config, task, parsed.data));
+      return send(res, 200, result);
+    }
+
+    if (req.method === 'POST' && url.pathname === '/review/run') {
+      let json: unknown;
+      try {
+        json = await readJson(req);
+      } catch (error) {
+        return error instanceof Error && error.message === 'too-large'
+          ? problem(res, 413, 'Payload Too Large')
+          : problem(res, 400, 'Bad Request', 'The body is not valid JSON.');
+      }
+      const parsed = RunReviewRequest.safeParse(json);
+      if (!parsed.success) {
+        return problem(res, 400, 'Bad Request', parsed.error.issues[0]?.message);
+      }
+      const task = tasks.get(parsed.data.taskId);
+      if (!task) return problem(res, 404, 'Not Found', `Unknown task ${parsed.data.taskId}.`);
+      const result: RunReviewResponse = await review(config, task, parsed.data);
       return send(res, 200, result);
     }
 

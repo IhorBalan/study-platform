@@ -285,6 +285,8 @@ export const BridgeHealth = z.object({
   docker: z.boolean(),
   /** Runner images that are built and ready, e.g. ["node", "nest"]. */
   runners: z.array(z.string()),
+  /** True when the Claude CLI is installed on the host. */
+  claude: z.boolean().default(false),
 });
 export type BridgeHealth = z.infer<typeof BridgeHealth>;
 
@@ -293,6 +295,7 @@ export const BridgeStatusResponse = z.object({
   reachable: z.boolean(),
   docker: z.boolean(),
   runners: z.array(z.string()),
+  claude: z.boolean(),
 });
 export type BridgeStatusResponse = z.infer<typeof BridgeStatusResponse>;
 
@@ -317,6 +320,27 @@ export const RunChecksResponse = z.object({
   durationMs: z.number().int(),
 });
 export type RunChecksResponse = z.infer<typeof RunChecksResponse>;
+
+export const RunReviewRequest = z.object({
+  taskId: z.string().regex(/^m\d{2}-[a-z0-9-]+\/t\d{2}-[a-z0-9-]+$/),
+  /** Needed for code tasks: Claude reads the task folder exported at this commit. */
+  repoPath: z.string().min(1).optional(),
+  commitSha: CommitSha.optional(),
+  prompt: z.string().min(1).max(200_000),
+});
+export type RunReviewRequest = z.infer<typeof RunReviewRequest>;
+
+export const RunReviewResponse = z.object({
+  status: z.enum(['ok', 'error']),
+  /** Why the review could not run, in words for the learner. */
+  message: z.string().nullable(),
+  /** Claude's reply: the JSON object as text. */
+  output: z.string(),
+  model: z.string().nullable(),
+  costUsd: z.number().nullable(),
+  durationMs: z.number().int(),
+});
+export type RunReviewResponse = z.infer<typeof RunReviewResponse>;
 
 /** Queue the API fills and the worker drains. One job per automated check run. */
 export const CHECKS_QUEUE = 'verification-checks';
@@ -363,10 +387,17 @@ export const ReviewResult = z.object({
 });
 export type ReviewResult = z.infer<typeof ReviewResult>;
 
+export const StartReview = z.object({
+  mode: z.enum(['copy_paste', 'bridge']).default('copy_paste'),
+});
+export type StartReview = z.infer<typeof StartReview>;
+
 export const ReviewDto = z.object({
   runId: z.string().uuid(),
   status: RunStatus,
   mode: ReviewMode,
+  /** Why a one-click review failed. */
+  error: z.string().nullable(),
   /** The text to give to Claude. */
   prompt: z.string(),
   result: ReviewResult.nullable(),

@@ -78,8 +78,8 @@ export const api = {
   submit: (taskId: string, body: CreateSubmission) =>
     request(`/tasks/${taskId}/submissions`, SubmissionDto, { method: 'POST', body }),
   bridge: () => request('/bridge', BridgeStatusResponse),
-  startReview: (submissionId: string) =>
-    request(`/submissions/${submissionId}/reviews`, ReviewDto, { method: 'POST', body: {} }),
+  startReview: (submissionId: string, mode: 'copy_paste' | 'bridge') =>
+    request(`/submissions/${submissionId}/reviews`, ReviewDto, { method: 'POST', body: { mode } }),
   submitReviewResult: (runId: string, raw: string) =>
     request(`/reviews/${runId}/result`, ReviewDto, { method: 'POST', body: { raw } }),
 

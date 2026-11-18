@@ -9,7 +9,12 @@ export class BridgeController {
 
   @Get()
   async status(): Promise<BridgeStatusResponse> {
-    const offline: BridgeStatusResponse = { reachable: false, docker: false, runners: [] };
+    const offline: BridgeStatusResponse = {
+      reachable: false,
+      docker: false,
+      runners: [],
+      claude: false,
+    };
     if (!this.env.BRIDGE_SECRET) return offline;
     try {
       const res = await fetch(new URL('/health', this.env.BRIDGE_URL), {
@@ -18,7 +23,12 @@ export class BridgeController {
       });
       if (!res.ok) return offline;
       const health = BridgeHealth.parse(await res.json());
-      return { reachable: true, docker: health.docker, runners: health.runners };
+      return {
+        reachable: true,
+        docker: health.docker,
+        runners: health.runners,
+        claude: health.claude,
+      };
     } catch {
       return offline;
     }

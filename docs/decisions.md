@@ -526,6 +526,10 @@ A lesson is up to 6,000px tall on a phone with nothing to say how long it is or 
 
 Settings has a Theme choice: same as the system (default), light or dark (UX review, round 1, item 18). It is stored in `localStorage` and applied by a class on `<html>`, because it belongs to a screen, not to the learner's study data: a laptop and a phone can differ, and it has no place in a backup. Tailwind's `dark:` variant and the code highlighting now follow that class instead of the system media query; with "same as the system" the class tracks the system live. The class is set before React renders, and until then the page uses the system colour scheme, so there is no white flash for the common case.
 
+### D-142 · Stats forecasts the cards coming due, without dates or goals — 2026-11-18
+
+Finishing several lessons in a burst creates a pile of reviews a week later, and nothing showed it coming (feature proposal 5). Stats now has "Cards coming due, next 14 days": one bar per local day from `card_schedules.due`, for active cards already seen. Today's bar includes overdue cards, so it equals "Due today". New cards are left out because the daily limit, not a due date, decides when they appear. This is a forecast of work, not a schedule, so it stays within the "no dates" rule. The time estimate ("about 9 min") and the note after "Mark as done" from the same proposal are separate steps.
+
 ---
 
 ## Product direction

@@ -12,6 +12,9 @@ const DAY_MS = 86_400_000;
 /** Cards with an interval of three weeks or more count as mature, as in Anki. */
 const MATURE_DAYS = 21;
 
+/** How many days ahead the Stats page shows cards coming due. */
+const FORECAST_DAYS = 14;
+
 function localDayKey(date: Date): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -142,6 +145,22 @@ export class StatsService {
       select count(*)::int as n from cards c join card_schedules cs on cs.card_id = c.id
       where c.status = 'active' and cs.state <> 'new' and cs.due < ${endOfToday}
     `);
+    const horizon = new Date(today.getTime() + FORECAST_DAYS * DAY_MS);
+    const upcoming = await this.db.execute<{ due: Date }>(sql`
+      select cs.due from cards c join card_schedules cs on cs.card_id = c.id
+      where c.status = 'active' and cs.state <> 'new' and cs.due < ${horizon}
+    `);
+    const dueByDay = new Map<string, number>();
+    for (let i = 0; i < FORECAST_DAYS; i += 1) {
+      dueByDay.set(localDayKey(new Date(today.getTime() + i * DAY_MS)), 0);
+    }
+    const todayKey = localDayKey(today);
+    for (const row of upcoming.rows) {
+      const due = new Date(row.due);
+      // Overdue cards are today's work.
+      const key = due < today ? todayKey : localDayKey(due);
+      if (dueByDay.has(key)) dueByDay.set(key, (dueByDay.get(key) ?? 0) + 1);
+    }
     const retention = await this.db.execute<{ reviews: number; kept: number }>(sql`
       select count(*)::int as reviews, count(*) filter (where grade <> 'again')::int as kept
       from reviews where state_before = 'review' and reviewed_at >= ${windowStart}
@@ -184,6 +203,7 @@ export class StatsService {
       },
       memory: {
         dueToday: due.rows[0]?.n ?? 0,
+        dueByDay: [...dueByDay].map(([day, n]) => ({ day, cards: n })),
         reviewStreakDays: streak(reviewDaySet, now),
         retention: kept.reviews > 0 ? kept.kept / kept.reviews : null,
         retentionReviews: kept.reviews,

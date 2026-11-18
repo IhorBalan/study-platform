@@ -525,7 +525,13 @@ describe('API (e2e, real Postgres)', () => {
 
     it('reports the bridge as unreachable when it is not running', async () => {
       const res = await http().get('/api/bridge').expect(200);
-      expect(res.body).toEqual({ reachable: false, docker: false, runners: [], claude: false });
+      expect(res.body).toEqual({
+        reachable: false,
+        docker: false,
+        runners: [],
+        claude: false,
+        lastBackupAt: null,
+      });
     });
   });
 

@@ -14,6 +14,7 @@ export class BridgeController {
       docker: false,
       runners: [],
       claude: false,
+      lastBackupAt: null,
     };
     if (!this.env.BRIDGE_SECRET) return offline;
     try {
@@ -28,6 +29,7 @@ export class BridgeController {
         docker: health.docker,
         runners: health.runners,
         claude: health.claude,
+        lastBackupAt: health.lastBackupAt,
       };
     } catch {
       return offline;

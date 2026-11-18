@@ -1,3 +1,4 @@
+import { lastBackupAt } from './backups.js';
 import { timingSafeEqual } from 'node:crypto';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import type { Curriculum, LoadedTask } from '@study/curriculum';
@@ -100,6 +101,7 @@ export function createBridgeServer({
         docker,
         runners,
         claude: await claudeAvailable(config),
+        lastBackupAt: await lastBackupAt(config.BACKUP_DIR),
       };
       return send(res, 200, body);
     }

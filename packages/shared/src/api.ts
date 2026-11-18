@@ -328,6 +328,8 @@ export const BridgeHealth = z.object({
   runners: z.array(z.string()),
   /** True when the Claude CLI is installed on the host. */
   claude: z.boolean().default(false),
+  /** When the newest file in the backup folder was written. Null when there is none. */
+  lastBackupAt: z.string().nullable().default(null),
 });
 export type BridgeHealth = z.infer<typeof BridgeHealth>;
 
@@ -337,6 +339,8 @@ export const BridgeStatusResponse = z.object({
   docker: z.boolean(),
   runners: z.array(z.string()),
   claude: z.boolean(),
+  /** Null when there is no backup yet, or when the bridge cannot be reached. */
+  lastBackupAt: z.string().nullable(),
 });
 export type BridgeStatusResponse = z.infer<typeof BridgeStatusResponse>;
 

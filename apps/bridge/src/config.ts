@@ -13,6 +13,11 @@ const ConfigSchema = z.object({
   LAB_NETWORK: z.string().default('lab-net'),
   DOCKER_BIN: z.string().default('docker'),
   CLAUDE_BIN: z.string().default('claude'),
+  /** Where "pnpm backup" writes. A relative path is taken from the repository root, as there. */
+  BACKUP_DIR: z
+    .string()
+    .default('backups')
+    .transform((dir) => path.resolve(repoRoot, dir)),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;

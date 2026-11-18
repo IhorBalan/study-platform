@@ -27,6 +27,12 @@ describe('editorLink', () => {
     });
   });
 
+  it('encodes characters that would cut the path short', () => {
+    expect(editorLink('vscode', '/Users/me/C#/what?/lab')?.href).toBe(
+      'vscode://file/Users/me/C%23/what%3F/lab',
+    );
+  });
+
   it('gives no link when the learner turned it off', () => {
     expect(editorLink('none', '/Users/me/lab/m00/t01')).toBeNull();
   });

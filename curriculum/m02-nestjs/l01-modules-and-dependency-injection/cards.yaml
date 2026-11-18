@@ -1,0 +1,55 @@
+- id: provider-term
+  type: term
+  front: Provider (NestJS)
+  back: |-
+    A recipe, registered under a token, that tells the container how to produce a value to inject.
+    Example: `providers: [NotesService]`.
+  skills: [nest-di]
+- id: design-paramtypes
+  type: concept
+  front: Types are erased at run time. How does Nest know which class to pass to a constructor?
+  back: With `emitDecoratorMetadata`, TypeScript stores the constructor's parameter classes as `design:paramtypes` metadata on each decorated class, and Nest reads that.
+  skills: [nest-di]
+- id: import-type-breaks-injection
+  type: concept
+  front: What happens when a constructor parameter's class was imported with `import type`?
+  back: The import is erased, so the metadata holds a placeholder (`Function`) instead of the class. Nest fails at start-up because it cannot resolve the dependency.
+  skills: [nest-di]
+- id: exports-visibility
+  type: concept
+  front: "`OrdersModule` imports `NotesModule`, yet Nest cannot resolve `NotesService` in `OrdersService`. What is the usual cause?"
+  back: "`NotesModule` does not list `NotesService` in `exports`. Providers are private to their module unless exported."
+  skills: [nest-di]
+- id: inject-token-cloze
+  type: cloze
+  front: "`constructor({{...}} private readonly env: Env) {}` receives the value registered as `{ provide: ENV, useFactory: loadEnv }`."
+  back: "`@Inject(ENV)`"
+  skills: [nest-di]
+- id: usevalue-vs-usefactory
+  type: comparison
+  front: "`useValue` vs `useFactory`"
+  back: "`useValue` registers an object you already have. `useFactory` runs a function, possibly async and with injected arguments, to build it at start-up."
+  skills: [nest-di]
+- id: default-scope
+  type: concept
+  front: Why must a default-scoped Nest service not keep the current user in a field?
+  back: It is a singleton shared by all requests, so concurrent requests would overwrite each other's value.
+  skills: [nest-di]
+- id: request-scope-cost
+  type: concept
+  front: What does making one provider request-scoped do to the classes that depend on it?
+  back: They become request-scoped too, up to the controller, so Nest builds that chain again for every request.
+  skills: [nest-di]
+- id: factory-provider-snippet
+  type: snippet
+  front: Register a provider under the token `DB` that is built from the provider registered as `ENV`.
+  back: |-
+    ```ts
+    { provide: DB, useFactory: (env: Env) => connect(env.DATABASE_URL), inject: [ENV] }
+    ```
+  skills: [nest-di]
+- id: di-vs-react-context
+  type: comparison
+  front: Nest dependency injection vs React context
+  back: Both look a value up by a key instead of importing it. Nest resolves the whole graph once at start-up; React resolves from the nearest provider on each render.
+  skills: [nest-di]

@@ -10,13 +10,21 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CardsRouteImport } from './routes/cards'
 import { Route as ReviewRouteImport } from './routes/review'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as StatsRouteImport } from './routes/stats'
+import { Route as LessonsModuleIdLessonSlugRouteImport } from './routes/lessons/$moduleId.$lessonSlug'
+import { Route as TasksModuleIdTaskSlugRouteImport } from './routes/tasks/$moduleId.$taskSlug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CardsRoute = CardsRouteImport.update({
+  id: '/cards',
+  path: '/cards',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReviewRoute = ReviewRouteImport.update({
@@ -34,39 +42,84 @@ const StatsRoute = StatsRouteImport.update({
   path: '/stats',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LessonsModuleIdLessonSlugRoute =
+  LessonsModuleIdLessonSlugRouteImport.update({
+    id: '/lessons/$moduleId/$lessonSlug',
+    path: '/lessons/$moduleId/$lessonSlug',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const TasksModuleIdTaskSlugRoute = TasksModuleIdTaskSlugRouteImport.update({
+  id: '/tasks/$moduleId/$taskSlug',
+  path: '/tasks/$moduleId/$taskSlug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/cards': typeof CardsRoute
   '/review': typeof ReviewRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
+  '/lessons/$moduleId/$lessonSlug': typeof LessonsModuleIdLessonSlugRoute
+  '/tasks/$moduleId/$taskSlug': typeof TasksModuleIdTaskSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/cards': typeof CardsRoute
   '/review': typeof ReviewRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
+  '/lessons/$moduleId/$lessonSlug': typeof LessonsModuleIdLessonSlugRoute
+  '/tasks/$moduleId/$taskSlug': typeof TasksModuleIdTaskSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/cards': typeof CardsRoute
   '/review': typeof ReviewRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
+  '/lessons/$moduleId/$lessonSlug': typeof LessonsModuleIdLessonSlugRoute
+  '/tasks/$moduleId/$taskSlug': typeof TasksModuleIdTaskSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/review' | '/settings' | '/stats'
+  fullPaths:
+    | '/'
+    | '/cards'
+    | '/review'
+    | '/settings'
+    | '/stats'
+    | '/lessons/$moduleId/$lessonSlug'
+    | '/tasks/$moduleId/$taskSlug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/review' | '/settings' | '/stats'
-  id: '__root__' | '/' | '/review' | '/settings' | '/stats'
+  to:
+    | '/'
+    | '/cards'
+    | '/review'
+    | '/settings'
+    | '/stats'
+    | '/lessons/$moduleId/$lessonSlug'
+    | '/tasks/$moduleId/$taskSlug'
+  id:
+    | '__root__'
+    | '/'
+    | '/cards'
+    | '/review'
+    | '/settings'
+    | '/stats'
+    | '/lessons/$moduleId/$lessonSlug'
+    | '/tasks/$moduleId/$taskSlug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CardsRoute: typeof CardsRoute
   ReviewRoute: typeof ReviewRoute
   SettingsRoute: typeof SettingsRoute
   StatsRoute: typeof StatsRoute
+  LessonsModuleIdLessonSlugRoute: typeof LessonsModuleIdLessonSlugRoute
+  TasksModuleIdTaskSlugRoute: typeof TasksModuleIdTaskSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -76,6 +129,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cards': {
+      id: '/cards'
+      path: '/cards'
+      fullPath: '/cards'
+      preLoaderRoute: typeof CardsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/review': {
@@ -99,14 +159,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StatsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lessons/$moduleId/$lessonSlug': {
+      id: '/lessons/$moduleId/$lessonSlug'
+      path: '/lessons/$moduleId/$lessonSlug'
+      fullPath: '/lessons/$moduleId/$lessonSlug'
+      preLoaderRoute: typeof LessonsModuleIdLessonSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tasks/$moduleId/$taskSlug': {
+      id: '/tasks/$moduleId/$taskSlug'
+      path: '/tasks/$moduleId/$taskSlug'
+      fullPath: '/tasks/$moduleId/$taskSlug'
+      preLoaderRoute: typeof TasksModuleIdTaskSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CardsRoute: CardsRoute,
   ReviewRoute: ReviewRoute,
   SettingsRoute: SettingsRoute,
   StatsRoute: StatsRoute,
+  LessonsModuleIdLessonSlugRoute: LessonsModuleIdLessonSlugRoute,
+  TasksModuleIdTaskSlugRoute: TasksModuleIdTaskSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

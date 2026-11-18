@@ -1,0 +1,59 @@
+- id: safe-method
+  type: term
+  front: 'Safe method (HTTP)'
+  back: 'A method that does not ask the server to change state, so anyone may send it freely. Example - `GET`, `HEAD`, `OPTIONS`.'
+  skills: [http-semantics]
+
+- id: idempotent-method
+  type: term
+  front: 'Idempotent method (HTTP)'
+  back: 'A method where repeating the request has the same intended effect as sending it once, so it can be retried. Example - `PUT /users/7` twice leaves the same user.'
+  skills: [http-semantics]
+
+- id: post-retry
+  type: concept
+  front: 'Why is it risky for a client to retry a `POST` automatically after a timeout?'
+  back: "`POST` is not idempotent, and the client cannot tell whether the first attempt was processed. The retry may create a duplicate."
+  skills: [http-semantics]
+
+- id: status-401-vs-403
+  type: comparison
+  front: "`401` vs `403`"
+  back: "`401`: the request carries no valid credentials. `403`: the caller is identified but is not allowed to do this."
+  skills: [http-semantics]
+
+- id: status-405-allow
+  type: cloze
+  front: "A `405 Method Not Allowed` response must include the `{{...}}` header listing the methods the resource supports."
+  back: "`Allow`"
+  skills: [http-semantics]
+
+- id: status-400-vs-422
+  type: comparison
+  front: "`400` vs `422`"
+  back: "`400`: the request is malformed, for example the JSON does not parse. `422`: it parses, but the content breaks a rule, for example a required field is missing."
+  skills: [http-semantics]
+
+- id: no-cache-vs-no-store
+  type: comparison
+  front: "`Cache-Control: no-cache` vs `no-store`"
+  back: "`no-cache`: may be stored, but must be revalidated with the server before each reuse. `no-store`: must not be stored at all."
+  skills: [http-caching]
+
+- id: etag-revalidation
+  type: concept
+  front: 'What does the server reply when a request''s `If-None-Match` value equals the resource''s current `ETag`?'
+  back: "`304 Not Modified` with no body. The client reuses its cached copy."
+  skills: [http-caching]
+
+- id: vary-header
+  type: concept
+  front: 'Why must a response that depends on `Accept-Encoding` send `Vary: Accept-Encoding`?'
+  back: 'So a cache keeps a separate copy per header value and does not serve a gzip body to a client that cannot decode it.'
+  skills: [http-caching]
+
+- id: h2-head-of-line
+  type: concept
+  front: 'What problem of HTTP/2 does HTTP/3 remove by running over QUIC instead of TCP?'
+  back: 'One lost packet stalls every stream on an HTTP/2 connection. QUIC streams are independent, so loss only delays the stream it hit.'
+  skills: [http-versions]

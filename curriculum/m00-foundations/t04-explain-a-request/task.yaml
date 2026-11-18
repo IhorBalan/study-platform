@@ -1,0 +1,17 @@
+title: Explain a request from a curl transcript
+type: text
+skills: [http-semantics, http-caching, http-versions]
+services: []
+hints:
+  - Go through the transcript top to bottom and say who produced each group of lines - curl itself, the request, or the response.
+  - For the caching questions, decide first who is allowed to store the response, then for how long, then what happens once that time is over.
+  - A conditional request is an ordinary GET with one extra header. Write that header out with its value.
+rubric:
+  - { id: line-prefixes, title: "States what the *, > and < prefixes mean and identifies which lines are connection set-up, request and response", skill: http-semantics, max: 3 }
+  - { id: request-parts, title: "Explains the request method and its safe and idempotent properties, the target, and what accept and accept-encoding ask for", skill: http-semantics, max: 4 }
+  - { id: protocol-version, title: "Identifies the protocol as HTTP/2 from the transcript and names at least two visible differences from an HTTP/1.1 exchange (ALPN line, lower-case headers, no reason phrase, stream id)", skill: http-versions, max: 3 }
+  - { id: response-parts, title: "Explains the status code and what content-type, content-encoding, content-length and vary each tell the client", skill: http-semantics, max: 4 }
+  - { id: freshness, title: "States that the response may be reused without contacting the server for 60 seconds, only by the user's own browser cache and not by a CDN or proxy, and ties each claim to the directive that causes it", skill: http-caching, max: 4 }
+  - { id: revalidation, title: "Writes the conditional request header with the ETag value from the transcript and gives both outcomes (304 without a body when unchanged, 200 with a new body and ETag when changed)", skill: http-caching, max: 4 }
+  - { id: header-changes, title: "For each of the three alternative Cache-Control values, states who may store the response and when the server is contacted again, and names one situation where that value is the right choice", skill: http-caching, max: 4 }
+  - { id: own-words, title: "Explanations are written in the learner's own words and refer to concrete lines of this transcript instead of restating general definitions", max: 2 }

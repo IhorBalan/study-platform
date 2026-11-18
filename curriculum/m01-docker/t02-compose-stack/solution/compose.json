@@ -1,0 +1,89 @@
+{
+  "name": "orders",
+  "networks": {
+    "data": {
+      "internal": true,
+      "name": "orders_data"
+    },
+    "edge": {
+      "name": "orders_edge"
+    }
+  },
+  "services": {
+    "adminer": {
+      "depends_on": {
+        "db": {
+          "condition": "service_healthy",
+          "required": true
+        }
+      },
+      "image": "adminer:5",
+      "networks": {
+        "data": null,
+        "edge": null
+      },
+      "ports": [
+        "127.0.0.1:${ADMINER_PORT:-8080}:8080"
+      ],
+      "profiles": [
+        "admin"
+      ]
+    },
+    "api": {
+      "build": {
+        "context": "/home/user/study-platform/curriculum/m01-docker/t02-compose-stack/solution/api",
+        "dockerfile": "Dockerfile"
+      },
+      "depends_on": {
+        "db": {
+          "condition": "service_healthy",
+          "required": true
+        }
+      },
+      "environment": {
+        "DATABASE_URL": "postgres://${POSTGRES_USER:-orders}:${POSTGRES_PASSWORD:?copy .env.example to .env and set POSTGRES_PASSWORD}@db:5432/orders",
+        "PORT": 3000
+      },
+      "networks": {
+        "data": null,
+        "edge": null
+      },
+      "ports": [
+        "127.0.0.1:${API_PORT:-3000}:3000"
+      ]
+    },
+    "db": {
+      "environment": {
+        "POSTGRES_DB": "orders",
+        "POSTGRES_PASSWORD": "${POSTGRES_PASSWORD:?copy .env.example to .env and set POSTGRES_PASSWORD}",
+        "POSTGRES_USER": "${POSTGRES_USER:-orders}"
+      },
+      "healthcheck": {
+        "interval": "2s",
+        "retries": 30,
+        "test": [
+          "CMD-SHELL",
+          "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""
+        ],
+        "timeout": "3s"
+      },
+      "image": "postgres:18-alpine",
+      "networks": {
+        "data": null
+      },
+      "volumes": [
+        {
+          "source": "db-data",
+          "target": "/var/lib/postgresql",
+          "type": "volume",
+          "volume": {}
+        }
+      ]
+    }
+  },
+  "volumes": {
+    "db-data": {
+      "name": "orders_db-data"
+    }
+  }
+}

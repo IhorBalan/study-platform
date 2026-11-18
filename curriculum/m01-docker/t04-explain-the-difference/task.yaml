@@ -1,0 +1,16 @@
+title: Diagnose three Docker surprises
+type: text
+skills: [docker-storage, docker-networking, docker-images, dockerfile, compose]
+services: []
+hints:
+  - For each scenario, ask where the thing lives (which layer, which volume, which network namespace) before asking what the command did.
+  - '`docker volume ls`, `docker compose config` and `docker image history` each make one of these problems visible.'
+  - A fix that removes the symptom but keeps the cause (for example publishing a port to make localhost work) is not the answer.
+rubric:
+  - { id: volume-cause, title: 'Scenario 1: states that -v removed the named volume holding the database files, and that plain down (or stop) keeps it', skill: docker-storage, max: 3 }
+  - { id: volume-prevention, title: 'Scenario 1: gives at least one concrete way to check or protect the data (inspecting volumes before removal, a dump or backup, an external volume, a seed script) and says the deleted data cannot be recovered from Docker', skill: docker-storage, max: 2 }
+  - { id: localhost-cause, title: 'Scenario 2: explains that localhost inside the api container is the api container itself, because each container has its own network namespace', skill: docker-networking, max: 3 }
+  - { id: localhost-fix, title: 'Scenario 2: fixes it by using the service name and container port (db:5432) on a shared network, and explains why the published port 54320 is irrelevant between services', skill: docker-networking, max: 3 }
+  - { id: size-causes, title: 'Scenario 3: identifies at least three distinct contributors visible in the Dockerfile (full base image, dev dependencies and build tools kept, whole context copied without .dockerignore, cleanup in a later layer that frees nothing)', skill: docker-images, max: 4 }
+  - { id: size-fix, title: 'Scenario 3: proposes a multi-stage build on a slim base with production-only dependencies and a .dockerignore, and names a command that shows which layers are large', skill: dockerfile, max: 3 }
+  - { id: verification, title: 'For every scenario, names a command whose output would confirm the diagnosis', max: 2 }

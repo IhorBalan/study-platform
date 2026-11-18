@@ -1,0 +1,25 @@
+title: Rewrite a naive Dockerfile as a multi-stage build
+type: repo
+skills: [dockerfile, docker-images]
+services: []
+runner: node
+hints:
+  - Give each `FROM` a name with `AS`, and move files into the last stage with `COPY --from=<name>`.
+  - The builder reuses a layer only while every earlier step is unchanged. Which files change least often?
+  - The official Node images already contain an unprivileged user.
+  - Slim images have no `curl`. Node has `fetch`, and `node -e` runs a one-line script.
+  - The checks cannot run Docker. Build and run the image yourself before you submit.
+criteria:
+  - { id: multi-stage, title: The Dockerfile has at least two stages }
+  - { id: pinned-small-base, title: 'The final stage uses a slim, Alpine or distroless base pinned to a version' }
+  - { id: deps-before-source, title: The manifest is copied and dependencies are installed before the source is copied }
+  - { id: lean-final-stage, title: The final stage takes build output from an earlier stage and does not copy the whole context }
+  - { id: non-root-user, title: The final stage runs as a non-root user }
+  - { id: exec-form, title: The start command uses the exec form and starts node directly }
+  - { id: dockerignore, title: .dockerignore excludes node_modules and .git }
+  - { id: healthcheck, title: The final stage has a HEALTHCHECK or a documented reason for leaving it out }
+rubric:
+  - { id: stage-design, title: 'Stages have a clear purpose and the final stage contains only what the process needs at run time (no build script, no sources, no package manager cache)', skill: dockerfile, max: 4 }
+  - { id: cache-reasoning, title: 'NOTES.md explains which layers are reused after a source edit and why the original order defeated the cache', skill: docker-images, max: 4 }
+  - { id: signal-reasoning, title: 'NOTES.md explains which process is PID 1 before and after the change and what `docker stop` does in each case', skill: dockerfile, max: 4 }
+  - { id: healthcheck-quality, title: 'The health check (or the documented reason) fits the image: it uses a tool that exists in the final stage, targets /healthz, and sets sensible timings', skill: dockerfile, max: 3 }

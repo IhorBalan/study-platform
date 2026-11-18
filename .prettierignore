@@ -4,3 +4,4 @@ dist
 packages/db/drizzle
 docs
 curriculum
+**/routeTree.gen.ts

@@ -1,0 +1,2 @@
+- { id: c1, type: term, front: Q1, back: A1, skills: [http-basics] }
+- { id: c2, type: concept, front: Q2, back: A2 }

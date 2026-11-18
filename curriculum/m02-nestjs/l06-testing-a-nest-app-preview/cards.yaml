@@ -1,0 +1,52 @@
+- id: create-testing-module
+  type: term
+  front: "`Test.createTestingModule()`"
+  back: |-
+    Builds a Nest container for a test from the same metadata as `@Module()`, without opening a port.
+    Example: `await Test.createTestingModule({ imports: [AppModule] }).compile()`.
+  skills: [nest-testing]
+- id: override-provider-snippet
+  type: snippet
+  front: Build a testing module from `AppModule` with the `CLOCK` provider replaced by `fakeClock`.
+  back: |-
+    ```ts
+    await Test.createTestingModule({ imports: [AppModule] })
+      .overrideProvider(CLOCK).useValue(fakeClock)
+      .compile();
+    ```
+  skills: [nest-testing, nest-di]
+- id: what-to-override
+  type: concept
+  front: Which providers are good candidates for `overrideProvider` in a test?
+  back: The slow, non-deterministic or external ones, such as the clock, a payment client or outgoing email. Keep the code under test real.
+  skills: [nest-testing]
+- id: port-zero
+  type: concept
+  front: Why do HTTP-level tests call `app.listen(0)`?
+  back: Port `0` makes the operating system pick a free port, so test files running in parallel never collide.
+  skills: [nest-testing]
+- id: main-ts-not-run
+  type: concept
+  front: "A test builds the app from `AppModule`, and invalid bodies are accepted although production rejects them. What is the likely cause?"
+  back: "The validation pipe is registered in `main.ts` with `app.useGlobalPipes()`, and tests never run `main.ts`. Register it under `APP_PIPE` in a module."
+  skills: [nest-testing, nest-validation]
+- id: app-close
+  type: concept
+  front: What goes wrong when a test file never calls `app.close()`?
+  back: The HTTP server and any open connections keep the event loop alive, so the test run hangs or leaks resources.
+  skills: [nest-testing]
+- id: module-per-test
+  type: concept
+  front: Why build a fresh testing module in `beforeEach` for services with in-memory state?
+  back: Each module has its own singleton instances, so state cannot leak between tests or make them depend on their order.
+  skills: [nest-testing]
+- id: unit-vs-http-test
+  type: comparison
+  front: Service unit test vs HTTP-level test in Nest
+  back: A unit test checks one class's logic quickly. An HTTP-level test also covers routing, guards, pipes, status codes and filters, which exist only in the request lifecycle.
+  skills: [nest-testing]
+- id: vitest-decorator-metadata
+  type: concept
+  front: Under Vitest, every injected dependency of a Nest class is `undefined`. What should you check first?
+  back: Whether the test transformer emits decorator metadata (`design:paramtypes`). Vitest's default one does not; Nest projects configure SWC for it.
+  skills: [nest-testing]

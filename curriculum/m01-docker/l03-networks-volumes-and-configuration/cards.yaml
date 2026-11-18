@@ -1,0 +1,59 @@
+- id: localhost-in-container
+  type: concept
+  front: Inside a container, what does `localhost` refer to?
+  back: The container itself. Each container has its own network namespace, so other containers and the host are different machines from its point of view.
+  skills: [docker-networking]
+
+- id: dns-by-name
+  type: concept
+  front: How does an API container find the database container on a user-defined bridge network?
+  back: By name. Docker's embedded DNS resolves the container (or Compose service) name, e.g. `db:5432`.
+  skills: [docker-networking]
+
+- id: publish-loopback
+  type: snippet
+  front: Publish container port 3000 on host port 8080 so that only your own machine can reach it.
+  back: "`docker run -p 127.0.0.1:8080:3000 my-api`"
+  skills: [docker-networking]
+
+- id: publish-all-interfaces
+  type: concept
+  front: Which host interfaces does `-p 5432:5432` listen on?
+  back: All of them (`0.0.0.0`), so other machines on the network can connect.
+  skills: [docker-networking]
+
+- id: internal-network
+  type: term
+  front: Internal network
+  back: "A Docker network with no route to the outside world. Example: `docker network create --internal data-net` for a database that should only be reachable by the API."
+  skills: [docker-networking, container-hardening]
+
+- id: volume-vs-bind
+  type: comparison
+  front: Named volume vs bind mount
+  back: A named volume is storage managed by Docker and owned by the container's data. A bind mount maps a path from your machine into the container.
+  skills: [docker-storage]
+
+- id: down-v
+  type: concept
+  front: What does `docker compose down -v` remove that plain `docker compose down` keeps?
+  back: The named volumes declared in the Compose file (and anonymous volumes), which usually means the database's data.
+  skills: [docker-storage, compose]
+
+- id: env-not-secret
+  type: concept
+  front: Why is an environment variable a weak place for a secret?
+  back: It is readable through `docker inspect` and inherited by every child process, so it leaks easily into logs and crash reports.
+  skills: [container-config]
+
+- id: oom-exit-code
+  type: cloze
+  front: A container that exceeds its `--memory` limit is killed by the kernel and exits with code {{...}}.
+  back: 137 (128 + 9, the number of SIGKILL)
+  skills: [container-hardening]
+
+- id: read-only-tmpfs
+  type: snippet
+  front: Run a container with an immutable root filesystem but a writable `/tmp`.
+  back: "`docker run --read-only --tmpfs /tmp my-api`"
+  skills: [container-hardening]

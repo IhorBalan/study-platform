@@ -19,7 +19,7 @@ The platform is built with the stack it teaches (React, NestJS, PostgreSQL), so 
 | # | Draft v0 | v1 | Reason |
 |---|---|---|---|
 | 1 | Week-by-week plan at 10 h/week, projected finish date, hours logged vs planned | Recommended order, S/M/L effort per module, time actually spent | Self-paced (handoff) |
-| 2 | 13 modules | 18 modules (0–17), each marked core or optional | Missing topics, industry check |
+| 2 | 13 modules | 20 modules (0–19), each marked core or optional | Missing topics, industry check, market and interview research |
 | 3 | Platform and lab share the AWS emulator | Platform stores files on local disk; the lab has its own emulator | A lab exercise could destroy platform data |
 | 4 | Redis/Valkey in the core stack | Core is web + API + worker + one Postgres; jobs use pg-boss | Low-RAM machines |
 | 5 | Worker launches sandboxes and calls the Claude CLI | A native host bridge is the only process that does either | Full mode runs the worker in Docker; the socket must stay out of it |
@@ -135,28 +135,43 @@ No week estimates. Effort is relative: S is roughly a third of M, L roughly doub
 |---|---|---|---|---|
 | 0 | Foundations: HTTP in depth, Node runtime and event loop, TypeScript for the backend | Core | M | none |
 | 1 | Docker and Compose: images, layers, networks, volumes, multi-stage builds | Core | S | none |
-| 2 | NestJS fundamentals: modules, DI, controllers, pipes, validation (class-validator and zod), config, errors | Core | M | none |
-| 3 | PostgreSQL and data modelling: SQL, normalisation, indexes, EXPLAIN, transactions, isolation, migrations, raw SQL then Drizzle, Prisma comparison | Core | L | lab Postgres |
-| 4 | API design: REST conventions, OpenAPI, pagination, versioning, error formats (RFC 9457), idempotency keys; GraphQL and gRPC compared | Core | M | lab Postgres |
-| 5 | Testing: unit, integration with Testcontainers, API end-to-end, test doubles | Core | M | lab Postgres |
-| 6 | Auth and security: sessions, JWT, RBAC, argon2id, OWASP Top 10:2025, API Top 10; OAuth 2.1 and OIDC with a local IdP | Core (OIDC part optional) | L | lab Postgres; Keycloak for OIDC |
-| 7 | Caching and queues: cache strategies and invalidation, BullMQ, retries, rate limiting | Core | M | lab Valkey |
+| 2 | NestJS fundamentals: modules, DI, controllers, pipes, validation (class-validator and zod), config, errors; the framework landscape (Express, Hono, Next.js route handlers) | Core | M | none |
+| 3 | PostgreSQL and data modelling: SQL, normalisation, indexes, EXPLAIN, transactions, isolation, migrations, zero-downtime migrations, SQL drills (window functions, top N per group), raw SQL then Drizzle, Prisma and TypeORM compared; full-text search; optional: Row-Level Security, MongoDB and when a document store fits | Core | L | lab Postgres |
+| 4 | API design: REST conventions, OpenAPI, pagination, versioning, error formats (RFC 9457), idempotency keys; GraphQL, gRPC and tRPC compared; real-time with WebSockets, Socket.IO and SSE | Core | M | lab Postgres, lab Valkey |
+| 5 | Testing: unit, integration with Testcontainers, API end-to-end, test doubles; mapping Vitest to Jest | Core | M | lab Postgres |
+| 6 | Auth and security: sessions, JWT, RBAC, argon2id, OWASP Top 10:2025, API Top 10; OAuth 2.1 and OIDC with a local IdP; passkeys (WebAuthn); multi-tenancy; build or buy (Passport, Better Auth, a managed provider) | Core (OIDC part optional) | L | lab Postgres; Keycloak for OIDC |
+| 7 | Caching and queues: cache strategies and invalidation, BullMQ, retries, rate limiting; hosted jobs and durable workflows (Inngest or Trigger.dev, Temporal) compared | Core | M | lab Valkey |
 | 8 | Reliability patterns: timeouts, retries with backoff, idempotency, outbox, sagas, optimistic and pessimistic concurrency | Core | M | lab Postgres, lab Valkey |
 | 9 | File storage with S3: buckets, presigned URLs, multipart upload, lifecycle | Core | S | lab AWS emulator |
-| 10 | Payments with Stripe: Checkout, subscriptions, webhooks and signatures, idempotency, test clocks, reconciliation | Core | M | Stripe CLI, lab Postgres |
+| 10 | Payments with Stripe: Checkout, subscriptions, webhooks and signatures, idempotency, test clocks, reconciliation; transactional email and outbound webhooks | Core | M | Stripe CLI, lab Postgres, Mailpit |
 | 11 | AWS building blocks: IAM, SQS and SNS, EventBridge, DynamoDB, Secrets Manager and SSM, Lambda | Core (Lambda optional) | L | lab AWS emulator; `lambda` profile |
-| 12 | Observability: structured logs, metrics, traces, dashboards, alerting concepts | Core | M | observability stack |
-| 13 | CI/CD: pipelines for lint, typecheck, test, build and images; running workflows locally with `act` | Core | S | none |
-| 14 | Infrastructure as code: OpenTofu against the emulator, state, environments | Core | M | lab AWS emulator |
-| 15 | Kubernetes: what it solves, pods, deployments, services, config and secrets, probes, scaling, and when it is and is not worth using | Core, theory | M | none (optional self-practice with `kind`) |
-| 16 | Kafka and event streaming: logs vs queues, topics, partitions, consumer groups, delivery guarantees, and where it fits next to SQS and BullMQ | Core, theory | S | none (optional self-practice) |
-| 17 | System design and capstone: design reviews, then a SaaS with auth, uploads, subscriptions, jobs, observability, CI and IaC | Core | L | most of the above |
+| 12 | Observability: structured logs, metrics, traces, dashboards, alerting concepts; diagnosing a slow Node process (event-loop lag, heap snapshots, profiling); error tracking with Sentry (optional, needs a free account) | Core | M | observability stack |
+| 13 | LLM features in a backend: provider SDKs and the Vercel AI SDK, streaming over SSE, structured output and tool calling, embeddings and RAG with pgvector, cost, rate limits and caching, evaluating output, prompt injection and data leakage (OWASP LLM Top 10), a small MCP server | Core | M | lab Postgres with pgvector; the learner's Claude plan or a local model, no API key |
+| 14 | CI/CD: pipelines for lint, typecheck, test, build and images; running workflows locally with `act`; zero-downtime deploys and rollbacks; deploying to a PaaS (Railway or Fly, optional, needs a free account) | Core | S | none |
+| 15 | Infrastructure as code: OpenTofu against the emulator, state, environments | Core | M | lab AWS emulator |
+| 16 | Kubernetes: what it solves, pods, deployments, services, config and secrets, probes, scaling, and when it is and is not worth using | Core, theory | M | none (optional self-practice with `kind`) |
+| 17 | Kafka and event streaming: logs vs queues, topics, partitions, consumer groups, delivery guarantees, and where it fits next to SQS and BullMQ; examples use Confluent's `@confluentinc/kafka-javascript` client | Core, theory | S | none (optional self-practice) |
+| 18 | System design and capstone: design reviews on startup-sized prompts, then a SaaS with auth, uploads, subscriptions, jobs, observability, CI and IaC | Core | L | most of the above |
+| 19 | Interview prep: timed mock system design, a time-boxed take-home, a code review of a seeded pull request, a behavioural story bank, light algorithms, and a deck of the most-asked questions | Optional | M | none |
 
-Modules 15 and 16 are theory modules: lessons, card decks and written tasks (design questions reviewed by Claude), with no practice environment in Docker. Each ends with a short "practise on your own" section for learners who want hands-on time later.
+Modules 16 and 17 are theory modules: lessons, card decks and written tasks (design questions reviewed by Claude), with no practice environment in Docker. Each ends with a short "practise on your own" section for learners who want hands-on time later.
 
 Every lesson ships with a card deck. Testing is introduced in module 5 and then required in the checks of every later code task.
 
-### 5.1 File format
+### 5.1 Research inputs
+
+Two research documents shaped this list after the first version of the spec:
+
+- [`market-research-fullstack-backend.md`](./market-research-fullstack-backend.md) (what postings and small-team stacks ask for). All ten of its proposals in section 5 are in the table above.
+- [`interview-questions.md`](./interview-questions.md) (what startup interviews ask). Its coverage gaps are in the table above, and module 19 follows its suggestion. That file was written against the earlier numbering: its M13 to M17 are now modules 14 to 18, and its "M18 Interview prep" is module 19.
+
+How the interview questions are used when a module is authored:
+
+- Questions marked ★ for a module become flashcards in that module's decks, tagged `interview`.
+- Scenario questions ("p99 latency spiked after a deploy, what do you do?") become written tasks reviewed by Claude.
+- System design prompts go to module 18, and take-home, code-review and behavioural material goes to module 19.
+
+### 5.2 File format
 
 ```
 curriculum/

@@ -1,0 +1,15 @@
+title: NestJS fundamentals
+summary: >-
+  You can structure a NestJS 12 app into modules wired by dependency injection, follow a request
+  through middleware, guards, interceptors, pipes and filters, validate input at the boundary,
+  load typed configuration that fails fast, and return consistent problem-details errors.
+kind: core
+effort: M
+services: []
+skills:
+  - { id: nest-di, title: NestJS modules and dependency injection }
+  - { id: nest-request-lifecycle, title: Controllers and the NestJS request lifecycle }
+  - { id: nest-validation, title: Validation and pipes in NestJS }
+  - { id: nest-config, title: Typed configuration and environments }
+  - { id: nest-errors, title: "Exceptions, filters and problem details" }
+  - { id: nest-testing, title: Testing a NestJS app }

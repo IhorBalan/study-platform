@@ -19,7 +19,10 @@ export function NotesBox({ itemId }: { itemId: string }) {
 
   const save = useMutation({
     mutationFn: (body: string) => api.saveNote(itemId, body),
-    onSuccess: (saved) => queryClient.setQueryData(key, saved),
+    onSuccess: (saved) => {
+      queryClient.setQueryData(key, saved);
+      void queryClient.invalidateQueries({ queryKey: ['notes'] });
+    },
   });
   const { mutate } = save;
 

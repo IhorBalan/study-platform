@@ -4,6 +4,7 @@ export const goTargets = {
   KeyP: { to: '/', label: 'Plan' },
   KeyR: { to: '/review', label: 'Review' },
   KeyC: { to: '/cards', label: 'Cards' },
+  KeyN: { to: '/notes', label: 'Notes' },
   KeyS: { to: '/stats', label: 'Stats' },
   KeyE: { to: '/settings', label: 'Settings' },
 } as const;

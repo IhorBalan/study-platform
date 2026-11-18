@@ -550,6 +550,21 @@ export const NoteDto = z.object({
 });
 export type NoteDto = z.infer<typeof NoteDto>;
 
+/** One note with the lesson or task it belongs to, for the Notes page. */
+export const NoteListItem = z.object({
+  kind: z.enum(['lesson', 'task']),
+  itemId: z.string(),
+  title: z.string(),
+  moduleTitle: z.string(),
+  body: z.string(),
+  updatedAt: z.string(),
+});
+export type NoteListItem = z.infer<typeof NoteListItem>;
+
+/** Notes in the order of the plan. Notes on content that no longer exists are left out. */
+export const NoteListResponse = z.object({ notes: z.array(NoteListItem) });
+export type NoteListResponse = z.infer<typeof NoteListResponse>;
+
 /** Saving an empty body removes the note. */
 export const SaveNote = z.object({ body: z.string().max(20_000) });
 export type SaveNote = z.infer<typeof SaveNote>;

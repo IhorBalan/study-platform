@@ -53,3 +53,18 @@
   front: Nest dependency injection vs React context
   back: Both look a value up by a key instead of importing it. Nest resolves the whole graph once at start-up; React resolves from the nearest provider on each render.
   skills: [nest-di]
+- id: nest-enable-shutdown-hooks
+  type: concept
+  front: What must `main.ts` call so that `SIGTERM` runs a provider's `onApplicationShutdown` hook?
+  back: "`app.enableShutdownHooks()`. Without it the shutdown hooks run only when the code calls `app.close()`."
+  skills: [nest-di]
+- id: nest-hook-close-pool
+  type: concept
+  front: In which Nest lifecycle hook do you close a database pool, and why not earlier?
+  back: "`onApplicationShutdown`. It runs after the HTTP server has closed, so no request that is still running loses its connection."
+  skills: [nest-di]
+- id: nest-startup-hook-order
+  type: comparison
+  front: "`onModuleInit` vs `onApplicationBootstrap`"
+  back: "`onModuleInit` runs when the provider's own dependencies are ready. `onApplicationBootstrap` runs once every module is initialized, just before the app listens."
+  skills: [nest-di]

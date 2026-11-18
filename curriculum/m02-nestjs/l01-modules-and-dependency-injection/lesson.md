@@ -89,6 +89,52 @@ By default every provider is a **singleton**: one instance per application, crea
 
 `Scope.REQUEST` builds a new instance for each request, and `Scope.TRANSIENT` a new one for each consumer. Request scope spreads: everything that depends on a request-scoped provider becomes request-scoped too, including controllers, so Nest rebuilds that part of the graph on every request. Reach for it rarely.
 
+## Lifecycle hooks and shutdown
+
+A provider often owns something that has to be opened and closed: a database pool, a queue worker, a timer. Nest calls **lifecycle hooks** on every provider, controller and module that implements them. A hook is a method with a fixed name, and each has an interface of the same name with a capital letter.
+
+On start-up, in this order:
+
+1. `onModuleInit()`: the provider's own dependencies are ready. Open connections here.
+2. `onApplicationBootstrap()`: every module is initialized. The app starts listening after this.
+
+On shutdown, in this order:
+
+1. `onModuleDestroy()`: shutdown has begun.
+2. `beforeApplicationShutdown(signal)`: runs before Nest closes the HTTP server. Stop taking new work here.
+3. `onApplicationShutdown(signal)`: the server is closed and requests have finished. Close pools and clients here.
+
+A hook may return a promise, and Nest waits for it before it moves on.
+
+```ts
+@Injectable()
+export class Database implements OnModuleInit, OnApplicationShutdown {
+  private readonly pool: Pool;
+
+  constructor(@Inject(ENV) env: Env) {
+    this.pool = new Pool({ connectionString: env.DATABASE_URL });
+  }
+
+  async onModuleInit() {
+    await this.pool.query('select 1'); // fail at start-up, not on the first request
+  }
+
+  async onApplicationShutdown() {
+    await this.pool.end();
+  }
+}
+```
+
+The shutdown hooks do **not** run on a signal unless you ask for them. They run when your code calls `app.close()`, and on `SIGTERM` or `SIGINT` only after `app.enableShutdownHooks()` in `main.ts`:
+
+```ts
+const app = await NestFactory.create(AppModule);
+app.enableShutdownHooks();
+await app.listen(3000);
+```
+
+Without that line a container that receives `SIGTERM` is killed with its pool open and its jobs half done. This is the Nest form of the graceful shutdown you wrote by hand in module 0, and the modules on queues, AWS and Kubernetes rely on it. Hooks are not called on request-scoped providers, whose lifetime Nest does not manage.
+
 ## Common mistakes
 
 - Listing a service in `providers` of two modules. Each module gets its own instance, so "shared" state is not shared. Provide it once, export it, import the module.
@@ -96,6 +142,7 @@ By default every provider is a **singleton**: one instance per application, crea
 - Using `import type` for a class that is injected, or leaving `.js` off a relative import in an ESM project.
 - Two files that import each other. One of the classes is `undefined` when the metadata is written. Restructure before reaching for `forwardRef`.
 - Storing the current user or request in a field of a singleton service. Concurrent requests overwrite each other.
+- Implementing `onApplicationShutdown` and never calling `app.enableShutdownHooks()`, so the hook only ever runs in tests.
 
 ## Go deeper
 
@@ -104,3 +151,4 @@ By default every provider is a **singleton**: one instance per application, crea
 - [NestJS: Custom providers](https://docs.nestjs.com/fundamentals/custom-providers): every `useValue`, `useClass`, `useFactory` and `useExisting` form.
 - [NestJS: Injection scopes](https://docs.nestjs.com/fundamentals/injection-scopes): request and transient scope and what they cost.
 - [TypeScript handbook: Decorators](https://www.typescriptlang.org/docs/handbook/decorators.html): the legacy decorator model and metadata emission.
+- [NestJS: Lifecycle events](https://docs.nestjs.com/fundamentals/lifecycle-events): every hook, their order and how shutdown hooks are enabled.

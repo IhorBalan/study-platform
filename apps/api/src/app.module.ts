@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 import { BridgeController } from './bridge/bridge.controller.js';
+import { hostGuard } from './common/host-guard.middleware.js';
 import { ProblemDetailsFilter } from './common/problem-details.filter.js';
 import { writeGuard } from './common/write-guard.middleware.js';
 import { CurriculumModule } from './curriculum/curriculum.module.js';
@@ -79,6 +80,8 @@ export class AppModule implements NestModule {
   constructor(@Inject(ENV) private readonly env: Env) {}
 
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(writeGuard(this.env.WEB_ORIGIN)).forRoutes('*path');
+    consumer
+      .apply(hostGuard(this.env.WEB_ORIGIN), writeGuard(this.env.WEB_ORIGIN))
+      .forRoutes('*path');
   }
 }

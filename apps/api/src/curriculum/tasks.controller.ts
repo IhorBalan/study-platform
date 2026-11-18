@@ -20,7 +20,8 @@ export class TasksController {
       services: task.services,
       criteria: task.criteria,
       rubric: task.rubric.map((r) => ({ id: r.id, title: r.title, max: r.max })),
-      labFolder: `lab/${task.id}`,
+      labFolder: task.id,
+      hasChecks: task.checksDir !== null,
     };
   }
 }

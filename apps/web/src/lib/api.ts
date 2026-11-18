@@ -7,11 +7,15 @@ import {
   CardDto,
   CardListResponse,
   ReviewQueueResponse,
+  BridgeStatusResponse,
   SettingsDto,
+  SubmissionDto,
+  SubmissionListResponse,
   SubmitReviewResponse,
   TaskDetail,
   type CardStatus,
   type CreateCard,
+  type CreateSubmission,
   type Grade,
   type ProgressStatus,
   type UpdateCard,
@@ -59,6 +63,10 @@ export const api = {
   setLessonProgress: (id: string, status: ProgressStatus) =>
     request(`/lessons/${id}/progress`, LessonProgressResponse, { method: 'PUT', body: { status } }),
   task: (id: string) => request(`/tasks/${id}`, TaskDetail),
+  submissions: (taskId: string) => request(`/tasks/${taskId}/submissions`, SubmissionListResponse),
+  submit: (taskId: string, body: CreateSubmission) =>
+    request(`/tasks/${taskId}/submissions`, SubmissionDto, { method: 'POST', body }),
+  bridge: () => request('/bridge', BridgeStatusResponse),
 
   reviewQueue: () => request('/review/queue', ReviewQueueResponse),
   submitReview: (cardId: string, grade: Grade, answerMs: number) =>

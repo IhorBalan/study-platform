@@ -10,6 +10,9 @@ const EnvSchema = z.object({
   DATABASE_URL: z.string().url().default('postgres://study:study@localhost:54320/study'),
   WEB_ORIGIN: z.string().url().default('http://localhost:5173'),
   CURRICULUM_DIR: z.string().default(path.join(repoRoot, 'curriculum')),
+  BRIDGE_URL: z.string().url().default('http://localhost:4100'),
+  /** Empty until `pnpm dev` has generated it. Without it the bridge counts as offline. */
+  BRIDGE_SECRET: z.string().default(''),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

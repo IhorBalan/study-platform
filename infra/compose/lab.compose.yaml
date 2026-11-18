@@ -1,0 +1,74 @@
+# Practice services for lab tasks. Nothing here starts by default:
+#   pnpm lab up postgres valkey     start the services a module needs
+#   pnpm lab status                 see what is running
+#   pnpm lab down                   stop everything (data is kept)
+#
+# These are separate from the platform's own database on purpose: a lab
+# exercise may drop tables or wipe a bucket, and must never touch your progress.
+#
+# Two networks:
+#   lab-net   no internet. Task checks run in a sandbox attached only to this one
+#             and reach the services by name (postgres, valkey, aws, mailpit).
+#   lab-edge  an ordinary network, needed so ports can be published to your Mac.
+name: study-lab
+
+networks:
+  lab-net:
+    name: lab-net
+    internal: true
+  lab-edge:
+
+services:
+  postgres:
+    profiles: [postgres]
+    # PostgreSQL 18 with the pgvector extension available (used by the LLM module).
+    image: pgvector/pgvector:pg18
+    environment:
+      POSTGRES_USER: lab
+      POSTGRES_PASSWORD: lab
+      POSTGRES_DB: lab
+    ports: ['127.0.0.1:${LAB_POSTGRES_PORT:-55432}:5432']
+    volumes: ['lab-postgres:/var/lib/postgresql']
+    networks: [lab-net, lab-edge]
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U lab -d lab']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    mem_limit: 512m
+
+  valkey:
+    profiles: [valkey]
+    image: valkey/valkey:8.1-alpine
+    ports: ['127.0.0.1:${LAB_VALKEY_PORT:-56379}:6379']
+    networks: [lab-net, lab-edge]
+    healthcheck:
+      test: ['CMD', 'valkey-cli', 'ping']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    mem_limit: 256m
+
+  # AWS emulator (S3, SQS, SNS, EventBridge, DynamoDB, Secrets Manager, SSM, IAM).
+  # It has no Docker socket, so Lambda is not available in this profile.
+  aws:
+    profiles: [aws]
+    image: floci/floci:latest
+    ports: ['127.0.0.1:${LAB_AWS_PORT:-4566}:4566']
+    volumes: ['lab-aws:/app/data']
+    networks: [lab-net, lab-edge]
+    mem_limit: 512m
+
+  # Catches outgoing email. Web inbox on http://localhost:58025, SMTP on port 51025.
+  mailpit:
+    profiles: [mailpit]
+    image: axllent/mailpit:latest
+    ports:
+      - '127.0.0.1:${LAB_MAILPIT_UI_PORT:-58025}:8025'
+      - '127.0.0.1:${LAB_MAILPIT_SMTP_PORT:-51025}:1025'
+    networks: [lab-net, lab-edge]
+    mem_limit: 128m
+
+volumes:
+  lab-postgres:
+  lab-aws:

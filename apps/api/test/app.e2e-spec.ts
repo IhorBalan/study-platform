@@ -16,6 +16,9 @@ describe('API (e2e, real Postgres)', () => {
     container = await new PostgreSqlContainer('postgres:18-alpine').start();
     process.env.DATABASE_URL = container.getConnectionUri();
     process.env.CURRICULUM_DIR = path.join(import.meta.dirname, 'fixtures/curriculum');
+    // Nothing listens here, so the bridge counts as offline in these tests.
+    process.env.BRIDGE_URL = 'http://127.0.0.1:9';
+    process.env.BRIDGE_SECRET = 'test-secret-that-is-long-enough-123';
 
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = moduleRef.createNestApplication();
@@ -51,7 +54,10 @@ describe('API (e2e, real Postgres)', () => {
           { id: 'm00-demo/l01-first', status: 'not_started' },
           { id: 'm00-demo/l02-second', status: 'not_started' },
         ],
-        tasks: [{ id: 'm00-demo/t01-explain', type: 'text' }],
+        tasks: [
+          { id: 'm00-demo/t01-explain', type: 'text' },
+          { id: 'm00-demo/t02-code', type: 'repo' },
+        ],
       });
     });
 
@@ -102,11 +108,60 @@ describe('API (e2e, real Postgres)', () => {
       expect(res.body).toMatchObject({
         type: 'text',
         markdown: 'Explain HTTP caching.',
-        labFolder: 'lab/m00-demo/t01-explain',
+        labFolder: 'm00-demo/t01-explain',
         rubric: [{ id: 'clarity', max: 4 }],
       });
     });
   });
+  describe('submissions', () => {
+    it('stores a written answer without a check run', async () => {
+      const res = await http()
+        .post('/api/tasks/m00-demo/t01-explain/submissions')
+        .send({ type: 'text', body: 'Because of caching.' })
+        .expect(201);
+      expect(res.body).toMatchObject({ type: 'text', body: 'Because of caching.', runs: [] });
+    });
+
+    it('queues automated checks for a code submission', async () => {
+      const res = await http()
+        .post('/api/tasks/m00-demo/t02-code/submissions')
+        .send({ type: 'repo', commitSha: 'abc1234' })
+        .expect(201);
+      expect(res.body).toMatchObject({
+        type: 'repo',
+        commitSha: 'abc1234',
+        runs: [{ stage: 'checks', status: 'queued', checks: [] }],
+      });
+
+      const list = await http().get('/api/tasks/m00-demo/t02-code/submissions').expect(200);
+      expect(list.body.submissions).toHaveLength(1);
+    });
+
+    it('rejects the wrong kind of submission for a task', async () => {
+      const res = await http()
+        .post('/api/tasks/m00-demo/t01-explain/submissions')
+        .send({ type: 'repo' });
+      expect(res.status).toBe(400);
+    });
+
+    it('rejects a commit id that is not hexadecimal', async () => {
+      const res = await http()
+        .post('/api/tasks/m00-demo/t02-code/submissions')
+        .send({ type: 'repo', commitSha: 'HEAD; rm -rf /' });
+      expect(res.status).toBe(400);
+    });
+
+    it('answers 404 for an unknown task', async () => {
+      const res = await http().get('/api/tasks/m00-demo/t99-none/submissions');
+      expect(res.status).toBe(404);
+    });
+
+    it('reports the bridge as unreachable when it is not running', async () => {
+      const res = await http().get('/api/bridge').expect(200);
+      expect(res.body).toEqual({ reachable: false, docker: false, runners: [] });
+    });
+  });
+
   describe('spaced repetition', () => {
     it('queues the lesson deck as new cards with a preview for each grade', async () => {
       const res = await http().get('/api/review/queue').expect(200);

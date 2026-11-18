@@ -260,3 +260,29 @@ Decisions made while building are appended below.
 ### D-088 · Lost database connections are logged, not fatal — Accepted, 2026-11-18
 - **Found by:** the QA pass. The API exited when Postgres restarted, and the dev watcher did not bring it back.
 - **Chosen:** the pool reports the error and opens a new connection on the next query. Confirmed by restarting Postgres under a running API.
+
+### D-089 · The bridge is a small plain Node server, not a NestJS app — Accepted, 2026-11-18
+- **Why:** it is the one process with access to Docker and, later, the Claude login. Fewer dependencies means less to audit. It has three routes.
+- **Rules it enforces:** listens on loopback only; requires the shared secret; rejects requests addressed to any host name other than localhost (stops a web page from reaching it through DNS tricks); never takes a command, image name or mount path from a request, only a task id that it looks up in the curriculum; runs every program with an argument list and no shell; one sandbox at a time.
+- **Alternatives:** NestJS like the API (consistent, but heavier than the job needs).
+
+### D-090 · `pnpm dev` creates `.env` and generates the bridge secret — Accepted, 2026-11-18
+- **Why:** a secret copied from `.env.example` would be the same on every install. Generating it also removes the manual "copy the example file" step.
+- **Detail:** `scripts/ensure-env.mjs` never changes a value that is already set.
+
+### D-091 · The worker is a plain Node process using pg-boss — Accepted, 2026-11-18
+- **Changed from the spec:** the spec said "NestJS standalone app". The worker has one job type so far and needs no framework.
+- **Behaviour:** each failure is written onto the run, in words the learner can act on (lab path not set, bridge not running, commit not found, image not built). The queue does not retry, because a retry would only repeat the same outcome.
+- **Revisit if:** the worker grows several job types that share services.
+
+### D-092 · "Run checks" without a commit id checks the latest commit — Accepted, 2026-11-18
+- **Why:** pasting a commit id every time is friction. The bridge resolves the latest commit and the platform records exactly which one was checked.
+- **Kept:** uncommitted changes are never checked, so a result always refers to something reproducible.
+
+### D-093 · Lab services: two networks, pgvector image, no service starts by default — Accepted, 2026-11-18
+- **Networks:** `lab-net` has no internet and is the only one sandboxes join. Services also join an ordinary network, because a port cannot be published from a network without outside access.
+- **Images:** lab Postgres uses `pgvector/pgvector:pg18` so the LLM module needs no second database. The AWS emulator is `floci/floci`. Both tags were confirmed to exist. They are not yet started and exercised here; that happens when the modules that use them are authored.
+- **Not yet in the file:** the observability stack, Keycloak and the Lambda-capable emulator. They are added with their modules.
+
+### D-094 · The lab folder for a task is `<module>/<task>` at the root of the lab repository — Accepted, 2026-11-18
+- **Why:** the task id is already that path, so one string identifies the task everywhere. `pnpm lab start` also writes the brief as `TASK.md` next to the starter files.

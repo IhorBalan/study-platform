@@ -7,7 +7,7 @@
     "node": ">=24"
   },
   "scripts": {
-    "dev": "pnpm infra:up && turbo run dev",
+    "dev": "node scripts/ensure-env.mjs && pnpm infra:up && turbo run dev",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
@@ -18,7 +18,8 @@
     "infra:down": "docker compose -f infra/compose/compose.yaml down",
     "db:generate": "pnpm --filter @study/db generate",
     "db:migrate": "pnpm --filter @study/db migrate",
-    "curriculum:check": "pnpm --filter @study/curriculum build && pnpm --filter @study/curriculum check"
+    "curriculum:check": "pnpm --filter @study/curriculum build && pnpm --filter @study/curriculum check",
+    "lab": "turbo run build --filter=@study/lab-cli --output-logs=errors-only --log-prefix=none >/dev/null && node packages/lab-cli/dist/cli.js"
   },
   "devDependencies": {
     "oxlint": "catalog:",

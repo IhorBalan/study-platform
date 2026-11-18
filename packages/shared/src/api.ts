@@ -9,6 +9,8 @@ import {
   ModuleKind,
   ProgressStatus,
   ReviewMode,
+  RunStage,
+  RunStatus,
   SubmissionType,
 } from './enums.js';
 
@@ -102,6 +104,8 @@ export const TaskDetail = z.object({
   rubric: z.array(z.object({ id: z.string(), title: z.string(), max: z.number().int() })),
   /** Where the task lives inside the learner's lab repository. */
   labFolder: z.string(),
+  /** True when the task has an automated check suite (stage 1). */
+  hasChecks: z.boolean(),
 });
 export type TaskDetail = z.infer<typeof TaskDetail>;
 
@@ -192,3 +196,101 @@ export type SettingsDto = z.infer<typeof SettingsDto>;
 
 export const UpdateSettings = SettingsDto.partial();
 export type UpdateSettings = z.infer<typeof UpdateSettings>;
+
+// ---------------------------------------------------------------------------
+// Submissions and automated checks
+// ---------------------------------------------------------------------------
+
+/** A full or abbreviated commit id. Empty means "the latest commit". */
+const CommitSha = z
+  .string()
+  .trim()
+  .regex(/^[0-9a-f]{7,40}$/i, 'Use a commit id of 7 to 40 hex characters');
+
+export const CreateSubmission = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('repo'), commitSha: CommitSha.optional() }),
+  z.object({ type: z.literal('text'), body: z.string().trim().min(1).max(50_000) }),
+]);
+export type CreateSubmission = z.infer<typeof CreateSubmission>;
+
+export const CheckResultDto = z.object({
+  criterionId: z.string(),
+  title: z.string(),
+  passed: z.boolean(),
+  log: z.string().nullable(),
+});
+export type CheckResultDto = z.infer<typeof CheckResultDto>;
+
+export const RunDto = z.object({
+  id: z.string().uuid(),
+  stage: RunStage,
+  status: RunStatus,
+  /** Why a run could not start or finish, in words for the learner. */
+  error: z.string().nullable(),
+  durationMs: z.number().int().nullable(),
+  createdAt: z.string(),
+  finishedAt: z.string().nullable(),
+  checks: z.array(CheckResultDto),
+});
+export type RunDto = z.infer<typeof RunDto>;
+
+export const SubmissionDto = z.object({
+  id: z.string().uuid(),
+  taskId: z.string(),
+  type: SubmissionType,
+  commitSha: z.string().nullable(),
+  body: z.string().nullable(),
+  createdAt: z.string(),
+  runs: z.array(RunDto),
+});
+export type SubmissionDto = z.infer<typeof SubmissionDto>;
+
+export const SubmissionListResponse = z.object({ submissions: z.array(SubmissionDto) });
+export type SubmissionListResponse = z.infer<typeof SubmissionListResponse>;
+
+// ---------------------------------------------------------------------------
+// Host bridge (the only process that may start containers or run the Claude CLI)
+// ---------------------------------------------------------------------------
+
+export const BridgeHealth = z.object({
+  status: z.literal('ok'),
+  docker: z.boolean(),
+  /** Runner images that are built and ready, e.g. ["node", "nest"]. */
+  runners: z.array(z.string()),
+});
+export type BridgeHealth = z.infer<typeof BridgeHealth>;
+
+/** What the web app shows: whether the bridge can be reached, and what it reports. */
+export const BridgeStatusResponse = z.object({
+  reachable: z.boolean(),
+  docker: z.boolean(),
+  runners: z.array(z.string()),
+});
+export type BridgeStatusResponse = z.infer<typeof BridgeStatusResponse>;
+
+export const RunChecksRequest = z.object({
+  taskId: z.string().regex(/^m\d{2}-[a-z0-9-]+\/t\d{2}-[a-z0-9-]+$/),
+  /** Absolute path of the learner's lab repository on the host. */
+  repoPath: z.string().min(1),
+  /** Omitted means the latest commit on the checked-out branch. */
+  commitSha: CommitSha.optional(),
+});
+export type RunChecksRequest = z.infer<typeof RunChecksRequest>;
+
+export const RunChecksResponse = z.object({
+  /** `error` means the checks could not run at all; `message` says why. */
+  status: z.enum(['passed', 'failed', 'error']),
+  message: z.string().nullable(),
+  /** The commit that was checked, resolved to its full id. */
+  commitSha: z.string().nullable(),
+  results: z.array(CheckResultDto),
+  /** Tail of the check output, for the learner to read. */
+  log: z.string(),
+  durationMs: z.number().int(),
+});
+export type RunChecksResponse = z.infer<typeof RunChecksResponse>;
+
+/** Queue the API fills and the worker drains. One job per automated check run. */
+export const CHECKS_QUEUE = 'verification-checks';
+export const ChecksJob = z.object({ runId: z.string().uuid() });
+export type ChecksJob = z.infer<typeof ChecksJob>;

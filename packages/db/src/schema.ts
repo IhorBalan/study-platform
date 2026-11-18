@@ -201,6 +201,8 @@ export const checkResults = pgTable(
       .notNull()
       .references(() => verificationRuns.id, { onDelete: 'cascade' }),
     criterionId: text('criterion_id').notNull(),
+    /** Order of the criterion in the task file. */
+    position: integer('position').notNull().default(0),
     title: text('title').notNull(),
     passed: boolean('passed').notNull(),
     log: text('log'),

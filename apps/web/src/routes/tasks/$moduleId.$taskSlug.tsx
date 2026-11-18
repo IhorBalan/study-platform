@@ -1,6 +1,7 @@
 import { queryOptions, useSuspenseQuery } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Markdown } from '../../components/Markdown';
+import { SubmitPanel } from '../../components/SubmitPanel';
 import { api } from '../../lib/api';
 
 const taskQuery = (id: string) =>
@@ -32,7 +33,9 @@ function TaskPage() {
 
       {task.type === 'repo' && (
         <p className="mt-6 rounded-lg border border-zinc-200 p-4 text-sm dark:border-zinc-800">
-          Work in <code className="font-mono">{task.labFolder}</code> inside your lab repository.
+          Run <code className="font-mono">pnpm lab start {task.id}</code> to copy the starter files,
+          then work in <code className="font-mono">{task.labFolder}</code> inside your lab
+          repository.
           {task.services.length > 0 && <> Needs: {task.services.join(', ')}.</>}
         </p>
       )}
@@ -71,9 +74,7 @@ function TaskPage() {
         </details>
       )}
 
-      <p className="mt-10 border-t border-zinc-200 pt-6 text-sm text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
-        Submitting and review are not built yet.
-      </p>
+      <SubmitPanel task={task} />
     </article>
   );
 }

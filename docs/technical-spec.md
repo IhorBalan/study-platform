@@ -40,12 +40,12 @@ The platform is built with the stack it teaches (React, NestJS, PostgreSQL), so 
 apps/
   web/        React SPA (Vite)
   api/        NestJS HTTP API
-  worker/     NestJS standalone app: pg-boss consumers (verification, card suggestions)
+  worker/     Plain Node process: pg-boss consumers (verification, card suggestions)
   bridge/     Native host process: runs sandboxes and the Claude CLI
 packages/
   shared/     zod schemas and types shared by all apps
   db/         Drizzle schema, migrations, seed
-  curriculum-loader/   Parses and validates curriculum files
+  curriculum/ Parses and validates curriculum files
   lab-cli/    `pnpm lab ...` commands
 curriculum/   Modules, lessons, tasks and card decks (Markdown + YAML)
 infra/
@@ -91,7 +91,7 @@ Each module's `module.yaml` lists the services its tasks need. The UI shows whic
 
 ### 3.5 Lab workspace
 
-One git repository, created by `pnpm lab init <path>`, with a folder per module and task. A code submission is `{ taskId, folder, commitSha }`. The bridge exports that folder at that commit with `git archive` into a temporary directory and mounts it read-only, so uncommitted work and other tasks are invisible to the checks.
+One git repository, created by `pnpm lab init <path>`, with a folder per module and task (`m00-foundations/t01-raw-http-server/`). A code submission is `{ taskId, commitSha }`, and an empty commit id means the latest commit. The bridge exports that folder at that commit with `git archive` into a temporary directory and mounts it read-only, so uncommitted work and other tasks are invisible to the checks.
 
 ### 3.6 Sandbox container
 

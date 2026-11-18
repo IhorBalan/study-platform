@@ -18,22 +18,33 @@ No cloud accounts are needed.
 ```sh
 corepack enable
 pnpm install
-cp .env.example .env
 pnpm dev
 ```
 
-`pnpm dev` starts PostgreSQL in Docker, then the API on http://localhost:3000/api and the web app on http://localhost:5173, both with hot reload. Data lives in a Docker volume and survives restarts. `pnpm infra:down` stops the database and keeps the data.
+`pnpm dev` creates `.env` on first run, starts PostgreSQL in Docker, then starts four processes with hot reload: the web app on http://localhost:5173, the API on http://localhost:3000/api, the worker, and the host bridge that runs task checks. Data lives in a Docker volume and survives restarts. `pnpm infra:down` stops the database and keeps the data.
+
+### Working on tasks
+
+```sh
+pnpm lab images                                       # once: build the images that run task checks
+pnpm lab init ~/code/backend-lab                      # once: create your lab repository
+pnpm lab start m00-foundations/t01-raw-http-server    # copy a task's starter files into it
+```
+
+Solve the task in the lab repository, commit, and press "Run checks" on the task page. The checks run against the commit inside a container with no internet access. Some modules need practice services, started with `pnpm lab up postgres` (also `valkey`, `aws`, `mailpit`). `pnpm lab status` shows what is running and `pnpm lab down` stops it.
 
 ## Commands
 
-| Command                     | What it does                                                       |
-| --------------------------- | ------------------------------------------------------------------ |
-| `pnpm dev`                  | Start the core tier and all apps in watch mode                     |
-| `pnpm build`                | Build every package                                                |
-| `pnpm typecheck`            | Type-check every package                                           |
-| `pnpm test`                 | Run tests (the API tests start PostgreSQL with Testcontainers)     |
-| `pnpm lint` / `pnpm format` | oxlint / Prettier                                                  |
-| `pnpm db:generate`          | Generate a SQL migration after editing `packages/db/src/schema.ts` |
+| Command                     | What it does                                                         |
+| --------------------------- | -------------------------------------------------------------------- |
+| `pnpm dev`                  | Start the core tier and all apps in watch mode                       |
+| `pnpm build`                | Build every package                                                  |
+| `pnpm typecheck`            | Type-check every package                                             |
+| `pnpm test`                 | Run tests (the API tests start PostgreSQL with Testcontainers)       |
+| `pnpm lint` / `pnpm format` | oxlint / Prettier                                                    |
+| `pnpm lab <command>`        | Lab repository, check images and practice services (`pnpm lab help`) |
+| `pnpm curriculum:check`     | Validate every file under `curriculum/`                              |
+| `pnpm db:generate`          | Generate a SQL migration after editing `packages/db/src/schema.ts`   |
 
 ## Layout
 

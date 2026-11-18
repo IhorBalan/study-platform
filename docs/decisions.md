@@ -404,6 +404,11 @@ Decisions made while building are appended below.
 ### D-115 · CI validates the real curriculum — 2026-11-18
 - **What:** the `verify` job runs `pnpm curriculum:check`.
 - **Why:** the tests load a small fixture curriculum, so a broken `task.yaml` or card file under `curriculum/` passed CI and then stopped `pnpm dev`, because the API refuses to start on a content problem. Found by the code review (R1).
+### D-116 · The worker fails check runs it finds running at start-up — 2026-11-18
+- **What:** before taking jobs, the worker marks every check run still in `running` as an error with "The checker restarted while this run was in progress. Submit again."
+- **Why:** jobs are not retried, so a run interrupted by a crash or a closed laptop stayed `running`. The task page polled for ever and that submission could never be reviewed. Found by the code review (R2a).
+- **Alternatives:** retrying the job. A check run is cheap to submit again, and a retry could run checks against a commit the learner has already moved past.
+- **Limits:** assumes one worker. With several, a start-up sweep would fail runs another worker is still processing.
 
 ---
 

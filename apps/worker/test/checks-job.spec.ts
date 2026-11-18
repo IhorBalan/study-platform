@@ -4,7 +4,7 @@ import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testconta
 import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { BridgeUnavailableError, type RunChecksOnBridge } from '../src/bridge-client.js';
-import { processChecksJob } from '../src/checks-job.js';
+import { failInterruptedRuns, processChecksJob } from '../src/checks-job.js';
 
 const { modules, tasks, submissions, verificationRuns, checkResults, settings } = schema;
 const TASK = 'm00-demo/t02-code';
@@ -149,5 +149,27 @@ describe('checks job (real Postgres)', () => {
     await processChecksJob({ db: handle.db, runOnBridge }, runId);
     expect(calls).toBe(1);
     expect((await loadRun(runId)).status).toBe('passed');
+  });
+
+  it('fails runs left running by a stopped worker and leaves the rest alone', async () => {
+    const interrupted = await queueRun();
+    const queued = await queueRun();
+    const review = await queueRun();
+    const set = (id: string, values: Partial<typeof verificationRuns.$inferInsert>) =>
+      handle.db.update(verificationRuns).set(values).where(eq(verificationRuns.id, id));
+    await set(interrupted, { status: 'running' });
+    await set(review, { stage: 'review', status: 'running' });
+
+    expect(await failInterruptedRuns(handle.db)).toBe(1);
+
+    const failed = await loadRun(interrupted);
+    expect(failed.status).toBe('error');
+    expect(failed.error).toContain('Submit again');
+    expect(failed.finishedAt).not.toBeNull();
+    expect((await loadRun(queued)).status).toBe('queued');
+    expect((await loadRun(review)).status).toBe('running');
+
+    // Nothing is left to fail on the next start.
+    expect(await failInterruptedRuns(handle.db)).toBe(0);
   });
 });

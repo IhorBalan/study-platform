@@ -24,7 +24,10 @@ export function plainText(markdown: string): string {
     .replace(/```[^\n]*\n/g, ' ') // code fence markers; the code itself stays searchable
     .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1') // links and images keep their label
     .replace(/^\s{0,3}(#{1,6}|>|[-*+]|\d+\.)\s+/gm, '') // headings, quotes, list markers
-    .replace(/[*_`|]/g, '')
+    .replace(/[*`|]/g, '')
+    // Underscores are removed only where they mark emphasis, at the edge of a word.
+    // Inside a word they are part of a name such as pg_trgm or statement_timeout.
+    .replace(/(?<![A-Za-z0-9])_+|_+(?![A-Za-z0-9])/g, '')
     .replace(/\s+/g, ' ')
     .trim();
 }

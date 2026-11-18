@@ -5,6 +5,7 @@ dist/
 .env.*
 !.env.example
 data/
+backups/
 coverage/
 *.tsbuildinfo
 .DS_Store

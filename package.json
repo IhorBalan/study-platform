@@ -16,6 +16,8 @@
     "format:check": "prettier --check .",
     "infra:up": "docker compose -f infra/compose/compose.yaml up -d --wait",
     "infra:down": "docker compose -f infra/compose/compose.yaml down",
+    "backup": "node scripts/backup.mjs",
+    "restore": "node scripts/restore.mjs",
     "db:generate": "pnpm --filter @study/db generate",
     "db:migrate": "pnpm --filter @study/db migrate",
     "curriculum:check": "pnpm --filter @study/curriculum build && pnpm --filter @study/curriculum check",

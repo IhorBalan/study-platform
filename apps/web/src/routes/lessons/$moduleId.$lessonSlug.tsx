@@ -1,8 +1,9 @@
 import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Markdown } from '../../components/Markdown';
 import { api } from '../../lib/api';
+import { lessonOutline, readingMinutes } from '../../lib/lessonOutline';
 import { useStudySession } from '../../lib/useStudySession';
 
 const lessonQuery = (id: string) =>
@@ -24,6 +25,7 @@ function LessonPage() {
   const id = `${moduleId}/${lessonSlug}`;
   const { data: lesson } = useSuspenseQuery(lessonQuery(id));
   const queryClient = useQueryClient();
+  const outline = useMemo(() => lessonOutline(lesson.markdown), [lesson.markdown]);
   useStudySession('lesson', id);
   const [notice, setNotice] = useState<{ lessonId: string; text: string } | null>(null);
 
@@ -55,9 +57,31 @@ function LessonPage() {
         </Link>{' '}
         / {lesson.moduleTitle}
       </p>
-      <h1 className="mt-1 mb-6 text-3xl font-semibold">{lesson.title}</h1>
+      <h1 className="mt-1 text-3xl font-semibold">{lesson.title}</h1>
+      <p className="mt-1 mb-6 text-sm text-zinc-500 dark:text-zinc-400">
+        About {readingMinutes(lesson.markdown)} min read
+      </p>
 
-      <Markdown>{lesson.markdown}</Markdown>
+      {outline.length > 1 && (
+        <details className="mb-6 rounded-lg border border-zinc-200 p-3 text-sm dark:border-zinc-800">
+          <summary className="cursor-pointer font-medium">
+            In this lesson ({outline.length} sections)
+          </summary>
+          <nav aria-label="Sections of this lesson">
+            <ol className="mt-2 space-y-1">
+              {outline.map((item) => (
+                <li key={item.id}>
+                  <a href={`#${item.id}`} className="hover:underline">
+                    {item.title}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </nav>
+        </details>
+      )}
+
+      <Markdown sectionIds={outline.map((item) => item.id)}>{lesson.markdown}</Markdown>
 
       <div className="mt-10 flex flex-wrap items-center gap-4 border-t border-zinc-200 pt-6 dark:border-zinc-800">
         {lesson.status === 'done' ? (

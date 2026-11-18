@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CardsRouteImport } from './routes/cards'
+import { Route as NotesRouteImport } from './routes/notes'
 import { Route as ReviewRouteImport } from './routes/review'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -26,6 +27,11 @@ const IndexRoute = IndexRouteImport.update({
 const CardsRoute = CardsRouteImport.update({
   id: '/cards',
   path: '/cards',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotesRoute = NotesRouteImport.update({
+  id: '/notes',
+  path: '/notes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReviewRoute = ReviewRouteImport.update({
@@ -63,6 +69,7 @@ const TasksModuleIdTaskSlugRoute = TasksModuleIdTaskSlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cards': typeof CardsRoute
+  '/notes': typeof NotesRoute
   '/review': typeof ReviewRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cards': typeof CardsRoute
+  '/notes': typeof NotesRoute
   '/review': typeof ReviewRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/cards': typeof CardsRoute
+  '/notes': typeof NotesRoute
   '/review': typeof ReviewRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/cards'
+    | '/notes'
     | '/review'
     | '/search'
     | '/settings'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/cards'
+    | '/notes'
     | '/review'
     | '/search'
     | '/settings'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/cards'
+    | '/notes'
     | '/review'
     | '/search'
     | '/settings'
@@ -127,6 +139,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CardsRoute: typeof CardsRoute
+  NotesRoute: typeof NotesRoute
   ReviewRoute: typeof ReviewRoute
   SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
@@ -149,6 +162,13 @@ declare module '@tanstack/react-router' {
       path: '/cards'
       fullPath: '/cards'
       preLoaderRoute: typeof CardsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notes': {
+      id: '/notes'
+      path: '/notes'
+      fullPath: '/notes'
+      preLoaderRoute: typeof NotesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/review': {
@@ -199,6 +219,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CardsRoute: CardsRoute,
+  NotesRoute: NotesRoute,
   ReviewRoute: ReviewRoute,
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,

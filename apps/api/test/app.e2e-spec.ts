@@ -810,6 +810,21 @@ describe('API (e2e, real Postgres)', () => {
       expect(read.body.body).toBe('Second **draft**');
       expect(read.body.updatedAt).toEqual(expect.any(String));
 
+      // The list names what each note is about, in plan order.
+      await http().put('/api/notes/m00-demo/t01-explain').send({ body: 'Task note' }).expect(200);
+      const all = await http().get('/api/notes').expect(200);
+      expect(
+        all.body.notes.map((n: { itemId: string; kind: string }) => [n.kind, n.itemId]),
+      ).toEqual([
+        ['lesson', lessonId],
+        ['task', 'm00-demo/t01-explain'],
+      ]);
+      expect(all.body.notes[0]).toMatchObject({
+        moduleTitle: 'Demo module',
+        body: 'Second **draft**',
+      });
+      await http().put('/api/notes/m00-demo/t01-explain').send({ body: '' }).expect(200);
+
       // An emptied note is removed, not stored as blank text.
       await http().put(`/api/notes/${lessonId}`).send({ body: '   ' }).expect(200);
       const gone = await http().get(`/api/notes/${lessonId}`).expect(200);

@@ -1,5 +1,6 @@
 import {
   NoteDto,
+  NoteListResponse,
   HealthResponse,
   LessonDetail,
   LessonProgressResponse,
@@ -118,6 +119,7 @@ export const api = {
   dismissReviewTask: (id: string) =>
     request(`/review-tasks/${id}/dismiss`, z.undefined(), { method: 'POST', body: {} }),
 
+  notes: () => request('/notes', NoteListResponse),
   note: (itemId: string) => request(`/notes/${itemId}`, NoteDto),
   /** `keepalive` lets a save sent while the page is closing still arrive. */
   saveNote: (itemId: string, body: string, keepalive = false) =>

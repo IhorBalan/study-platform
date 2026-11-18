@@ -1,10 +1,15 @@
 import { Body, Controller, Get, Param, Put } from '@nestjs/common';
-import { SaveNote, type NoteDto } from '@study/shared';
+import { SaveNote, type NoteDto, type NoteListResponse } from '@study/shared';
 import { NotesService } from './notes.service.js';
 
 @Controller('notes')
 export class NotesController {
   constructor(private readonly notes: NotesService) {}
+
+  @Get()
+  async list(): Promise<NoteListResponse> {
+    return { notes: await this.notes.list() };
+  }
 
   @Get(':moduleId/:slug')
   get(@Param('moduleId') moduleId: string, @Param('slug') slug: string): Promise<NoteDto> {

@@ -421,6 +421,9 @@ Decisions made while building are appended below.
 ### D-121 · The bridge keeps only the tail of a program's output while it runs — 2026-11-18
 - **What:** `exec()` drops old output chunks as new ones arrive and never holds more than the output limit plus one chunk per stream.
 - **Why:** it used to keep every chunk and trim at the end. A submission printing in a loop grew the bridge from 98 MB to 12.7 GB in a minute until the kernel killed it, which also failed every queued run. Found by the backend tester (BE-1).
+### D-122 · The API reads JSON bodies up to 1 MB — 2026-11-18
+- **What:** the JSON body limit is 1 MB instead of the framework default of 100 kB.
+- **Why:** the schemas allow a 90,000-character review reply and a 50,000-character answer. With JSON escaping or Cyrillic text those pass 100 kB and were refused with 413 before validation ran. Found by the backend tester (BE-4).
 
 ---
 

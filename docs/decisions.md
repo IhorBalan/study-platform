@@ -514,6 +514,10 @@ A second workflow, `Curriculum checks`, builds the two sandbox images, starts th
 
 A mis-pressed key in a review used to be permanent (UX review). Each review row now keeps `schedule_before`, a copy of the card's schedule as it was, and `POST /api/review/:cardId/undo` deletes the card's latest review and restores that copy, in one transaction under the same row lock a grade takes. Restoring the stored copy, instead of recomputing with FSRS, makes the undo exact, and deleting the row keeps the daily counts and retention statistics as if the grade never happened. Only the latest grade of a card, and only within ten minutes: the point is fixing a slip, not rewriting history. Reviews saved before this change have no copy and cannot be undone. The Review page offers "Undo" (key Z, matched by physical key) for the last card graded on that page.
 
+### D-139 · The Plan shows one line per module and overall progress — 2026-11-18
+
+The Plan page was 3,800px tall on a desktop and 6,800px on a phone, because every module showed its summary (UX review, round 1, item 5). Each module is now one line (title, kind, effort, lessons and tasks done) that opens to show the summary and its items. A module with anything started and not everything done starts open and has a stronger border; the others start closed. Above the list, a line and a bar give lessons and tasks done across the whole plan. Status dots carry their meaning as hidden text ("Done:", "In progress:", "Not started:") instead of an `aria-label` on a span, which screen readers skip and axe reports. The page is now about 2,100px on a desktop and 2,800px on a phone with one module open.
+
 ---
 
 ## Product direction

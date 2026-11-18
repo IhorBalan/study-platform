@@ -97,3 +97,25 @@ export async function processChecksJob(deps: ChecksJobDeps, runId: string): Prom
     });
   }
 }
+
+/**
+ * Fails check runs that an earlier worker left unfinished.
+ *
+ * The queue does not retry a job, so a run that was "running" when the worker
+ * stopped (a crash, a closed laptop) would stay that way: the task page would
+ * poll for ever and the submission could never be reviewed. Call this once at
+ * start-up, before taking jobs. It assumes a single worker, which is how the
+ * platform runs.
+ */
+export async function failInterruptedRuns(db: Database): Promise<number> {
+  const failed = await db
+    .update(verificationRuns)
+    .set({
+      status: 'error',
+      error: 'The checker restarted while this run was in progress. Submit again.',
+      finishedAt: new Date(),
+    })
+    .where(and(eq(verificationRuns.stage, 'checks'), eq(verificationRuns.status, 'running')))
+    .returning({ id: verificationRuns.id });
+  return failed.length;
+}

@@ -2,7 +2,7 @@ import { createDatabase } from '@study/db';
 import { CHECKS_QUEUE, ChecksJob } from '@study/shared';
 import { PgBoss } from 'pg-boss';
 import { createBridgeClient } from './bridge-client.js';
-import { processChecksJob } from './checks-job.js';
+import { failInterruptedRuns, processChecksJob } from './checks-job.js';
 import { loadConfig } from './config.js';
 
 const config = loadConfig();
@@ -15,6 +15,11 @@ const boss = new PgBoss(config.DATABASE_URL);
 boss.on('error', (error) => console.warn('[worker] queue error:', error.message));
 await boss.start();
 await boss.createQueue(CHECKS_QUEUE);
+
+const interrupted = await failInterruptedRuns(db);
+if (interrupted > 0) {
+  console.log(`[worker] marked ${interrupted} run(s) interrupted by a restart as failed`);
+}
 
 await boss.work(CHECKS_QUEUE, async (jobs) => {
   for (const job of jobs) {

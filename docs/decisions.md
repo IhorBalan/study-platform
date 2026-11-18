@@ -425,6 +425,11 @@ Decisions made while building are appended below.
 - **What:** the JSON body limit is 1 MB instead of the framework default of 100 kB.
 - **Why:** the schemas allow a 90,000-character review reply and a 50,000-character answer. With JSON escaping or Cyrillic text those pass 100 kB and were refused with 413 before validation ran. Found by the backend tester (BE-4).
 
+### D-123 · The API answers only requests addressed to this machine — 2026-11-18
+- **What:** a request whose `Host` header is not `localhost`, `127.0.0.1`, `[::1]` or the host of `WEB_ORIGIN` gets 403. The bridge already did this.
+- **Why:** the API has no login and relies on being reachable from this machine only. A web page on a domain re-pointed at 127.0.0.1 (DNS rebinding) counts as the same origin as the API and could read settings, cards and answers. Writes were already protected by the Origin check. Found by the backend tester (BE-5).
+- **Full Docker mode:** nginx passes the browser's `Host` on, so the same rule holds there.
+
 ---
 
 ## Agreed before this log

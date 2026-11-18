@@ -108,6 +108,15 @@ describe('API (e2e, real Postgres)', () => {
       expect(list.body.cards.some((c: { front: string }) => c.front === 'planted')).toBe(false);
     });
 
+    it('answers only requests addressed to this machine', async () => {
+      // A page on a domain re-pointed at 127.0.0.1 would send its own name as Host.
+      const res = await http().get('/api/settings').set('Host', 'evil.example:3000').expect(403);
+      expect(res.headers['content-type']).toContain('application/problem+json');
+      for (const host of ['localhost:3000', '127.0.0.1:3000', 'localhost', '[::1]:3000']) {
+        await http().get('/api/health').set('Host', host).expect(200);
+      }
+    });
+
     it('accepts JSON writes from the web app on localhost and 127.0.0.1', async () => {
       for (const origin of ['http://localhost:5173', 'http://127.0.0.1:5173']) {
         const res = await http().patch('/api/settings').set('Origin', origin).send({});

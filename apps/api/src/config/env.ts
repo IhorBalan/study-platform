@@ -7,6 +7,8 @@ const repoRoot = path.resolve(import.meta.dirname, '../../../..');
 const EnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   API_PORT: z.coerce.number().int().min(1).max(65535).default(3000),
+  /** Loopback by default. Only the Docker image sets 0.0.0.0, and Compose publishes it on 127.0.0.1. */
+  API_HOST: z.string().default('127.0.0.1'),
   DATABASE_URL: z.string().url().default('postgres://study:study@localhost:54320/study'),
   WEB_ORIGIN: z.string().url().default('http://localhost:5173'),
   CURRICULUM_DIR: z.string().default(path.join(repoRoot, 'curriculum')),

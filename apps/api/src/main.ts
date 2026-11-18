@@ -12,5 +12,5 @@ app.enableCors({ origin: env.WEB_ORIGIN });
 app.enableShutdownHooks();
 
 // Local-first: bind to loopback only so the API is never reachable from the network.
-await app.listen(env.API_PORT, '127.0.0.1');
+await app.listen(env.API_PORT, env.API_HOST);
 new Logger('Bootstrap').log(`API listening on http://localhost:${env.API_PORT}/api`);

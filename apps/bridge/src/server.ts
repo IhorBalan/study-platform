@@ -54,6 +54,28 @@ export interface BridgeDeps {
   /** Replaceable in tests. */
   run?: typeof runChecks;
   review?: typeof runReview;
+  health?: typeof readHealth;
+}
+
+/** How long a health answer is reused. */
+const HEALTH_TTL_MS = 15_000;
+
+/** What the host can do right now: Docker, the runner images, the Claude CLI, the last backup. */
+async function readHealth(config: Config): Promise<BridgeHealth> {
+  const docker = await dockerAvailable(config);
+  const runners: string[] = [];
+  if (docker) {
+    for (const runner of ['node', 'nest'] as const) {
+      if (await imageExists(config, runnerImage(runner))) runners.push(runner);
+    }
+  }
+  return {
+    status: 'ok',
+    docker,
+    runners,
+    claude: await claudeAvailable(config),
+    lastBackupAt: await lastBackupAt(config.BACKUP_DIR),
+  };
 }
 
 /**
@@ -65,17 +87,40 @@ export function createBridgeServer({
   curriculum,
   run = runChecks,
   review = runReview,
+  health = readHealth,
 }: BridgeDeps): Server {
   const tasks = new Map<string, LoadedTask>(
     curriculum.modules.flatMap((m) => m.tasks.map((t) => [t.id, t] as const)),
   );
 
+  /** Runs jobs one after another, in the order they arrive. */
+  const oneAtATime = () => {
+    let queue: Promise<unknown> = Promise.resolve();
+    return <T>(job: () => Promise<T>): Promise<T> => {
+      const next = queue.then(job, job);
+      queue = next.catch(() => undefined);
+      return next;
+    };
+  };
   // One sandbox at a time keeps memory use predictable on a laptop.
-  let queue: Promise<unknown> = Promise.resolve();
-  const inTurn = <T>(job: () => Promise<T>): Promise<T> => {
-    const next = queue.then(job, job);
-    queue = next.catch(() => undefined);
-    return next;
+  const inTurn = oneAtATime();
+  // One review at a time too: each starts a Claude process, and several at once
+  // would compete for the same account limits. Reviews do not wait for sandboxes.
+  const reviewInTurn = oneAtATime();
+
+  // The web app asks for the health every 30 seconds per open task page, and each
+  // answer costs four child processes. A short memory keeps that to one set.
+  let healthAt = 0;
+  let healthValue: Promise<BridgeHealth> | null = null;
+  const cachedHealth = (): Promise<BridgeHealth> => {
+    if (!healthValue || Date.now() - healthAt > HEALTH_TTL_MS) {
+      healthAt = Date.now();
+      healthValue = health(config).catch((error: unknown) => {
+        healthValue = null;
+        throw error;
+      });
+    }
+    return healthValue;
   };
 
   const handle = async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
@@ -89,21 +134,7 @@ export function createBridgeServer({
     const url = new URL(req.url ?? '/', 'http://bridge');
 
     if (req.method === 'GET' && url.pathname === '/health') {
-      const docker = await dockerAvailable(config);
-      const runners: string[] = [];
-      if (docker) {
-        for (const runner of ['node', 'nest'] as const) {
-          if (await imageExists(config, runnerImage(runner))) runners.push(runner);
-        }
-      }
-      const body: BridgeHealth = {
-        status: 'ok',
-        docker,
-        runners,
-        claude: await claudeAvailable(config),
-        lastBackupAt: await lastBackupAt(config.BACKUP_DIR),
-      };
-      return send(res, 200, body);
+      return send(res, 200, await cachedHealth());
     }
 
     if (req.method === 'POST' && url.pathname === '/checks/run') {
@@ -140,7 +171,7 @@ export function createBridgeServer({
       }
       const task = tasks.get(parsed.data.taskId);
       if (!task) return problem(res, 404, 'Not Found', `Unknown task ${parsed.data.taskId}.`);
-      const result: RunReviewResponse = await review(config, task, parsed.data);
+      const result: RunReviewResponse = await reviewInTurn(() => review(config, task, parsed.data));
       return send(res, 200, result);
     }
 

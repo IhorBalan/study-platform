@@ -14,6 +14,9 @@ describe('bridge server', () => {
   let base: string;
   let close: () => Promise<void>;
   const calls: unknown[] = [];
+  let healthReads = 0;
+  let reviewsRunning = 0;
+  let mostReviewsAtOnce = 0;
 
   beforeAll(async () => {
     const curriculum = await loadCurriculum(curriculumDir);
@@ -29,6 +32,24 @@ describe('bridge server', () => {
     const server = createBridgeServer({
       config,
       curriculum,
+      health: async () => {
+        healthReads += 1;
+        return { status: 'ok', docker: true, runners: ['node'], claude: false, lastBackupAt: null };
+      },
+      review: async () => {
+        reviewsRunning += 1;
+        mostReviewsAtOnce = Math.max(mostReviewsAtOnce, reviewsRunning);
+        await new Promise((resolve) => setTimeout(resolve, 30));
+        reviewsRunning -= 1;
+        return {
+          status: 'ok',
+          message: null,
+          output: 'fine',
+          model: null,
+          costUsd: null,
+          durationMs: 1,
+        };
+      },
       run: async (_config, task, request) => {
         calls.push({ task: task.id, request });
         return fake;
@@ -114,5 +135,26 @@ describe('bridge server', () => {
     expect(res.status).toBe(200);
     expect(((await res.json()) as RunChecksResponse).status).toBe('passed');
     expect(calls).toContainEqual({ task: taskId, request: { taskId, repoPath: '/tmp/lab' } });
+  });
+
+  it('reuses a health answer for a short while', async () => {
+    const get = () => fetch(`${base}/health`, { headers: { authorization: `Bearer ${SECRET}` } });
+    const [first, second] = await Promise.all([get(), get()]);
+    expect(await first.json()).toMatchObject({ status: 'ok', runners: ['node'] });
+    expect(second.status).toBe(200);
+    await get();
+    expect(healthReads).toBe(1);
+  });
+
+  it('runs one review at a time', async () => {
+    const review = () =>
+      fetch(`${base}/review/run`, {
+        method: 'POST',
+        headers: { authorization: `Bearer ${SECRET}`, 'content-type': 'application/json' },
+        body: JSON.stringify({ taskId: 'm00-demo/t01-explain', prompt: 'Review this.' }),
+      });
+    const replies = await Promise.all([review(), review(), review()]);
+    expect(replies.map((r) => r.status)).toEqual([200, 200, 200]);
+    expect(mostReviewsAtOnce).toBe(1);
   });
 });

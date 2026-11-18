@@ -8,11 +8,18 @@ import { InjectDb, type Database } from '../database/database.module.js';
 export class SettingsService {
   constructor(@InjectDb() private readonly db: Database) {}
 
-  /** The settings table has exactly one row; it is created on first read. */
+  /**
+   * The settings table has exactly one row. It is created the first time it is
+   * found missing, so an ordinary read is one select and no write.
+   */
   async get(): Promise<SettingsDto> {
     const { settings } = schema;
-    await this.db.insert(settings).values({ id: 1 }).onConflictDoNothing();
-    const [row] = await this.db.select().from(settings).where(eq(settings.id, 1));
+    const read = () => this.db.select().from(settings).where(eq(settings.id, 1));
+    let [row] = await read();
+    if (!row) {
+      await this.db.insert(settings).values({ id: 1 }).onConflictDoNothing();
+      [row] = await read();
+    }
     if (!row) throw new Error('settings row is missing');
     return {
       reviewMode: row.reviewMode,

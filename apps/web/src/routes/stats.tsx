@@ -19,6 +19,12 @@ function StatsPage() {
     );
   }
   const { learning, memory } = stats.data;
+  const moduleSeconds = (moduleId: string) =>
+    learning.secondsByModule.find((s) => s.moduleId === moduleId)?.seconds ?? 0;
+  const started = learning.modules.filter(
+    (m) => m.lessonsDone > 0 || m.tasksDone > 0 || moduleSeconds(m.moduleId) > 0,
+  );
+  const notStarted = learning.modules.length - started.length;
 
   return (
     <section>
@@ -59,18 +65,26 @@ function StatsPage() {
 
       <DailyChart days={learning.secondsByDay} />
 
-      <Table
-        caption="Progress by module"
-        head={['Module', 'Lessons', 'Tasks', 'Time']}
-        rows={learning.modules.map((m) => [
-          m.title,
-          `${m.lessonsDone} / ${m.lessonsTotal}`,
-          `${m.tasksDone} / ${m.tasksTotal}`,
-          durationLabel(
-            learning.secondsByModule.find((s) => s.moduleId === m.moduleId)?.seconds ?? 0,
-          ),
-        ])}
-      />
+      {started.length > 0 && (
+        <Table
+          caption="Progress by module"
+          head={['Module', 'Lessons', 'Tasks', 'Time']}
+          rows={started.map((m) => [
+            m.title,
+            `${m.lessonsDone} / ${m.lessonsTotal}`,
+            `${m.tasksDone} / ${m.tasksTotal}`,
+            durationLabel(moduleSeconds(m.moduleId)),
+          ])}
+        />
+      )}
+      {/* Modules with nothing done and no time spent would be rows of zeros. */}
+      {notStarted > 0 && (
+        <p className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">
+          {started.length === 0
+            ? `None of the ${notStarted} modules is started yet.`
+            : `${notStarted} more ${notStarted === 1 ? 'module is' : 'modules are'} not started.`}
+        </p>
+      )}
 
       {learning.rubricBySkill.length > 0 && (
         <Table

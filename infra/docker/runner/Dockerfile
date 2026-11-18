@@ -15,7 +15,9 @@ FROM base AS node
 
 FROM base AS nest
 USER root
-COPY runner-nest/package.json /opt/runner/package.json
+COPY runner-nest/package.json runner-nest/package-lock.json /opt/runner/
 # Internet is available while the image is built, never while it runs.
-RUN cd /opt/runner && npm install --omit=dev --no-audit --no-fund && npm cache clean --force
+# npm ci installs exactly what the lockfile lists and checks every tarball's hash.
+# --ignore-scripts: none of these packages needs an install script, so a hijacked one cannot run code here (S-007).
+RUN cd /opt/runner && npm ci --omit=dev --ignore-scripts --no-audit --no-fund && npm cache clean --force
 USER 10001:10001

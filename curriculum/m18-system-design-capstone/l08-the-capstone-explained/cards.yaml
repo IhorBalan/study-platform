@@ -1,0 +1,50 @@
+- id: walking-skeleton
+  type: term
+  front: Walking skeleton
+  back: "The thinnest version that goes end to end through every layer: a request, a DB write, a migration, a test, a container build. Example: GET /health plus one insert, built in CI."
+  skills: [capstone-delivery]
+- id: vertical-slice
+  type: comparison
+  front: Building in vertical slices vs in layers
+  back: "A slice delivers one feature through every layer and can be demonstrated. Layers (all tables, then all endpoints) show nothing working until the end."
+  skills: [capstone-delivery]
+- id: cut-list
+  type: concept
+  front: Why keep a written cut list during a project?
+  back: "It turns dropped scope into explicit decisions, stops scope creep, and becomes the \"what was cut\" section of the report."
+  skills: [capstone-delivery]
+- id: milestone-deployable
+  type: concept
+  front: Why should each capstone milestone leave a working, deployable product?
+  back: "If you stop early you stop with something that works, and each milestone can be verified on its own."
+  skills: [capstone-delivery]
+- id: timebox
+  type: concept
+  front: "Your milestone's timebox ran out. What do you do?"
+  back: "Write down what is left, decide whether it is essential, cut or defer the rest, and move on."
+  skills: [capstone-delivery]
+- id: adr-same-day
+  type: concept
+  front: Why write ADRs on the day you make a decision?
+  back: "The context and rejected alternatives are fresh. Reconstructed reasons a month later are guesses."
+  skills: [capstone-delivery]
+- id: fake-honestly
+  type: concept
+  front: "How do you test Stripe webhooks without a Stripe account?"
+  back: "Sign fixture events yourself with the Stripe SDK's test header helper and post them to your endpoint, and say so in the report."
+  skills: [capstone-delivery]
+- id: workflow-root
+  type: concept
+  front: Where must a GitHub Actions workflow live for a project in a subfolder of a repository?
+  back: "In `.github/workflows/` at the repository root, with a `paths:` filter and `working-directory` pointing at the subfolder."
+  skills: [capstone-delivery]
+- id: evidence-not-claims
+  type: concept
+  front: What counts as good evidence that an acceptance criterion is met?
+  back: "A named test or command that shows it, such as a test that every receipt endpoint returns 404 for another workspace's ids."
+  skills: [capstone-delivery]
+- id: report-audience
+  type: concept
+  front: Who should the capstone report be written for?
+  back: "A senior engineer who will maintain the system: honest about gaps, specific about evidence, short on adjectives."
+  skills: [capstone-delivery]

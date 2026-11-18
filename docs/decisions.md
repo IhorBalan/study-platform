@@ -359,3 +359,9 @@ Decisions made while building are appended below.
 - **Verified:** each digest is a multi-architecture index that includes `arm64`, so it works on Apple Silicon.
 - **Cost:** updates are manual. To update, pull the new tag, read its digest with `docker image inspect --format '{{index .RepoDigests 0}}'`, and replace it.
 - **Runner packages added the same day:** BullMQ, ioredis, express, AWS SDK v3 clients, nodemailer and Stripe, each at an exact version at least a day old. Run `pnpm lab images` again after pulling.
+
+### D-106 · The capstone is a written report on a project built in the lab repository — Accepted, 2026-11-18
+- **Chosen:** module 18's capstone ("Shoebox", a receipts inbox for small teams) is a brief with nine milestones and 40 numbered acceptance criteria that you check yourself. What you submit is a 1,200 to 2,000 word report with the commit, and Claude reviews it against a rubric.
+- **Why:** automated checks for a whole SaaS would force one fixed structure on a project whose point is making your own design decisions.
+- **Alternative:** hidden end-to-end checks per milestone. Rejected for the reason above, and because the earlier modules already check each building block.
+- **One task is hard on purpose:** in the report scheduler design task, the load does not fit the read replica's stated limit. The expected answer notices that and pushes back. Say so if you would rather have numbers that fit.

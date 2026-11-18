@@ -1,0 +1,19 @@
+title: "Design review: an activity feed"
+type: text
+skills: [sd-requirements-estimates, sd-data-design, sd-scaling, sd-async-architecture, sd-design-docs]
+hints:
+  - "Do the arithmetic first: reads per second at peak, and posts × average followers per day. Then look at the largest single fan-out separately; averages hide it."
+  - Fan-out on read is one query over the follows of one user. Ask how expensive that query is with 80 follows and with 2,000, and what index it needs.
+  - "Most products end up with a hybrid: precompute for normal authors, merge in the few huge accounts at read time. Say where the line is and why."
+  - "A precomputed feed is a copy. Lesson 2's three questions apply: source of truth, how it is updated, how stale it may be."
+  - "For deletes and blocks, filtering at read time is often simpler and more correct than chasing every copy."
+  - "Ask what makes a feed entry unique. A unique constraint makes a re-run fan-out harmless."
+rubric:
+  - { id: requirements, title: "States goals and explicit non-goals (for example no ranking, no notifications, no comments in the feed) and writes at least two clarifying questions with assumed answers", skill: sd-requirements-estimates, max: 3 }
+  - { id: numbers, title: "Estimates peak feed reads per second, posts per second, fan-out entries per day (about 1.2 million at 80 followers), the worst single fan-out (150,000) and storage per year with visible arithmetic, and states what the numbers decide", skill: sd-requirements-estimates, max: 4 }
+  - { id: data-model, title: "Gives tables for posts, follows (with an index for each direction) and, if used, feed entries, with keys, a uniqueness constraint on feed entries and indexes that serve newest-first cursor pagination", skill: sd-data-design, max: 4 }
+  - { id: feed-strategy, title: "Compares fan-out on write, on read and hybrid against the numbers, chooses one with reasons, and handles accounts with 150,000 followers concretely (for example pulled at read time above a follower threshold, or fanned out in batches with the one-minute target checked)", skill: sd-scaling, max: 5 }
+  - { id: api, title: "Defines feed read with an opaque cursor (not offset), post create and delete, follow and unfollow, with methods, paths and main status codes", skill: sd-data-design, max: 2 }
+  - { id: edge-cases, title: "Handles delete, unfollow, block and new follow with a concrete mechanism each (for example read-time filtering, cleanup jobs, backfilling recent posts) and states how stale each may be", skill: sd-data-design, max: 4 }
+  - { id: failure-handling, title: "Covers a fan-out worker crash (idempotent batches or unique constraint), a backlog after a viral post (separate queue or batching, measured by oldest job age), Valkey restarting (feeds rebuildable from Postgres) and rebuilding one user's feed", skill: sd-async-architecture, max: 4 }
+  - { id: trade-offs, title: "Names at least two trade-offs with their cost, lists what was left out with a revisit signal for each, and keeps the design on the existing stack without new infrastructure no requirement forces", skill: sd-design-docs, max: 4 }

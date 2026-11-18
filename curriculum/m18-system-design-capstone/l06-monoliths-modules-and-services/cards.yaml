@@ -1,0 +1,60 @@
+- id: modular-monolith
+  type: term
+  front: Modular monolith
+  back: "One deployable and one database, with code split into business modules that own their tables and expose a small interface. Example: billing exports only EntitlementsService."
+  skills: [sd-service-boundaries]
+- id: network-boundary-cost
+  type: concept
+  front: Name three things that change when an in-process call becomes a network call.
+  back: "It can fail or time out, transactions stop at the boundary, deploys must stay version-compatible; tracing and local setup also get harder."
+  skills: [sd-service-boundaries]
+- id: capability-not-layer
+  type: comparison
+  front: Modules by business capability vs by technical layer
+  back: "Capability (billing, documents) keeps a feature's change in one place. Layers (controllers, services) spread every change across all of them."
+  skills: [sd-service-boundaries]
+- id: owns-tables
+  type: concept
+  front: Why should only the billing module read and write the subscriptions table?
+  back: "Other modules then depend on its interface, not its storage, so billing can change its schema or move out without breaking them."
+  skills: [sd-service-boundaries]
+- id: nest-exports
+  type: cloze
+  front: "In NestJS, another module can inject a provider only if its module lists it in {{exports}}."
+  back: "`exports`. Providers are encapsulated by default."
+  skills: [sd-service-boundaries]
+- id: enforce-boundaries
+  type: concept
+  front: How do you stop module boundaries eroding under deadlines?
+  back: "Enforce them in CI: an ESLint no-restricted-imports rule or a dependency-graph check that allows only each module's public entry."
+  skills: [sd-service-boundaries]
+- id: worker-split
+  type: concept
+  front: What is the cheapest useful split of a monolith, and why?
+  back: "The same codebase run as an API process and a worker process: separate scaling and isolation of heavy jobs, with no data split."
+  skills: [sd-service-boundaries]
+- id: split-signals
+  type: concept
+  front: Name three signals that justify a separate service.
+  back: "A very different resource profile or runtime, a security or compliance boundary, independent teams blocking each other, different availability needs."
+  skills: [sd-service-boundaries]
+- id: shared-db-services
+  type: concept
+  front: 'Why is "two services, one shared database they both write" a poor split?'
+  back: "It keeps the coupling (schema changes break both) and adds the network costs, so you get none of the independence."
+  skills: [sd-service-boundaries]
+- id: strangler-fig
+  type: term
+  front: Strangler fig migration
+  back: "Replacing part of a system gradually: clean the module, put a new service behind the same interface, shift traffic, move data, delete the old code."
+  skills: [sd-service-boundaries]
+- id: data-move-hard
+  type: concept
+  front: Which step of extracting a service is usually hardest, and why?
+  back: "Moving the data: copy, keep in sync, switch reads, then writes, without losing or double-writing anything while both run."
+  skills: [sd-service-boundaries]
+- id: interview-monolith-or-micro
+  type: concept
+  front: "Interview: monolith or microservices for a new product?"
+  back: "A modular monolith: one deployable with clear business modules, plus a separate worker process. Split a module out when a measured signal appears, such as a different runtime, security boundary or team."
+  skills: [sd-service-boundaries]

@@ -1,0 +1,60 @@
+- id: data-first-why
+  type: concept
+  front: Why design the data model before the boxes and arrows?
+  back: "Data outlives code and is the hardest thing to change once it is large, shared and historical."
+  skills: [sd-data-design]
+- id: operations-table
+  type: concept
+  front: What do you list before drawing tables for a new feature?
+  back: "The operations, each marked read or write with a rough frequency. Tables and indexes then make the frequent ones cheap."
+  skills: [sd-data-design]
+- id: consistency-question
+  type: concept
+  front: What question decides how consistent a piece of data must be?
+  back: "If a reader sees an old value, who notices and what does it cost? Money, stock and permissions must be current; counters and feeds can lag."
+  skills: [sd-data-design]
+- id: copies-lose-consistency
+  type: concept
+  front: When does a single-Postgres design stop being strongly consistent?
+  back: "When you add a copy: a cache, a read replica, a search index, a denormalised column or another service's database."
+  skills: [sd-data-design]
+- id: three-answers-per-copy
+  type: concept
+  front: Which three things must a design say about every copy of data?
+  back: "The source of truth, how the copy is updated, and how stale it may be."
+  skills: [sd-data-design]
+- id: read-your-writes
+  type: term
+  front: Read-your-writes consistency
+  back: "The author of a change sees it immediately, even if other readers see it a little later. Example: an agent reloads a ticket after closing it."
+  skills: [sd-data-design]
+- id: denorm-update-methods
+  type: comparison
+  front: Same-transaction update vs background job for a denormalised column
+  back: "Same transaction: never stale, adds work to the write. Background job: seconds stale, suits expensive or many-row updates."
+  skills: [sd-data-design]
+- id: rebuild-script
+  type: concept
+  front: Why write a rebuild procedure for every denormalised copy?
+  back: "Copies drift through bugs. Recomputing from the source turns a data incident into a routine fix."
+  skills: [sd-data-design]
+- id: hot-row
+  type: concept
+  front: Why is `workspaces.document_count = document_count + 1` on every upload risky at high write rates?
+  back: "Every update takes the same row lock, so concurrent uploads queue behind each other. Use per-day rows, events or a Valkey counter."
+  skills: [sd-data-design]
+- id: tenancy-default
+  type: comparison
+  front: Shared tables with tenant_id vs database per tenant
+  back: "Shared: one schema and migration, cheap tenants, but a missing filter leaks data. Per database: strong isolation, but operations multiply per tenant."
+  skills: [sd-data-design]
+- id: tenant-leading-key
+  type: concept
+  front: Why put tenant_id first in primary keys and indexes?
+  back: "Every query filters by tenant, so the index serves it directly, and composite foreign keys stop rows pointing across tenants."
+  skills: [sd-data-design]
+- id: interview-denormalise-design
+  type: concept
+  front: "Interview: in this design, where would you denormalise, and how do you keep the copy correct?"
+  back: "Where a frequent read would join or aggregate a large table, or needs to sort by another table's value. Update it in the same transaction or by a job, state the staleness, and keep a rebuild script."
+  skills: [sd-data-design]

@@ -1,0 +1,35 @@
+title: "Capstone: build and report on a small SaaS"
+type: text
+skills:
+  - capstone-delivery
+  - sd-design-docs
+  - sd-service-boundaries
+  - sd-availability
+  - tenant-isolation
+  - session-auth
+  - access-control
+  - presigned-urls
+  - background-jobs
+  - transactional-outbox
+  - webhook-handling
+  - subscription-billing
+  - ci-pipeline-design
+hints:
+  - "Get M1 working end to end in an evening or two, ugly but complete: request, migration, test, image. Then add vertical slices."
+  - "Write the ADR on the day you decide, and add to the cut list every time you skip something. Both become most of the report."
+  - "Create two workspaces in every integration test from M2 onwards. Tenant leaks are found by tests that try them."
+  - "For each criterion, write the proving command or test name in your README as you finish it. The verification table then writes itself."
+  - "Stripe without an account: build the event JSON, sign it with stripe.webhooks.generateTestHeaderString({ payload, secret }), and post it. Send the same event twice, and send updated before created."
+  - "The worker is your first split: same code and image, different entry point. You do not need more services than that."
+  - "If time runs out, finish M0 to M5 well and mark the rest honestly. A clear \"not met\" beats a vague \"done\"."
+rubric:
+  - { id: architecture, title: "Gives a diagram of processes and services and numbered paths of one upload (presign, direct PUT, complete, job, status) and one Stripe event (verify, dedupe, apply, entitlements), consistent with the brief", skill: sd-service-boundaries, max: 4 }
+  - { id: tenancy-auth, title: "Shows server-side sessions with safe cookie attributes and CSRF protection, a roles guard tested per role, and tenant isolation enforced in keys and queries with a cross-workspace test as evidence (criteria 2.1 to 2.6)", skill: tenant-isolation, max: 5 }
+  - { id: uploads, title: "Shows presigned uploads keyed by ids, server-side checks after upload (size, magic bytes, hash), idempotent completion, short-lived downloads only for ready receipts, and clean-up of abandoned uploads (criteria 3.1 to 3.6)", skill: presigned-urls, max: 4 }
+  - { id: jobs, title: "Shows an outbox written in the business transaction, jobs keyed for deduplication, bounded retries with backoff and a way to re-drive failures, a single scheduler that fans out per workspace, and an export that emails once per workspace and month (criteria 4.1 to 4.5)", skill: background-jobs, max: 5 }
+  - { id: billing, title: "Shows signature verification on the raw body, once-only processing by event id, convergence when events arrive out of order, entitlements stored locally and read on limit checks, and written rules for past_due and downgrades (criteria 5.1 to 5.6)", skill: webhook-handling, max: 5 }
+  - { id: observability-ci-iac, title: "Shows structured request and job logs with ids and redaction, the named metrics on a non-public endpoint, three alerts with thresholds and first actions, a CI workflow with real service containers and pinned actions, and OpenTofu that applies cleanly with no drift (criteria 6.1 to 7.4)", skill: ci-pipeline-design, max: 5 }
+  - { id: decisions, title: "Explains at least five decisions with the rejected alternative and the cost of the choice, each linked to an ADR written at the time", skill: sd-design-docs, max: 4 }
+  - { id: scope, title: "Lists what was cut with a reason for each and what comes next, and the scope cuts are sensible (core milestones M0 to M5 prioritised over extras)", skill: capstone-delivery, max: 3 }
+  - { id: verification, title: "Provides a verification table covering every criterion id with an honest status and a specific test name or command as evidence; nothing is claimed without evidence", skill: capstone-delivery, max: 5 }
+  - { id: operations, title: "States RPO and RTO, reports the restore drill with its measured time, the load test's p95 and error rate, and names the first thing expected to break at 10x with the fix", skill: sd-availability, max: 3 }

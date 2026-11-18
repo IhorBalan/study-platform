@@ -1,0 +1,60 @@
+- id: three-nines-time
+  type: cloze
+  front: "99.9% availability allows about {{43 minutes}} of downtime in a 30-day month."
+  back: "43 minutes (0.1% of 43,200 minutes). 99.99% allows about 4."
+  skills: [sd-availability]
+- id: serial-dependencies
+  type: concept
+  front: "A request needs three components, each 99.9% available. What is the request's availability, and why?"
+  back: "About 99.7%: availabilities in series multiply, so each synchronous dependency lowers the ceiling."
+  skills: [sd-availability]
+- id: spof
+  type: term
+  front: Single point of failure
+  back: "A component whose failure alone takes the product down. Example: one Postgres server with no standby."
+  skills: [sd-availability]
+- id: availability-zone
+  type: term
+  front: Availability zone
+  back: "A separate data centre within a region, with its own power and network. Example: running API instances in two zones of eu-central-1."
+  skills: [sd-availability]
+- id: multi-az-db
+  type: concept
+  front: What does a multi-AZ managed database do when its primary's zone fails?
+  back: "Promotes a synchronously replicated standby in another zone and moves the DNS name. Connections drop briefly and the app must reconnect."
+  skills: [sd-availability]
+- id: degraded-mode
+  type: concept
+  front: What should a design say for each dependency in the request path?
+  back: "What the user sees while it is down or slow, and the timeout that bounds the wait."
+  skills: [sd-availability]
+- id: rpo
+  type: term
+  front: RPO (recovery point objective)
+  back: "How much data, measured in time, you can afford to lose. Example: at most 5 minutes of writes."
+  skills: [sd-availability]
+- id: rto
+  type: term
+  front: RTO (recovery time objective)
+  back: "How long you can afford to be down while recovering. Example: back within 1 hour."
+  skills: [sd-availability]
+- id: pitr-vs-dump
+  type: comparison
+  front: Nightly pg_dump vs point-in-time recovery
+  back: "A nightly dump can lose up to a day of writes. PITR replays archived WAL to any moment, such as just before a bad delete."
+  skills: [sd-availability]
+- id: replica-not-backup
+  type: concept
+  front: Why is a standby or read replica not a backup?
+  back: "It replicates every change, including an accidental delete or a corrupting bug, within seconds."
+  skills: [sd-availability]
+- id: restore-drill
+  type: concept
+  front: Why run restore drills on a schedule?
+  back: "An untested backup may not restore, and only a timed restore tells you your real RTO."
+  skills: [sd-availability]
+- id: interview-high-availability
+  type: concept
+  front: "Interview: how would you make this design highly available?"
+  back: "List the single points of failure, then: 2+ instances across zones, a multi-AZ database with PITR, timeouts and degraded modes per dependency, honest health checks, and tested restores. State the target, such as 99.9%."
+  skills: [sd-availability]

@@ -1,0 +1,60 @@
+- id: sync-or-async
+  type: concept
+  front: Which question decides whether a step stays in the request or becomes a job?
+  back: "Does the caller need this step's result to continue? If not, record the intent durably and do it in the background."
+  skills: [sd-async-architecture]
+- id: command-vs-event
+  type: comparison
+  front: Command (job) vs event
+  back: "A command says \"do this\" and has one consumer; an event says \"this happened\" and any number of consumers may react."
+  skills: [sd-async-architecture]
+- id: reliable-chain
+  type: concept
+  front: "Name the hops of a reliable asynchronous side effect."
+  back: "One transaction writes the change and an outbox row; a relay enqueues a job keyed by the outbox id; an idempotent worker performs the effect with an idempotency key."
+  skills: [sd-async-architecture]
+- id: effectively-once
+  type: concept
+  front: How do you get the effect of exactly-once processing on an at-least-once queue?
+  back: "Make the handler idempotent: a unique constraint, a forward-only status, or a provider idempotency key."
+  skills: [sd-async-architecture]
+- id: littles-law
+  type: cloze
+  front: "30,000 jobs waiting and workers finishing 80 per second means the newest job waits about {{six minutes}}."
+  back: "Six minutes (30,000 / 80 ≈ 375 s). Wait = queue length / throughput."
+  skills: [sd-async-architecture]
+- id: oldest-job-age
+  type: concept
+  front: Why alert on the age of the oldest job rather than queue depth alone?
+  back: "Age is the delay users feel. Depth means little without throughput: 10,000 fast jobs may be fine, 100 stuck ones are not."
+  skills: [sd-async-architecture]
+- id: backpressure
+  type: term
+  front: Backpressure
+  back: "Slowing or refusing new work when consumers cannot keep up, instead of letting a queue grow without bound. Example: 429 with Retry-After for bulk imports."
+  skills: [sd-async-architecture]
+- id: noisy-tenant-queue
+  type: concept
+  front: One tenant's import enqueues 200,000 jobs and everyone else waits. Name two fixes.
+  back: "A separate queue for bulk work, a per-tenant cap on jobs in flight, or round-robin enqueueing between tenants."
+  skills: [sd-async-architecture]
+- id: cron-per-instance
+  type: concept
+  front: What goes wrong with a cron library running inside each API instance?
+  back: "The job runs once per instance. Use one scheduler: BullMQ job schedulers, a platform cron or a database table."
+  skills: [sd-async-architecture]
+- id: skip-locked
+  type: concept
+  front: What does `FOR UPDATE SKIP LOCKED` give a table-based scheduler?
+  back: "Several workers can poll the same table: each due row is claimed by one worker, and no one waits on another's lock."
+  skills: [sd-async-architecture]
+- id: interview-worker-crash
+  type: concept
+  front: "Interview: what happens if this worker crashes halfway through a job?"
+  back: "The lock expires and the job runs again (stalled in BullMQ, visibility timeout in SQS). Keep jobs small, checkpoint long ones, and make side effects idempotent so the rerun is safe."
+  skills: [sd-async-architecture]
+- id: interview-webhook-isolation
+  type: concept
+  front: "Interview: in a webhook delivery service, how do you stop one slow customer endpoint delaying everyone?"
+  back: "Short timeouts, a concurrency limit per endpoint, retries with backoff off the main path, and pausing endpoints that keep failing."
+  skills: [sd-async-architecture]

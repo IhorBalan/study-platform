@@ -1,0 +1,17 @@
+title: Should Rota move to Kubernetes?
+type: text
+skills: [k8s-when-to-use, k8s-health-scaling]
+hints:
+  - Start from what hurts today and ask whether Kubernetes is the cheapest fix for each pain. Most pains have a fix on the current platform.
+  - List what a production cluster needs besides the cluster itself, then ask who on a four-person team would own each item at 3 a.m.
+  - Failed requests during deploys usually come from how the process starts and stops, not from the platform. What does your app do on SIGTERM?
+  - A long job blocking a queue is a queue design problem before it is a scaling problem.
+  - For the hospital deal, ask what "installed in their account" really means to them, and how likely and how soon it is.
+rubric:
+  - { id: recommendation, title: "Opens with a clear recommendation that fits a four-person team without ops staff (stay on the PaaS, or a clearly justified small step such as a container service), not an unconditional move to Kubernetes now", skill: k8s-when-to-use, max: 3 }
+  - { id: cost-of-k8s, title: "Lists at least five concrete things a production cluster would need beyond EKS itself (for example gateway or ingress controller, TLS certificates, logging and metrics, secret syncing, deploy tooling or GitOps, cluster and add-on upgrades several times a year, on-call knowledge) and gives a rough ongoing time estimate", skill: k8s-when-to-use, max: 4 }
+  - { id: reasons-scale-hiring, title: "Answers reasons 1 and 5 specifically: 150 rps on two instances is far from the PaaS's limits and the PaaS can add instances; hiring is not a reason to take on platform work, and names what would show real scaling pressure", skill: k8s-when-to-use, max: 3 }
+  - { id: reason-502s, title: "For reason 2, identifies graceful shutdown and readiness as the likely cause (process not handling SIGTERM, server closed abruptly, no health check before traffic, or similar) and proposes a fix on the current platform; notes Kubernetes would show the same 502s without that fix", skill: k8s-health-scaling, max: 4 }
+  - { id: reason-workers, title: "For reason 3, proposes a queue-level fix such as a separate queue and worker for long exports, concurrency settings or chunking the export, and notes the PaaS can run more worker instances", skill: k8s-when-to-use, max: 3 }
+  - { id: reason-portability, title: "For reason 4, names at least two questions to settle first (for example how likely and when, whether a single-tenant hosted deployment would satisfy them, who operates it, what the contract pays) and a cheap way to keep the option open now (good container images, config by env vars, no PaaS-only features, infrastructure as code)", skill: k8s-when-to-use, max: 4 }
+  - { id: revisit-signals, title: "Gives at least three measurable revisit signals, such as number of services or teams, a signed contract requiring customer-hosted installs, PaaS cost compared with engineer cost, or a workload the PaaS cannot run", skill: k8s-when-to-use, max: 3 }

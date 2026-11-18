@@ -1,0 +1,60 @@
+- id: pod
+  type: term
+  front: Pod
+  back: "One or more containers scheduled together on one node, sharing an IP and `localhost`. The smallest unit Kubernetes runs."
+  skills: [k8s-workloads]
+- id: pods-disposable
+  type: concept
+  front: Why should you never rely on a Pod's IP or local filesystem?
+  back: "Pods are disposable. A replacement has a new name, IP and empty filesystem; Pods never move between nodes."
+  skills: [k8s-workloads]
+- id: sidecar
+  type: term
+  front: Sidecar container
+  back: "A helper container that runs next to the app for the Pod's whole life, such as a log shipper. Declared natively as an init container with `restartPolicy: Always`."
+  skills: [k8s-workloads]
+- id: deployment-vs-replicaset
+  type: comparison
+  front: Deployment vs ReplicaSet
+  back: "A ReplicaSet keeps N Pods of one template running. A Deployment manages one ReplicaSet per template version and moves Pods between them during rollouts."
+  skills: [k8s-workloads]
+- id: max-surge-unavailable
+  type: cloze
+  front: "For a zero-downtime rollout of 3 replicas, set `maxSurge: 1` and `maxUnavailable: {{...}}`."
+  back: "`0`, so no ready Pod is removed until its replacement is ready."
+  skills: [k8s-workloads]
+- id: stalled-rollout
+  type: concept
+  front: A new Pod in a rollout never becomes ready. What happens with `maxUnavailable` set to 0?
+  back: "The rollout stalls with the old Pods still serving. After `progressDeadlineSeconds` it is marked failed, but it is not rolled back automatically."
+  skills: [k8s-workloads]
+- id: rollout-undo
+  type: snippet
+  front: Roll a Deployment back to its previous version.
+  back: "`kubectl rollout undo deploy/api` (then revert the change in git, or the next deploy brings it back)."
+  skills: [k8s-workloads]
+- id: two-versions
+  type: concept
+  front: Why must migrations be backwards compatible with a rolling update?
+  back: "Old and new Pods serve traffic at the same time during the rollout, so both versions must work against the same schema."
+  skills: [k8s-workloads]
+- id: job-vs-deployment
+  type: comparison
+  front: Job vs Deployment
+  back: "A Job runs Pods until they complete successfully, then stops. A Deployment keeps Pods running forever and replaces any that exit."
+  skills: [k8s-workloads]
+- id: job-idempotent
+  type: concept
+  front: Why must Job and CronJob code be idempotent?
+  back: "A Job may run a Pod more than once after failures or retries, and a CronJob can occasionally run twice or skip a run."
+  skills: [k8s-workloads]
+- id: statefulset
+  type: term
+  front: StatefulSet
+  back: "A workload whose Pods have stable names, DNS names and their own persistent volumes, started in order. For databases and Kafka-like systems."
+  skills: [k8s-workloads]
+- id: daemonset
+  type: term
+  front: DaemonSet
+  back: "Runs one Pod on every node (or selected nodes). Used for node agents such as log collectors and metrics exporters."
+  skills: [k8s-workloads]

@@ -24,11 +24,11 @@ export function useStudySession(activity: Activity, itemId: string | null): void
     const events = ['keydown', 'pointerdown', 'pointermove', 'scroll'] as const;
     for (const name of events) window.addEventListener(name, onInput, { passive: true });
 
-    const flush = () => {
+    const flush = (leaving = false) => {
       if (!sessionId || activeSeconds === sentSeconds) return;
       sentSeconds = activeSeconds;
       // Time tracking must never get in the way of studying, so failures are ignored.
-      api.updateSession(sessionId, activeSeconds).catch(() => undefined);
+      api.updateSession(sessionId, activeSeconds, leaving).catch(() => undefined);
     };
 
     const tick = window.setInterval(() => {
@@ -51,16 +51,19 @@ export function useStudySession(activity: Activity, itemId: string | null): void
     }, 1000);
 
     const onHide = () => {
-      if (document.visibilityState === 'hidden') flush();
+      if (document.visibilityState === 'hidden') flush(true);
     };
+    const onLeave = () => flush(true);
     document.addEventListener('visibilitychange', onHide);
+    window.addEventListener('pagehide', onLeave);
 
     return () => {
       stopped = true;
       window.clearInterval(tick);
       for (const name of events) window.removeEventListener(name, onInput);
       document.removeEventListener('visibilitychange', onHide);
-      flush();
+      window.removeEventListener('pagehide', onLeave);
+      flush(true);
     };
   }, [activity, itemId]);
 }

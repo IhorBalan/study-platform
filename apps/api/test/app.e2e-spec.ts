@@ -370,6 +370,17 @@ describe('API (e2e, real Postgres)', () => {
         expect(review.error).toContain('copy and paste');
       });
 
+      it('starts only one review when asked several times at once', async () => {
+        const created = await http()
+          .post('/api/tasks/m00-demo/t01-explain/submissions')
+          .send({ type: 'text', body: 'An answer.' })
+          .expect(201);
+        const start = () =>
+          http().post(`/api/submissions/${created.body.id}/reviews`).send({ mode: 'bridge' });
+        const replies = await Promise.all([start(), start(), start()]);
+        expect(replies.map((r) => r.status).toSorted()).toEqual([201, 409, 409]);
+      });
+
       it('passes on the reason when the CLI is not signed in', async () => {
         bridgeReplies.push({
           status: 'error',

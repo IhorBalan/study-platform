@@ -89,17 +89,43 @@ export class SubmissionReviewService implements OnModuleInit {
       checks: checksRun ? { status: checksRun.status, note: checksRun.error, results } : null,
     });
 
-    const [run] = await this.db
-      .insert(verificationRuns)
-      .values({
-        submissionId,
-        stage: 'review',
-        status: mode === 'bridge' ? 'running' : 'queued',
-        mode,
-        prompt,
-      })
-      .returning({ id: verificationRuns.id });
-    if (!run) throw new Error('review run was not created');
+    const run = await this.db.transaction(async (tx) => {
+      // The lock makes concurrent starts take turns, so only one sees "none running".
+      await tx
+        .select({ id: submissions.id })
+        .from(submissions)
+        .where(eq(submissions.id, submissionId))
+        .for('update');
+      if (mode === 'bridge') {
+        const [running] = await tx
+          .select({ id: verificationRuns.id })
+          .from(verificationRuns)
+          .where(
+            and(
+              eq(verificationRuns.submissionId, submissionId),
+              eq(verificationRuns.stage, 'review'),
+              eq(verificationRuns.mode, 'bridge'),
+              eq(verificationRuns.status, 'running'),
+            ),
+          )
+          .limit(1);
+        if (running) {
+          throw new ConflictException('A review of this submission is already running.');
+        }
+      }
+      const [created] = await tx
+        .insert(verificationRuns)
+        .values({
+          submissionId,
+          stage: 'review',
+          status: mode === 'bridge' ? 'running' : 'queued',
+          mode,
+          prompt,
+        })
+        .returning({ id: verificationRuns.id });
+      if (!created) throw new Error('review run was not created');
+      return created;
+    });
 
     if (mode === 'bridge') {
       const { labRepoPath } = await this.settings.get();

@@ -1,0 +1,55 @@
+- id: service
+  type: term
+  front: Service
+  back: "A stable virtual IP and DNS name in front of the ready Pods that match a label selector. Example: `api` on port 80 forwards to Pods labelled `app: api`."
+  skills: [k8s-networking]
+- id: port-vs-targetport
+  type: comparison
+  front: "Service `port` vs `targetPort`"
+  back: "`port` is what callers connect to on the Service. `targetPort` is the port the container actually listens on."
+  skills: [k8s-networking]
+- id: service-types
+  type: comparison
+  front: "ClusterIP vs NodePort vs LoadBalancer"
+  back: "ClusterIP: inside the cluster only (default). NodePort: a high port on every node. LoadBalancer: a cloud load balancer in front of the Service."
+  skills: [k8s-networking]
+- id: service-dns
+  type: cloze
+  front: "From a Pod in namespace `web`, the Service `api` in namespace `shop` is reachable as `{{...}}`."
+  back: "`api.shop` (full name `api.shop.svc.cluster.local`)."
+  skills: [k8s-networking]
+- id: endpoints-ready-only
+  type: concept
+  front: Which Pods behind a Service receive traffic?
+  back: "Only those that match the selector and are ready. Pods failing readiness or shutting down are removed from the EndpointSlices."
+  skills: [k8s-networking]
+- id: no-endpoints
+  type: concept
+  front: "A Service has no endpoints. What are the two most likely causes?"
+  back: "Its selector does not match the Pods' labels, or no matching Pod is passing its readiness probe."
+  skills: [k8s-networking]
+- id: ingress-needs-controller
+  type: concept
+  front: You create an Ingress and nothing happens. Why might that be?
+  back: "An Ingress is only rules. An ingress controller must be installed and match its `ingressClassName` to act on it."
+  skills: [k8s-networking]
+- id: ingress-annotations
+  type: concept
+  front: Why are Ingress manifests often not portable between controllers?
+  back: "The spec covers only hosts, paths and TLS. Timeouts, rewrites and canaries live in controller-specific annotations."
+  skills: [k8s-networking]
+- id: gateway-roles
+  type: concept
+  front: "Gateway API: who owns GatewayClass, Gateway and HTTPRoute?"
+  back: "GatewayClass: the cluster operator (which implementation). Gateway: the platform team (listeners, TLS). HTTPRoute: the app team (routes to its Services)."
+  skills: [k8s-networking]
+- id: ingress-vs-gateway
+  type: comparison
+  front: Ingress vs Gateway API
+  back: "Ingress is frozen and needs annotations for anything beyond host, path and TLS. The Gateway API has typed fields for weights, headers, rewrites and timeouts, and splits ownership by role."
+  skills: [k8s-networking]
+- id: ingress-nginx-retired
+  type: concept
+  front: What happened to the community ingress-nginx controller?
+  back: "It was retired in March 2026: no more releases or security fixes. The Ingress API itself still exists; migrate to the Gateway API or another controller."
+  skills: [k8s-networking]

@@ -1,0 +1,60 @@
+- id: event-vs-command
+  type: comparison
+  front: Event vs command
+  back: "An event states a past fact for any listener (`OrderPaid`). A command asks one handler to act (`SendReceiptEmail`) and usually cares about the result."
+  skills: [kafka-event-design]
+- id: event-id-purpose
+  type: concept
+  front: Why should every event carry its own unique `eventId`?
+  back: "So consumers can detect and skip duplicates under at-least-once delivery."
+  skills: [kafka-event-design]
+- id: thin-vs-fat
+  type: comparison
+  front: Thin event vs fat event
+  back: "Thin events say what changed and make consumers call back for data, coupling them to your API. Fat events carry the data consumers need."
+  skills: [kafka-event-design]
+- id: schema-registry-term
+  type: term
+  front: Schema Registry
+  back: "A service storing versioned schemas per topic and rejecting incompatible changes. Records carry a schema ID. Example: Avro schemas for `orders.events`."
+  skills: [kafka-event-design]
+- id: backward-compat
+  type: concept
+  front: "Under BACKWARD compatibility (the registry default), which side do you upgrade first?"
+  back: "Consumers. The new schema must read data written with the previous one."
+  skills: [kafka-event-design]
+- id: safe-schema-change
+  type: concept
+  front: Which schema change is safe in every compatibility mode?
+  back: "Adding an optional field with a default. Renaming or retyping a field is never safe."
+  skills: [kafka-event-design]
+- id: compaction-term
+  type: term
+  front: Log compaction
+  back: "`cleanup.policy=compact` keeps at least the latest record per key and drops older ones. Example: a `customers.profile` topic as a replayable table."
+  skills: [kafka-event-design]
+- id: tombstone
+  type: cloze
+  front: "To delete a key from a compacted topic, write a {{tombstone: that key with a `null` value}}."
+  back: "tombstone: that key with a `null` value"
+  skills: [kafka-event-design]
+- id: dual-write
+  type: concept
+  front: What goes wrong when a handler commits to Postgres and then calls `producer.send`?
+  back: "A crash or Kafka outage between the two leaves a saved change with no event. The two systems cannot commit atomically."
+  skills: [kafka-event-design]
+- id: outbox-pattern
+  type: term
+  front: Transactional outbox
+  back: "Insert the event into an `outbox` table in the same transaction as the change; a relay or CDC publishes it later. Example: Debezium's outbox router."
+  skills: [kafka-event-design]
+- id: debezium-postgres
+  type: concept
+  front: How does Debezium read changes from Postgres?
+  back: "Through logical replication: a replication slot and the built-in `pgoutput` plugin stream committed WAL changes."
+  skills: [kafka-event-design]
+- id: abandoned-slot
+  type: concept
+  front: Why is an abandoned replication slot dangerous?
+  back: "Postgres keeps all WAL the slot has not confirmed, so the disk fills up."
+  skills: [kafka-event-design]

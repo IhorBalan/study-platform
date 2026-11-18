@@ -342,3 +342,13 @@ Decisions made while building are appended below.
 - A lesson or task address that does not exist shows "Page not found" inside the normal layout.
 - An emptied number field on Settings no longer saves 0, and the Cards form says so when the text is only spaces.
 - `apps/web/.tanstack/` is ignored by git.
+
+### D-103 · Third round of QA fixes — Accepted, 2026-11-18
+- A one-click review cannot be started while another one is running for the same submission (`409`). Before, each request started the Claude CLI again.
+- Settings shows the field message from a failed save, not only "Request validation failed".
+- The last study-time update is sent with `keepalive` on `pagehide` and when the tab is hidden, so closing a tab no longer loses up to 20 seconds.
+
+### D-104 · Kubernetes and Kafka are theory modules with self-practice sections — Accepted, 2026-11-18
+- **Asked for:** both topics in the path at least as theory, with no Docker practice environment.
+- **Built:** module 16 (7 lessons, 78 cards, 4 written tasks) and module 17 (5 lessons, 59 cards, 3 written tasks). All tasks are written answers reviewed by Claude against a rubric. Each module ends with a "practise on your own" section (`kind` for Kubernetes, a single-node KRaft broker for Kafka).
+- **Verified:** every Kubernetes manifest validates against the 1.37 schemas and Gateway API v1.5. The Kafka code examples ran against a real Kafka 4.4 broker with `@confluentinc/kafka-javascript` 1.11.

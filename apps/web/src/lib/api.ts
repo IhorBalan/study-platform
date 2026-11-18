@@ -47,7 +47,7 @@ export class ApiError extends Error {
 async function request<T extends z.ZodType>(
   path: string,
   schema: T,
-  init?: { method: string; body: unknown },
+  init?: { method: string; body: unknown; keepalive?: boolean },
 ): Promise<z.infer<T>> {
   const res = await fetch(`/api${path}`, {
     method: init?.method ?? 'GET',
@@ -56,6 +56,8 @@ async function request<T extends z.ZodType>(
       ...(init ? { 'content-type': 'application/json' } : {}),
     },
     body: init ? JSON.stringify(init.body) : undefined,
+    // Lets a request sent while the page is closing still reach the server.
+    keepalive: init?.keepalive,
   });
   if (res.status === 204) return schema.parse(undefined);
   const body: unknown = await res.json().catch(() => null);
@@ -101,8 +103,12 @@ export const api = {
   stats: () => request('/stats', StatsResponse),
   startSession: (activity: Activity, itemId: string | null) =>
     request('/sessions', SessionDto, { method: 'POST', body: { activity, itemId } }),
-  updateSession: (id: string, activeSeconds: number) =>
-    request(`/sessions/${id}`, z.undefined(), { method: 'PATCH', body: { activeSeconds } }),
+  updateSession: (id: string, activeSeconds: number, keepalive = false) =>
+    request(`/sessions/${id}`, z.undefined(), {
+      method: 'PATCH',
+      body: { activeSeconds },
+      keepalive,
+    }),
   dismissReviewTask: (id: string) =>
     request(`/review-tasks/${id}/dismiss`, z.undefined(), { method: 'POST', body: {} }),
 

@@ -1,0 +1,17 @@
+title: Kubernetes
+summary: >-
+  You can explain what Kubernetes does and when a small team should not use it, read and write
+  the manifests for a Node API (Deployment, Service, Gateway or Ingress, ConfigMap, Secret,
+  probes, HPA, PodDisruptionBudget), make deploys zero-downtime, debug a failing rollout, and
+  describe how Helm, Kustomize and CI fit around it. Theory first; hands-on with kind is optional.
+kind: core
+effort: M
+services: []
+skills:
+  - { id: k8s-when-to-use, title: When Kubernetes is worth it }
+  - { id: k8s-architecture, title: "Control plane, nodes and reconciliation" }
+  - { id: k8s-workloads, title: "Pods, Deployments and other workloads" }
+  - { id: k8s-networking, title: "Services, Ingress and the Gateway API" }
+  - { id: k8s-config, title: "ConfigMaps, Secrets, resources and namespaces" }
+  - { id: k8s-health-scaling, title: "Probes, graceful shutdown and scaling" }
+  - { id: k8s-delivery, title: Shipping a Node API to Kubernetes }

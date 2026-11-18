@@ -1,0 +1,16 @@
+title: Debug consumer lag and duplicate processing
+type: text
+skills: [kafka-consumer-groups, kafka-partitions]
+hints:
+  - Lag on all partitions and lag on one or two partitions have different causes. Which do you see here?
+  - An offset that never moves means the consumer keeps trying the same record. What happens when eachMessage throws?
+  - "Count partitions and pods. How many pods can one group keep busy?"
+  - Auto-commit only commits work that finished. What happens to work that finished after the last commit when the partition moves?
+rubric:
+  - { id: poison-partition, title: "Identifies a poison message (a record that always fails, so the handler throws and the client redelivers it) as the likely cause for partition 7, and names a way to confirm it (repeated error logs for the same partition and offset, or reading the record at the committed offset)", skill: kafka-consumer-groups, max: 3 }
+  - { id: hot-partition, title: "Attributes partition 3's lag to a hot key: the bulk import by one large customer, keyed by customer ID, lands in one partition that only one consumer can process in order", skill: kafka-partitions, max: 3 }
+  - { id: rebalance-cause, title: "Explains that PDF calls without a timeout can keep a handler past max.poll.interval.ms, so the consumer is removed from the group and its partitions move, and that each rebalance pauses or slows consumption and replays uncommitted work", skill: kafka-consumer-groups, max: 3 }
+  - { id: duplicate-sequence, title: "Gives a correct duplicate sequence: an event is processed (row inserted, email sent) after the last commit, the partition moves before the next commit (rebalance or crash), and the new owner resumes from the last committed offset and processes it again; notes that the insert has no unique constraint", skill: kafka-consumer-groups, max: 4 }
+  - { id: scaling, title: "States that 20 pods cannot help beyond 12 because each partition goes to at most one group member, leaving 8 idle, and that more pods do not unblock partition 7 or split partition 3's hot key", skill: kafka-partitions, max: 2 }
+  - { id: fixes, title: "Proposes concrete fixes for each cause: a timeout and bounded retries on the PDF call, a dead-letter topic for records that keep failing, idempotency (a unique constraint on payment ID plus a check before emailing, or an idempotency key to the mailer), and an option for the hot key (more concurrency across partitions, a finer key if per-customer order is not required, or moving slow PDF work to a job queue); identifies idempotency as the fix that stops duplicate emails", skill: kafka-consumer-groups, max: 4 }
+  - { id: monitoring, title: "Names consumer lag per partition (or time lag) with a concrete alert threshold or duration, and at least one other signal such as rebalance rate, dead-letter topic volume or handler duration", skill: kafka-consumer-groups, max: 2 }

@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, type FormEvent } from 'react';
 import { Button, Field, Input, PageHeader, Select } from '../components/ui';
-import { api } from '../lib/api';
+import { api, ApiError } from '../lib/api';
 
 export const Route = createFileRoute('/settings')({ component: SettingsPage });
 
@@ -112,7 +112,9 @@ function SettingsPage() {
           )}
           {save.isError && (
             <span role="alert" className="text-sm text-red-600">
-              {save.error.message}
+              {save.error instanceof ApiError && save.error.errors.length > 0
+                ? save.error.errors.join('. ')
+                : save.error.message}
             </span>
           )}
         </div>

@@ -1,0 +1,60 @@
+- id: configmap
+  type: term
+  front: ConfigMap
+  back: "An object holding non-secret key-value config, consumed as env vars or mounted files. Example: `LOG_LEVEL: info`."
+  skills: [k8s-config]
+- id: env-not-reloaded
+  type: concept
+  front: You change a ConfigMap used through `envFrom`. Do running Pods see the new value?
+  back: "No. Env vars are read when the container starts. Trigger a rollout, for example with `kubectl rollout restart`."
+  skills: [k8s-config]
+- id: base64-not-encryption
+  type: concept
+  front: "Interview: are Kubernetes Secrets encrypted?"
+  back: "Not by themselves. `data` is only base64-encoded. Protection comes from RBAC, encryption at rest in etcd (a cluster setting) and keeping them out of git."
+  skills: [k8s-config]
+- id: pod-create-reads-secrets
+  type: concept
+  front: Why does permission to create Pods in a namespace amount to reading its Secrets?
+  back: "A Pod can mount or reference any Secret in its namespace, so whoever creates the Pod can read the values from inside it."
+  skills: [k8s-config]
+- id: secrets-in-git
+  type: concept
+  front: How do teams keep Kubernetes Secrets out of git?
+  back: "Sync them from a secret manager with External Secrets Operator, or commit only ciphertext with Sealed Secrets or SOPS."
+  skills: [k8s-config]
+- id: secret-ref-snippet
+  type: snippet
+  front: Set `DATABASE_URL` in a container from key `DATABASE_URL` of Secret `api-secrets`.
+  back: "`env: [{ name: DATABASE_URL, valueFrom: { secretKeyRef: { name: api-secrets, key: DATABASE_URL } } }]`"
+  skills: [k8s-config]
+- id: requests-vs-limits
+  type: comparison
+  front: Resource requests vs limits
+  back: "Requests are reserved and used by the scheduler and HPA. Limits are ceilings enforced at run time."
+  skills: [k8s-config]
+- id: cpu-vs-memory-limit
+  type: comparison
+  front: Exceeding a CPU limit vs a memory limit
+  back: "CPU: the container is throttled and slows down. Memory: the container is killed (`OOMKilled`) and restarted."
+  skills: [k8s-config]
+- id: node-heap
+  type: concept
+  front: Why set `--max-old-space-size` for Node in a container with a memory limit?
+  back: "So V8 collects garbage before the heap reaches the container limit, instead of the kernel killing the process with no error or snapshot."
+  skills: [k8s-config]
+- id: qos-classes
+  type: concept
+  front: Which QoS class is evicted first under node memory pressure, and how do you get it?
+  back: "BestEffort, which a Pod gets when none of its containers set any requests or limits."
+  skills: [k8s-config]
+- id: namespace
+  type: term
+  front: Namespace
+  back: "A scope for object names that RBAC, quotas, default limits and network policies attach to. Example: `kubectl get pods -n shop`."
+  skills: [k8s-config]
+- id: namespace-not-security
+  type: concept
+  front: Is a namespace a strong isolation boundary?
+  back: "No. Pods in different namespaces share nodes and, by default, the network. Use separate clusters for strong isolation."
+  skills: [k8s-config]

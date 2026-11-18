@@ -1,0 +1,19 @@
+title: Review a broken Deployment
+type: text
+skills: [k8s-workloads, k8s-config, k8s-health-scaling, k8s-networking]
+hints:
+  - Read the selectors first. Which objects are supposed to find which, and do the labels actually match?
+  - "For each probe, ask: if PostgreSQL or Stripe has a 30-second problem, what does Kubernetes do to every Pod?"
+  - "Follow a deploy: what process is PID 1, and what happens to SIGTERM and to migrations when three replicas start at once?"
+  - Anyone with read access to Deployments can see the `env` block. Who is that in your company?
+  - Compare the Service's ports with the container's port.
+rubric:
+  - { id: broken-wiring, title: "Finds that the Deployment's selector (app: orders) does not match its template labels (app: orders-api), so the API server rejects it, and that the Service's targetPort 8080 does not match the container port 3000", skill: k8s-workloads, max: 4 }
+  - { id: secrets-literal, title: "Flags the database password and Stripe key as literals in env, explains the exposure (git history, anyone who can read the Deployment, CI logs) and that the keys must now be rotated, and replaces them with secretKeyRef to a Secret managed outside git", skill: k8s-config, max: 4 }
+  - { id: probes, title: "Explains that the liveness probe checking PostgreSQL and Stripe will restart every Pod during a dependency blip, that there is no readiness probe so traffic reaches Pods before they listen, and gives separate cheap liveness and readiness probes (plus startup if needed)", skill: k8s-health-scaling, max: 4 }
+  - { id: image-and-command, title: "Flags the latest tag (unknown version, no reliable rollback) and the sh -c npm command (SIGTERM not reaching Node, so shutdowns end in SIGKILL; migrations run by every replica on every start) and fixes both with an immutable tag, exec-form node command and a migration Job or pipeline step", skill: k8s-workloads, max: 4 }
+  - { id: resources-and-replicas, title: "Flags missing resource requests and memory limit (blind scheduling, no HPA basis, OOM risk) and replicas: 1 (any node drain, crash or deploy problem is downtime), and proposes concrete values, at least two replicas and a PodDisruptionBudget", skill: k8s-config, max: 3 }
+  - { id: security-context, title: "Flags privileged: true as giving the container control of the node, and replaces it with a restricted securityContext (runAsNonRoot, allowPrivilegeEscalation false, capabilities dropped, ideally read-only root filesystem)", skill: k8s-config, max: 3 }
+  - { id: exposure, title: "Notes that a LoadBalancer Service exposes the API directly without TLS or shared routing, and changes it to ClusterIP behind an HTTPRoute (or Ingress) on the platform's gateway", skill: k8s-networking, max: 2 }
+  - { id: corrected-manifest, title: "The corrected YAML is valid for a current Kubernetes version (correct apiVersions and field names, matching selectors and ports) and actually contains every fix the list proposes", skill: k8s-workloads, max: 4 }
+  - { id: ordering, title: "Orders problems sensibly, with the manifest-breaking and secret-exposure issues above style and hardening issues, and states the app-side changes needed (SIGTERM handling or enableShutdownHooks, separate health endpoints, heap size)", max: 2 }

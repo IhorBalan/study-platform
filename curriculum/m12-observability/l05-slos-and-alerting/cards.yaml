@@ -1,0 +1,60 @@
+- id: sli-term
+  type: term
+  front: SLI
+  back: "A measure of user happiness as good events over all events. Example: the share of GET /orders requests answered in under 300 ms."
+  skills: [slo-alerting]
+- id: slo-vs-sla
+  type: comparison
+  front: SLO vs SLA
+  back: "An SLO is an internal target for an SLI over a window. An SLA is a contract with penalties, set looser than the SLO so you react before you owe money."
+  skills: [slo-alerting]
+- id: error-budget
+  type: concept
+  front: What is the error budget of a 99.9% availability SLO over 30 days?
+  back: "0.1% of requests, about 43 minutes of full outage. While it lasts, ship; when it is spent, prioritise reliability."
+  skills: [slo-alerting]
+- id: what-to-alert-on
+  type: concept
+  front: "Interview: what would you alert on?"
+  back: "Symptoms users feel: error rate and latency against the SLO, measured as burn rate, plus an external uptime check. Causes such as CPU or a restart go to a dashboard or a ticket."
+  skills: [slo-alerting]
+- id: alert-fatigue
+  type: concept
+  front: "Interview: how do you avoid alert fatigue?"
+  back: "Page only on urgent, actionable symptoms; route the rest to working-hours channels; review every page at hand-over and fix or delete noisy alerts."
+  skills: [slo-alerting]
+- id: burn-rate-term
+  type: term
+  front: Burn rate
+  back: "How fast the error budget is spent relative to spending it evenly over the window. 1 uses it all in 30 days; 14.4 uses 2% in one hour."
+  skills: [slo-alerting]
+- id: two-windows
+  type: concept
+  front: Why does a burn-rate alert check a long and a short window together?
+  back: "The long window shows the problem is significant. The short window shows it is still happening, so the alert clears soon after the fix."
+  skills: [slo-alerting]
+- id: fast-burn-page
+  type: cloze
+  front: "The common fast-burn page for a 30-day SLO fires at a burn rate of {{14.4}} over {{1 hour}}, confirmed over 5 minutes."
+  back: "14.4, 1 hour"
+  skills: [slo-alerting]
+- id: low-traffic-alerts
+  type: concept
+  front: Why are error-ratio alerts unreliable for a low-traffic endpoint, and what helps?
+  back: "One failure in ten requests is 10%. Require a minimum request rate, alert on counts, or add a synthetic check that sends steady traffic."
+  skills: [slo-alerting]
+- id: runbook-contents
+  type: concept
+  front: What belongs in a runbook for an alert?
+  back: "What it means, what users see, the dashboard to open, the first checks, and how to mitigate (roll back, flag off, scale out)."
+  skills: [slo-alerting]
+- id: incident-story
+  type: concept
+  front: "Interview: tell me about a production incident you handled. What should the story cover?"
+  back: "How it was detected, the impact in numbers, how you mitigated first, how you found the cause with data, and what you changed so it cannot recur."
+  skills: [slo-alerting]
+- id: mitigate-first
+  type: concept
+  front: Why does the on-call person roll back before finding the root cause?
+  back: "Users are hurting now, and a rollback is fast and well understood. The root cause can be found calmly once the bleeding stops."
+  skills: [slo-alerting]

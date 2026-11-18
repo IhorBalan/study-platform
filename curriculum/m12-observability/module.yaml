@@ -1,0 +1,17 @@
+title: Observability and production
+summary: >-
+  You can make a Node service explain itself in production: structured logs that follow a
+  request, Prometheus metrics with bounded labels, OpenTelemetry traces across services, SLOs
+  with alerts that page for the right reasons, and a calm method for diagnosing a slow or
+  leaking process, plus an honest view of what to host yourself and what to buy.
+kind: core
+effort: M
+services: []
+skills:
+  - { id: obs-signals, title: "Logs, metrics and traces" }
+  - { id: structured-logging, title: Structured logging and request correlation }
+  - { id: prometheus-metrics, title: Metrics with Prometheus }
+  - { id: distributed-tracing, title: Distributed tracing with OpenTelemetry }
+  - { id: slo-alerting, title: "SLOs, dashboards and alerting" }
+  - { id: node-diagnostics, title: Diagnosing slow and leaking Node processes }
+  - { id: error-tracking, title: Error tracking and hosted observability }

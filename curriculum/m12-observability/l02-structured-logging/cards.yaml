@@ -1,0 +1,65 @@
+- id: structured-log-line
+  type: concept
+  front: "Interview: what goes into a good structured log line?"
+  back: "A level, a timestamp, a constant message, and fields: request or trace id, service, and the ids and values of the event. No secrets, no whole bodies."
+  skills: [structured-logging]
+- id: correlate-across-services
+  type: concept
+  front: "Interview: how do you correlate logs across services?"
+  back: "Give each request an id at the edge and pass it on in headers (x-request-id, or the W3C traceparent). Every service writes that id, or the trace id, into every line."
+  skills: [structured-logging]
+- id: constant-message
+  type: concept
+  front: Why keep the log message constant and put the order id in a field?
+  back: "A constant message can be counted and filtered (`msg = \"order created\"`). A message with the id baked in is a different string every time."
+  skills: [structured-logging]
+- id: pino-levels
+  type: cloze
+  front: "pino levels: debug is {{20}}, info is 30, warn is 40, error is {{50}}."
+  back: "20 and 50"
+  skills: [structured-logging]
+- id: level-by-status
+  type: concept
+  front: Which level should a request summary line use for a 404 and for a 503?
+  back: "warn for the 404 (the client's mistake, handled). error for the 503 (the service failed)."
+  skills: [structured-logging]
+- id: err-key
+  type: concept
+  front: Why log an error as `logger.error({ err }, 'msg')` and not `logger.error(err.message)`?
+  back: "The err serializer keeps type, message and stack. The message alone loses the stack, and an Error under another key serialises to {} because its properties are not enumerable."
+  skills: [structured-logging]
+- id: als-request-id
+  type: snippet
+  front: Make a request id available to every pino line written during a request
+  back: |
+    ```ts
+    const ctx = new AsyncLocalStorage<{ reqId: string }>();
+    const logger = pino({ mixin: () => ({ reqId: ctx.getStore()?.reqId }) });
+    app.use((req, res, next) => ctx.run({ reqId: randomUUID() }, next));
+    ```
+  skills: [structured-logging]
+- id: module-variable-id
+  type: concept
+  front: What goes wrong if the current request id is stored in a module-level variable?
+  back: "Requests interleave at every await, so a later request overwrites the id and earlier requests log the wrong one."
+  skills: [structured-logging]
+- id: validate-incoming-id
+  type: concept
+  front: Why validate an incoming x-request-id before logging it?
+  back: "The client controls it and it is copied into every line. Newlines can inject fake log lines, and a huge value is stored many times."
+  skills: [structured-logging]
+- id: never-log
+  type: concept
+  front: Name four things a backend must never log.
+  back: "Passwords, session cookies and bearer tokens, API keys or webhook secrets, card numbers. Avoid whole bodies and unneeded personal data such as emails."
+  skills: [structured-logging]
+- id: redact-limit
+  type: concept
+  front: Why is pino's `redact` a safety net and not the main defence?
+  back: "Paths are exact and `*` matches one level, so a secret nested deeper or under a new key slips through. Keep secrets out at the call site."
+  skills: [structured-logging]
+- id: middleware-not-interceptor
+  type: concept
+  front: In NestJS, why log requests in middleware rather than an interceptor?
+  back: "Guards run before interceptors, so a request a guard rejects never reaches the interceptor and gets no log line. Middleware sees every request."
+  skills: [structured-logging]

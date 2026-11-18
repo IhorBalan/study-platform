@@ -1,0 +1,20 @@
+title: "Incident: p99 latency after a deploy"
+type: text
+skills: [slo-alerting, distributed-tracing, prometheus-metrics]
+hints:
+  - "Start with the users. Is anyone hurting right now, and what is the fastest way to stop it? Diagnosis can continue after that."
+  - "The p50 hardly moved but the p99 went up more than tenfold. What does that say about how many requests are affected, and how badly?"
+  - "Why would an endpoint whose code did not change get slower too? Look for a resource that every endpoint shares."
+  - "Line the trace up with the pool numbers. Where does a request spend its time when there are 10 connections and each request holds one for longer?"
+  - "An alert on connection timeouts fired 18 minutes after the deploy. Which signal would have fired sooner, and would it have paged for the right reason?"
+  - "An SLO needs an SLI with a precise good and total, a target and a window. An alert on it needs a burn rate and a time window."
+rubric:
+  - { id: mitigate-first, title: "Mitigates before diagnosing: rolls back v2.31.0 (or turns off the loyalty change if it is behind a flag) within the first minutes, justified by the deploy time matching the change, and says how to confirm the rollback worked", skill: slo-alerting, max: 4 }
+  - { id: reads-percentiles, title: "Explains that an unchanged p50 with a p99 of 2.4 s means a minority of requests are very slow, and that averages would have hidden it", skill: prometheus-metrics, max: 2 }
+  - { id: root-cause, title: "Identifies the N+1 loyalty query in GET /orders from the trace (51 queries, about 3 ms each) as the change, and the connection pool as the shared resource that turns it into waits of 1.9 s", skill: distributed-tracing, max: 4 }
+  - { id: explains-spillover, title: "Explains why POST /checkout slowed and why connection timeouts appeared although its code did not change: requests wait for the same exhausted pool, and pool waits over 2 s fail; also rules out CPU or event-loop causes using the lag and DB CPU numbers", skill: distributed-tracing, max: 3 }
+  - { id: db-timeout-checklist, title: "Gives a general first-check order for 'database connection timeout' alerts that covers pool saturation (in use and waiting), slow or long-running queries and locks in pg_stat_activity, the database's own connection limit, and recent deploys or traffic changes", skill: slo-alerting, max: 3 }
+  - { id: proper-fix, title: "Proposes a fix that removes the per-row query (a join, or one batched query with ANY($1)), and a way to verify it before release such as a test that counts queries or a trace in staging", skill: distributed-tracing, max: 3 }
+  - { id: slo-and-alert, title: "Writes an SLO for GET /orders with a precise SLI (which requests count as good, measured where), a target and a window, and a burn-rate alert with numbers that would have paged within about 10 minutes of this deploy", skill: slo-alerting, max: 4 }
+  - { id: prevention, title: "Names at least two further safeguards with a reason each, chosen from deploy markers on dashboards, a canary or progressive rollout judged on the SLO, a pool-wait metric with an alert, and a query-count check in tests", skill: slo-alerting, max: 3 }
+  - { id: postmortem, title: "Ends with a blameless summary of three to five sentences: impact with numbers, duration, cause, and the follow-ups with owners left as roles", max: 2 }

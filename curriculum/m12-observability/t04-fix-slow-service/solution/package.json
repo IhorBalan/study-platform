@@ -1,0 +1,8 @@
+{
+  "name": "product-service",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node start.mjs"
+  }
+}

@@ -1,0 +1,28 @@
+title: Expose Prometheus metrics
+type: repo
+skills: [prometheus-metrics]
+services: []
+runner: nest
+hints:
+  - "Create a Registry in createApp() and pass registers: [registry] to every metric. prom-client's global default registry throws when a second app registers the same name."
+  - "collectDefaultMetrics({ register: registry }) adds the process and Node runtime metrics to your registry."
+  - "histogram.startTimer() returns a function. Call it with the labels when the response is done; it records the elapsed seconds."
+  - "Listen for the response's 'close' event: it fires after 'finish', and also when the client disconnects first, so the in-flight gauge cannot drift upwards."
+  - "In Express 5, req.route.path is the matched route's template. It is only set once a route has matched, so read it when the response is done."
+  - "Status codes are a small set. User ids, order ids and query strings are not: each new value is a new time series held in memory by your app and by Prometheus."
+criteria:
+  - { id: typechecks, title: tsc reports no type errors }
+  - { id: metrics-endpoint, title: "GET /metrics serves the text format with a counter, a histogram and a gauge" }
+  - { id: request-counter, title: "http_requests_total counts every request once by method, route and status_code" }
+  - { id: duration-histogram, title: Request durations are observed in seconds and land in the right buckets }
+  - { id: in-flight-gauge, title: http_requests_in_flight rises during slow requests and falls back afterwards }
+  - { id: bounded-labels, title: "Ids, unknown paths and query strings never become label values" }
+  - { id: default-metrics, title: Process and Node runtime metrics are exposed }
+  - { id: own-registry, title: Each app has its own registry }
+  - { id: own-tests, title: Your tests pass and catch a counter that never grows and raw paths in the route label }
+rubric:
+  - { id: label-discipline, title: "Labels are limited to method, route template and status code; unknown methods and unmatched paths map to fixed values; a comment says why a raw path or user id must not be a label", skill: prometheus-metrics, max: 4 }
+  - { id: measurement, title: "Duration is measured from arrival to the end of the response with a monotonic clock, recorded once per request, including errors and client aborts", skill: prometheus-metrics, max: 3 }
+  - { id: readme-queries, title: "README gives working PromQL for request rate per route, error ratio, and p95 latency with histogram_quantile over rate(..._bucket[5m]) summed by le", skill: prometheus-metrics, max: 4 }
+  - { id: readme-red, title: "README maps the three HTTP metrics to the RED method and says why the p95 from a histogram is an estimate bounded by the bucket edges", skill: prometheus-metrics, max: 3 }
+limits: { timeoutSeconds: 120 }

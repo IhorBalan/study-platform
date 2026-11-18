@@ -1,0 +1,27 @@
+title: Structured request logging
+type: repo
+skills: [structured-logging]
+services: []
+runner: nest
+hints:
+  - "pino's mixin option is a function called for every line. Whatever object it returns is merged into that line."
+  - "AsyncLocalStorage.run(store, next) runs the rest of the Express chain with that store. Everything that chain awaits or schedules sees the same store."
+  - "The 'finish' event fires after the response is handed to the socket, outside the request's async context. Pass the id to the summary line yourself."
+  - "In Express 5, req.route.path is the template of the route that matched (\"/orders/:id\"). Read it when the response finishes; the route has not been matched yet when your middleware starts."
+  - "pino's redact option takes paths such as \"*.password\" and \"headers.authorization\". A one-level wildcard does not reach deeper nesting."
+  - "Redaction is a safety net. The first fix is not to hand the logger the request body or headers at all."
+criteria:
+  - { id: typechecks, title: tsc reports no type errors }
+  - { id: json-lines, title: "Every line is one JSON object with level, time and msg" }
+  - { id: request-line, title: "One summary line per request with method, route template, statusCode and durationMs" }
+  - { id: level-by-status, title: "The summary is info for 2xx and 3xx, warn for 4xx and error for 5xx" }
+  - { id: request-id, title: "A safe x-request-id is reused, a missing or unsafe one is replaced, and the id is sent back" }
+  - { id: correlated, title: Every line written during a request carries its id under concurrency }
+  - { id: redacts-secrets, title: "Passwords, Authorization headers and cookies never reach the log" }
+  - { id: own-tests, title: Your tests pass and catch a logged request body and lines without the request id }
+rubric:
+  - { id: context-propagation, title: "The request id reaches service code through AsyncLocalStorage (or a child logger bound to the request), never through a module-level variable or an extra parameter on every function", skill: structured-logging, max: 4 }
+  - { id: id-safety, title: "The incoming id is validated with a strict allow-list (characters and length) before it is trusted, and a comment or README line says what an unchecked id could do to the logs", skill: structured-logging, max: 3 }
+  - { id: secrets-defence, title: "Secrets are kept out at the call sites (no body or headers handed to the logger) and redaction is configured as a second layer", skill: structured-logging, max: 4 }
+  - { id: readme-what-not-to-log, title: "README lists at least three kinds of data this service must never log, and names one field that is useful to add next (for example user id or the trace id) with the reason", skill: structured-logging, max: 3 }
+limits: { timeoutSeconds: 120 }

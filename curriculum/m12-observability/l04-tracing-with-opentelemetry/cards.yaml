@@ -1,0 +1,67 @@
+- id: trace-and-span
+  type: term
+  front: Span
+  back: "One unit of work in a trace, with a trace id, its own id, a parent id, a name, timings, kind, status and attributes. Example: the `SELECT prices` query inside a request."
+  skills: [distributed-tracing]
+- id: span-kinds
+  type: concept
+  front: What do the span kinds SERVER, CLIENT and INTERNAL mean?
+  back: "SERVER handles an incoming request, CLIENT makes an outgoing call, INTERNAL is work inside the process. Backends pair CLIENT and SERVER spans to draw service maps."
+  skills: [distributed-tracing]
+- id: traceparent-fields
+  type: cloze
+  front: "`traceparent: 00-<{{trace id, 16 bytes}}>-<{{parent span id, 8 bytes}}>-01`, where 01 means {{sampled}}."
+  back: "trace id (16 bytes), parent span id (8 bytes), sampled"
+  skills: [distributed-tracing]
+- id: extract-inject
+  type: concept
+  front: What are the two halves of context propagation?
+  back: "The server extracts the context from incoming headers and parents its span on it. The client injects the current context into outgoing headers."
+  skills: [distributed-tracing]
+- id: api-vs-sdk
+  type: comparison
+  front: "@opentelemetry/api vs the OpenTelemetry SDK"
+  back: "The API is interfaces that are no-ops until an SDK is registered; app and library code use only it. The SDK (processors, samplers, exporters) is set up once at the entry point."
+  skills: [distributed-tracing]
+- id: otel-2x-provider
+  type: snippet
+  front: Create and register a Node tracer provider with OpenTelemetry JS 2.x
+  back: |
+    ```ts
+    const provider = new NodeTracerProvider({
+      resource: resourceFromAttributes({ [ATTR_SERVICE_NAME]: 'api' }),
+      spanProcessors: [new BatchSpanProcessor(exporter)],
+    });
+    provider.register();
+    ```
+  skills: [distributed-tracing]
+- id: simple-vs-batch
+  type: comparison
+  front: SimpleSpanProcessor vs BatchSpanProcessor
+  back: "Simple exports every span as it ends, which suits tests. Batch queues spans and exports them in the background, which suits production."
+  skills: [distributed-tracing]
+- id: span-end-finally
+  type: concept
+  front: Why end spans in a `finally` block?
+  back: "A span that never ends is never exported, so an error path without `span.end()` silently loses the span you need most."
+  skills: [distributed-tracing]
+- id: parent-based-sampling
+  type: concept
+  front: Why wrap a ratio sampler in ParentBasedSampler?
+  back: "Downstream services then follow the caller's sampled flag. Independent sampling per service produces traces with holes."
+  skills: [distributed-tracing]
+- id: head-vs-tail
+  type: comparison
+  front: Head sampling vs tail sampling
+  back: "Head decides at the first span, cheaply, without knowing the outcome. Tail decides after the trace completes, so it can keep every slow or failed trace, but needs a collector to hold spans."
+  skills: [distributed-tracing]
+- id: collector-why
+  type: concept
+  front: Why send telemetry to an OpenTelemetry Collector instead of straight to a vendor?
+  back: "The collector batches, samples and enriches, and can export to several backends. Changing vendor becomes a collector config change, not a code change."
+  skills: [distributed-tracing]
+- id: trace-id-in-logs
+  type: concept
+  front: How do you connect logs to traces?
+  back: "Add the active span's trace id (and span id) to every log line, for example with a pino mixin reading `trace.getActiveSpan()`."
+  skills: [distributed-tracing]

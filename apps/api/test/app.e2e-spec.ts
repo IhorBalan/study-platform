@@ -508,6 +508,14 @@ describe('API (e2e, real Postgres)', () => {
         }
       });
 
+      it('does not blame the bridge for a reply the platform cannot read', async () => {
+        bridgeReplies.push({ unexpected: 'shape' });
+        const review = await reviewAndWait();
+        expect(review.status).toBe('error');
+        expect(review.error).toContain('error in the platform');
+        expect(review.error).not.toContain('could not be reached');
+      });
+
       it('passes on the reason when the CLI is not signed in', async () => {
         bridgeReplies.push({
           status: 'error',

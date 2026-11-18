@@ -1,0 +1,60 @@
+- id: why-pool
+  type: concept
+  front: Why use a connection pool instead of a connection per request?
+  back: "Each Postgres connection is a server process with a costly handshake and its own memory. A pool reuses a few open connections."
+  skills: [db-access-node]
+- id: pool-sizing
+  type: concept
+  front: How do you size pg Pool `max` across a deployment?
+  back: "The sum of max over all instances must stay below the server's max_connections, with headroom for admin and migrations."
+  skills: [db-access-node]
+- id: connection-timeout
+  type: concept
+  front: "What happens when the pg pool is full and connectionTimeoutMillis is 0 (the default)?"
+  back: "Callers wait for a free client forever, so requests hang without an error."
+  skills: [db-access-node]
+- id: pool-exhaustion-vs-deadlock
+  type: comparison
+  front: "Pool exhaustion vs database deadlock (interview)"
+  back: "Exhaustion: the app waits for a free client and hangs while the DB is idle. Deadlock: Postgres detects a lock cycle and aborts one transaction with 40P01."
+  skills: [db-access-node, transactions-isolation]
+- id: transaction-one-client
+  type: concept
+  front: Why does `await pool.query('begin')` followed by other pool.query calls not form a transaction?
+  back: "Each pool.query may use a different connection. Take one client with pool.connect() and release it in finally."
+  skills: [db-access-node]
+- id: parameterised
+  type: concept
+  front: Why do $1 placeholders prevent SQL injection?
+  back: "The values are sent separately from the SQL text and are never parsed as SQL."
+  skills: [db-access-node]
+- id: bigint-string
+  type: concept
+  front: Why does pg return bigint and numeric columns as strings?
+  back: "A JavaScript number cannot represent every value exactly, so pg does not convert them by default."
+  skills: [db-access-node]
+- id: n-plus-one
+  type: concept
+  front: "What is the N+1 problem? (interview)"
+  back: "One query loads a list, then one more query runs per item. Fix with a join, one batched `= any($1)` query, or a relational query."
+  skills: [db-access-node]
+- id: drizzle-relational
+  type: snippet
+  front: "Load authors with their posts in Drizzle, without N+1."
+  back: "```ts\nawait db.query.authors.findMany({ with: { posts: true } });\n```\nNeeds `relations()` declared and `drizzle(pool, { schema })`."
+  skills: [db-access-node]
+- id: drizzle-transaction
+  type: snippet
+  front: Run two Drizzle updates in one transaction.
+  back: "```ts\nawait db.transaction(async (tx) => {\n  await tx.update(a).set(...).where(...);\n  await tx.update(b).set(...).where(...);\n});\n```"
+  skills: [db-access-node]
+- id: orm-vs-builder-vs-sql
+  type: comparison
+  front: "ORM vs query builder vs raw SQL (interview)"
+  back: "Raw SQL: full control, manual types. Query builder: typed SQL. ORM: objects and relations, fast CRUD, easy to hide N+1 and slow SQL."
+  skills: [db-access-node]
+- id: prisma-vs-drizzle
+  type: comparison
+  front: Prisma vs Drizzle
+  back: "Prisma: own schema language and an object API with strong tooling. Drizzle: TypeScript schema and SQL-shaped queries."
+  skills: [db-access-node]

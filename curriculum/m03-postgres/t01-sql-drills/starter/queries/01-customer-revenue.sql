@@ -1,0 +1,6 @@
+-- Drill 1: revenue per customer.
+-- Columns: customer_id, email, paid_orders, revenue
+-- One row for EVERY customer, including those without paid orders (0 and 0).
+-- revenue = sum of quantity * unit_price over the customer's paid orders.
+-- Order by revenue descending, then customer_id ascending.
+-- TODO: write the query.

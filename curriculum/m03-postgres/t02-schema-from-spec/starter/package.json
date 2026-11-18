@@ -1,0 +1,11 @@
+{
+  "name": "task-tracker-schema",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "db:apply": "psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -c 'drop schema if exists public cascade; create schema public' -f schema.sql"
+  },
+  "dependencies": {
+    "pg": "^8.16.0"
+  }
+}

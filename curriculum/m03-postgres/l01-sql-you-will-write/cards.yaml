@@ -1,0 +1,55 @@
+- id: clause-order
+  type: concept
+  front: Why can you not use a SELECT alias in WHERE?
+  back: "WHERE is applied before SELECT computes its columns, so the alias does not exist yet. Repeat the expression or wrap the query in a CTE."
+  skills: [sql-queries]
+- id: left-join-where-trap
+  type: concept
+  front: "A LEFT JOIN to orders has `WHERE o.status = 'paid'`. What happens to customers without orders?"
+  back: "They disappear. Their `o.status` is NULL, so WHERE drops the row. Put the condition in the ON clause."
+  skills: [sql-queries]
+- id: count-star-vs-column
+  type: comparison
+  front: "`count(*)` vs `count(o.id)` after a LEFT JOIN"
+  back: "`count(*)` counts rows, so an unmatched customer gets 1. `count(o.id)` skips NULLs and gives 0."
+  skills: [sql-queries]
+- id: fan-out
+  type: concept
+  front: Why does summing an order-level column after joining order_items give too large a number?
+  back: "The join repeats each order once per item (fan-out). Aggregate the items in a CTE first, then join at order grain."
+  skills: [sql-queries]
+- id: window-vs-group-by
+  type: comparison
+  front: Window function vs GROUP BY
+  back: "GROUP BY collapses rows into one per group. A window function keeps every row and adds a value computed over related rows."
+  skills: [sql-queries]
+- id: running-total
+  type: cloze
+  front: "Running total of monthly revenue: `sum(revenue) {{...}} as running_total`"
+  back: "`over (order by month)`"
+  skills: [sql-queries]
+- id: rank-functions
+  type: comparison
+  front: "`row_number()` vs `rank()` vs `dense_rank()` for the values 90, 82, 82, 70"
+  back: "1,2,3,4 vs 1,2,2,4 vs 1,2,2,3. Only row_number never ties."
+  skills: [sql-queries]
+- id: top-n-per-group
+  type: snippet
+  front: Return the 2 best-selling products per category (interview classic).
+  back: "```sql\nwith r as (select *, row_number() over (partition by category_id order by units desc, id) as rn from product_units)\nselect * from r where rn <= 2;\n```"
+  skills: [sql-queries]
+- id: find-duplicates
+  type: snippet
+  front: Find emails used by more than one customer, ignoring case.
+  back: "```sql\nselect lower(email), count(*) from customers\ngroup by lower(email) having count(*) > 1;\n```"
+  skills: [sql-queries]
+- id: not-in-null
+  type: concept
+  front: "Why can `WHERE id NOT IN (select customer_id from ...)` return no rows at all?"
+  back: "If the subquery returns a NULL, every comparison becomes unknown. Use NOT EXISTS instead."
+  skills: [sql-queries]
+- id: cte-inlining
+  type: concept
+  front: Does a CTE in PostgreSQL 12 and later act as an optimisation fence?
+  back: "Not by default. A side-effect-free CTE used once is inlined. Write `AS MATERIALIZED` to force it to be computed once."
+  skills: [sql-queries]

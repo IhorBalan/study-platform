@@ -332,7 +332,7 @@ Decisions made while building are appended below.
 - **The curriculum is baked into the API image,** so a content change needs a rebuild in full mode. Dev mode reads the files directly.
 - **Web server:** an unprivileged nginx image that serves the built files and passes `/api` to the API container.
 
-## D-102: Second round of QA fixes (2026-11-18)
+### D-102 · Second round of QA fixes — Accepted, 2026-11-18
 
 **Decided:** Fixed the seven findings from the second QA pass.
 

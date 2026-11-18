@@ -1,0 +1,60 @@
+- id: btree-order-by
+  type: concept
+  front: Why can a B-tree index serve `ORDER BY created_at` without a sort step?
+  back: Its entries are stored in key order, so the planner reads them in sequence and LIMIT can stop early.
+  skills: [sql-indexes]
+- id: composite-column-order
+  type: concept
+  front: "How do you order the columns of a composite index? (interview)"
+  back: "Columns compared with = first, then the column used for a range or ORDER BY."
+  skills: [sql-indexes]
+- id: leading-column
+  type: concept
+  front: "Can an index on (customer_id, created_at) serve `where created_at > ...` alone?"
+  back: "Not well. The index is sorted by customer_id first, like a phone book by surname. (Postgres 18 skip scan helps only when customer_id has few values.)"
+  skills: [sql-indexes]
+- id: redundant-index
+  type: concept
+  front: "With an index on (customer_id, created_at), is an index on (customer_id) useful?"
+  back: "No. The composite index already serves lookups on its leading column. The extra one only costs writes."
+  skills: [sql-indexes]
+- id: partial-index
+  type: term
+  front: Partial index
+  back: "An index with a WHERE clause that holds only matching rows. `create index on orders (created_at) where status = 'pending'`"
+  skills: [sql-indexes]
+- id: expression-index
+  type: concept
+  front: "Why does an index on email not help `where lower(email) = $1`?"
+  back: "The index holds the raw values. Index the expression: `create index on customers (lower(email))`."
+  skills: [sql-indexes]
+- id: covering-index
+  type: term
+  front: Covering index (INCLUDE)
+  back: "An index that holds every column a query needs, so it can use an Index Only Scan. `create index on orders (customer_id) include (total_cents)`"
+  skills: [sql-indexes]
+- id: gin-use
+  type: concept
+  front: When do you choose a GIN index?
+  back: "For values that contain many items: arrays (@>), jsonb containment and tsvector full-text search."
+  skills: [sql-indexes]
+- id: brin-use
+  type: concept
+  front: When is a BRIN index a good fit?
+  back: "On a huge table whose column follows the physical row order, such as created_at in an append-only log. It stores only min and max per block range."
+  skills: [sql-indexes]
+- id: index-type-choice
+  type: comparison
+  front: "B-tree vs GIN vs BRIN (interview: choosing an index type)"
+  back: "B-tree: equality, ranges and sorting. GIN: containment in arrays, jsonb, text search. BRIN: tiny range index for naturally ordered huge tables."
+  skills: [sql-indexes]
+- id: seq-scan-despite-index
+  type: concept
+  front: "Why might Postgres use a Seq Scan although a matching index exists? (interview)"
+  back: "The query matches a large share of rows, the table is small, or statistics are stale. Random index reads then cost more than one sequential pass."
+  skills: [sql-indexes, query-plans]
+- id: index-write-cost
+  type: concept
+  front: What does each extra index cost?
+  back: "Work on every insert and on updates of indexed columns, disk and cache space, and fewer HOT updates."
+  skills: [sql-indexes]

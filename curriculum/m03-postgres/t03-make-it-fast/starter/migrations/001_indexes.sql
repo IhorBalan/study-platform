@@ -1,0 +1,3 @@
+-- Indexes for the four queries in queries.sql.
+-- One statement per semicolon. CREATE INDEX CONCURRENTLY is allowed.
+-- TODO

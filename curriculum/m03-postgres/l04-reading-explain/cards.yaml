@@ -1,0 +1,60 @@
+- id: explain-analyze-runs
+  type: concept
+  front: "Does EXPLAIN ANALYZE run the query? (interview)"
+  back: "Yes. It executes the statement, so an UPDATE or DELETE changes data unless you wrap it in BEGIN ... ROLLBACK."
+  skills: [query-plans]
+- id: explain-vs-analyze
+  type: comparison
+  front: EXPLAIN vs EXPLAIN ANALYZE
+  back: "EXPLAIN shows the chosen plan with estimates only. ANALYZE also runs it and adds actual rows, times and loops."
+  skills: [query-plans]
+- id: read-inside-out
+  type: concept
+  front: In which order do you read a text query plan?
+  back: "From the innermost (most indented) nodes outwards. Each node feeds its parent."
+  skills: [query-plans]
+- id: cost-units
+  type: concept
+  front: "What does `cost=0.42..78.85` on a plan node mean?"
+  back: "Estimated startup cost and total cost in arbitrary planner units. Use it to compare plans, not as time."
+  skills: [query-plans]
+- id: loops
+  type: concept
+  front: "A node shows `actual time=0.01..0.05 rows=3 loops=10000`. How much work is that?"
+  back: "Times and rows are per loop: about 30,000 rows and 500 ms in total."
+  skills: [query-plans]
+- id: buffers-hit-read
+  type: comparison
+  front: "`shared hit` vs `shared read` in BUFFERS output"
+  back: "hit: pages found in Postgres's own cache. read: pages fetched from the OS cache or disk."
+  skills: [query-plans]
+- id: rows-removed-by-filter
+  type: concept
+  front: "What does a large `Rows Removed by Filter` tell you?"
+  back: "The node read many more rows than it kept. An index matching that condition is likely missing."
+  skills: [query-plans]
+- id: bitmap-scan
+  type: term
+  front: Bitmap Heap Scan
+  back: "Reads table pages found by a Bitmap Index Scan, each page once, in physical order. Typical for a moderate number of matching rows."
+  skills: [query-plans]
+- id: join-types
+  type: comparison
+  front: Nested Loop vs Hash Join
+  back: "Nested Loop: small outer side, indexed lookups on the inner side. Hash Join: hash the smaller input and stream the larger one through it."
+  skills: [query-plans]
+- id: misestimate
+  type: concept
+  front: "A node estimates rows=5 and actually returns 50,000. What do you check first?"
+  back: "Statistics: run ANALYZE. Then correlated columns (CREATE STATISTICS) or conditions the planner cannot estimate."
+  skills: [query-plans]
+- id: sort-spill
+  type: concept
+  front: "What does `Sort Method: external merge Disk: 51200kB` mean?"
+  back: "The sort did not fit in work_mem and spilled to disk. An index that provides the order removes the sort."
+  skills: [query-plans]
+- id: find-slow-queries
+  type: concept
+  front: How do you find which queries to optimise first in production?
+  back: "pg_stat_statements, sorted by total time. Frequent medium queries often cost more than one slow query."
+  skills: [query-plans]

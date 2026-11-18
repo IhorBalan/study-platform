@@ -1,0 +1,20 @@
+title: PostgreSQL and data modelling
+summary: >-
+  You can write the SQL that real features need, design a schema whose constraints keep the data
+  correct, choose and verify indexes with EXPLAIN, reason about transactions, isolation and locks,
+  change a large live table without downtime, and use Postgres from Node with pg and Drizzle
+  without pool exhaustion or N+1 queries.
+kind: core
+effort: L
+services: [postgres]
+skills:
+  - { id: sql-queries, title: "Joins, aggregation, CTEs and window functions" }
+  - { id: data-modelling, title: "Keys, constraints and normalisation" }
+  - { id: sql-indexes, title: Indexes in PostgreSQL }
+  - { id: query-plans, title: Reading query plans with EXPLAIN }
+  - { id: transactions-isolation, title: "Transactions, MVCC and isolation" }
+  - { id: zero-downtime-migrations, title: Schema migrations without downtime }
+  - { id: db-access-node, title: "Postgres from Node: pooling, Drizzle and ORMs" }
+  - { id: postgres-full-text-search, title: Full-text search in PostgreSQL }
+  - { id: row-level-security, title: Row-Level Security for multi-tenant data }
+  - { id: document-stores, title: Document stores and when they fit }

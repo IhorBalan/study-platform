@@ -493,6 +493,9 @@ The plan response carries `continueWith`: the lesson or task of the newest study
 ### D-133 · Task pages link to the task folder in the learner's editor — 2026-11-18
 
 Code task pages show the task's full folder path with a copy button and an "Open in VS Code" or "Open in Cursor" link (`<scheme>://file/<path>`), once the lab repository path is set. The editor is a new setting (VS Code by default, Cursor, or no link), stored as text in the settings row. JetBrains editors are left out because their link format could not be confirmed here. The link does not check that the folder exists; before `pnpm lab start` the editor reports a missing folder itself.
+### D-134 · Restore refuses while the platform is connected, and saves the current data first — 2026-11-18
+
+The backend tester showed that `pnpm restore --yes` ran while the API was writing, and the writes made after the restore ended up mixed into the restored data (BE-10). `pnpm restore` now counts the other connections to the `study` database and refuses if there are any; `--force` overrides it. Before replacing anything it writes `backups/before-restore-<time>.dump` (the newest 3 are kept, separately from the 14 normal backups) and prints the command that undoes the restore. Backup names now carry seconds, and a name that is already taken waits for the next second, so two backups close together no longer replace each other (BE-9). A `BACKUP_DIR` that is not a folder gives one line instead of a stack trace (BE-11).
 
 ---
 

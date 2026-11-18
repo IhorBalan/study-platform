@@ -40,13 +40,42 @@ function PlanPage() {
           and restart the API.
         </p>
       ) : (
-        <ol className="mt-6 space-y-3" aria-label="Modules">
-          {data.modules.map((m) => (
-            <ModuleRow key={m.id} module={m} />
-          ))}
-        </ol>
+        <>
+          <OverallProgress modules={data.modules} />
+          <ol className="mt-3 space-y-2" aria-label="Modules">
+            {data.modules.map((m) => (
+              <ModuleRow key={m.id} module={m} />
+            ))}
+          </ol>
+        </>
       )}
     </section>
+  );
+}
+
+/** Lessons and tasks done across the whole plan, as text and a bar. */
+function OverallProgress({ modules }: { modules: ModuleSummary[] }) {
+  const lessons = modules.flatMap((m) => m.lessons);
+  const tasks = modules.flatMap((m) => m.tasks);
+  const done = (items: { status: string }[]) => items.filter((i) => i.status === 'done').length;
+  const total = lessons.length + tasks.length;
+  const share = total === 0 ? 0 : (done(lessons) + done(tasks)) / total;
+  return (
+    <div className="mt-8">
+      <p className="text-sm text-zinc-600 dark:text-zinc-300">
+        {done(lessons)} of {lessons.length} lessons and {done(tasks)} of {tasks.length} tasks done
+      </p>
+      <div
+        role="progressbar"
+        aria-label="Overall progress"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(share * 100)}
+        className="mt-2 h-1.5 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800"
+      >
+        <div className="h-full bg-emerald-500" style={{ width: `${share * 100}%` }} />
+      </div>
+    </div>
   );
 }
 
@@ -203,46 +232,82 @@ function NextUpPanel({ nextUp }: { nextUp: NextUp }) {
   );
 }
 
-function ModuleRow({ module: m }: { module: ModuleSummary }) {
-  const done = m.lessons.filter((l) => l.status === 'done').length;
+const statusText = {
+  done: 'Done',
+  in_progress: 'In progress',
+  not_started: 'Not started',
+} as const;
+
+/** A status dot with its meaning as text for screen readers. */
+function StatusDot({ status }: { status: keyof typeof statusDot }) {
   return (
-    <li className="min-w-0 rounded-lg border border-zinc-200 p-4 break-words dark:border-zinc-800">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="min-w-0 font-medium [overflow-wrap:anywhere]">{m.title}</h2>
-        <div className="flex gap-2 text-xs text-zinc-500 dark:text-zinc-400">
-          <span>{m.kind === 'core' ? 'Core' : 'Optional'}</span>
-          <span aria-label={`Effort ${m.effort}`}>Effort {m.effort}</span>
-          <span>
-            {done}/{m.lessons.length} lessons
+    <>
+      <span aria-hidden="true" className={`size-2 shrink-0 rounded-full ${statusDot[status]}`} />
+      <span className="sr-only">{statusText[status]}:</span>
+    </>
+  );
+}
+
+function moduleStatus(m: ModuleSummary): keyof typeof statusDot {
+  const items = [...m.lessons, ...m.tasks];
+  if (items.length > 0 && items.every((i) => i.status === 'done')) return 'done';
+  return items.some((i) => i.status !== 'not_started') ? 'in_progress' : 'not_started';
+}
+
+/**
+ * One module. Only a module in progress starts open; the rest are a single line
+ * until opened, so the page is not twenty summaries long.
+ */
+function ModuleRow({ module: m }: { module: ModuleSummary }) {
+  const lessonsDone = m.lessons.filter((l) => l.status === 'done').length;
+  const tasksDone = m.tasks.filter((t) => t.status === 'done').length;
+  const status = moduleStatus(m);
+  return (
+    <li
+      className={`min-w-0 rounded-lg border break-words ${
+        status === 'in_progress'
+          ? 'border-zinc-400 dark:border-zinc-600'
+          : 'border-zinc-200 dark:border-zinc-800'
+      }`}
+    >
+      <details open={status === 'in_progress'} className="group">
+        <summary className="flex cursor-pointer flex-wrap items-baseline justify-between gap-x-3 gap-y-1 p-4">
+          <h2 className="flex min-w-0 items-baseline gap-2 font-medium [overflow-wrap:anywhere]">
+            <span
+              aria-hidden="true"
+              className="inline-block self-center text-xs text-zinc-400 transition-transform group-open:rotate-90"
+            >
+              ▶
+            </span>
+            <span className="flex items-center self-center">
+              <StatusDot status={status} />
+            </span>
+            {m.title}
+          </h2>
+          <span className="flex flex-wrap gap-x-2 text-xs text-zinc-500 dark:text-zinc-400">
+            <span>{m.kind === 'core' ? 'Core' : 'Optional'}</span>
+            <span>Effort {m.effort}</span>
+            <span>
+              {lessonsDone}/{m.lessons.length} lessons
+            </span>
+            <span>
+              {tasksDone}/{m.tasks.length} tasks
+            </span>
           </span>
-        </div>
-      </div>
-      {m.summary && <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">{m.summary}</p>}
-      {m.services.length > 0 && (
-        <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
-          Practice services: {m.services.join(', ')}
-        </p>
-      )}
-      {(m.lessons.length > 0 || m.tasks.length > 0) && (
-        <details className="mt-3 text-sm" open={done > 0 && done < m.lessons.length}>
-          <summary className="cursor-pointer text-zinc-600 dark:text-zinc-300">
-            {m.lessons.length} lessons, {m.tasks.length} tasks
-          </summary>
-          <ol className="mt-2 space-y-1">
+        </summary>
+        <div className="px-4 pb-4">
+          {m.summary && <p className="text-sm text-zinc-600 dark:text-zinc-300">{m.summary}</p>}
+          {m.services.length > 0 && (
+            <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+              Practice services: {m.services.join(', ')}
+            </p>
+          )}
+          <ol className="mt-3 space-y-1 text-sm">
             {m.lessons.map((l) => {
               const [moduleId = '', lessonSlug = ''] = l.id.split('/');
               return (
                 <li key={l.id} className="flex items-center gap-2">
-                  <span
-                    aria-label={l.status.replace('_', ' ')}
-                    className={`size-2 shrink-0 rounded-full ${
-                      l.status === 'done'
-                        ? 'bg-emerald-500'
-                        : l.status === 'in_progress'
-                          ? 'bg-amber-400'
-                          : 'bg-zinc-300 dark:bg-zinc-700'
-                    }`}
-                  />
+                  <StatusDot status={l.status} />
                   <Link
                     to="/lessons/$moduleId/$lessonSlug"
                     params={{ moduleId, lessonSlug }}
@@ -257,10 +322,7 @@ function ModuleRow({ module: m }: { module: ModuleSummary }) {
               const [moduleId = '', taskSlug = ''] = t.id.split('/');
               return (
                 <li key={t.id} className="flex items-center gap-2">
-                  <span
-                    aria-label={t.status.replace('_', ' ')}
-                    className={`size-2 shrink-0 rounded-full ${statusDot[t.status]}`}
-                  />
+                  <StatusDot status={t.status} />
                   <span className="rounded border border-zinc-300 px-1 text-[10px] uppercase text-zinc-500 dark:border-zinc-700">
                     {t.type === 'repo' ? 'Code' : t.type === 'text' ? 'Write' : 'Draw'}
                   </span>
@@ -275,8 +337,8 @@ function ModuleRow({ module: m }: { module: ModuleSummary }) {
               );
             })}
           </ol>
-        </details>
-      )}
+        </div>
+      </details>
     </li>
   );
 }

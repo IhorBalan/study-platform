@@ -1,0 +1,18 @@
+title: Least privilege for a worker, and where each job runs
+type: text
+skills: [aws-iam, aws-compute]
+hints:
+  - List every SDK command the worker sends first. Each one is one IAM action, and each action applies to a specific resource ARN.
+  - A GSI is its own resource. A Query on it needs the index ARN as well as the table ARN.
+  - A SecureString needs kms:Decrypt on its key as well as the SSM permission.
+  - "Secrets Manager adds a random six-character suffix to a secret's ARN, so the resource usually ends in `-*`."
+  - "The trust policy decides who may assume the role. For an ECS task, that is the service principal ecs-tasks.amazonaws.com."
+  - For each workload, ask how long one run takes, whether the load is steady or bursty, whether it holds connections, and what triggers it.
+rubric:
+  - { id: actions, title: "The permissions policy grants exactly the actions the worker uses (sqs:ReceiveMessage, sqs:DeleteMessage, sqs:ChangeMessageVisibility, dynamodb:GetItem, dynamodb:PutItem, dynamodb:UpdateItem, dynamodb:Query, ssm:GetParametersByPath, secretsmanager:GetSecretValue, kms:Decrypt, sns:Publish) and no wildcard actions", skill: aws-iam, max: 4 }
+  - { id: resources, title: "Every statement names concrete ARNs: the queue, the table and its index ARN, the parameter path, the secret with its suffix wildcard, the KMS key and the topic; no Resource is *", skill: aws-iam, max: 4 }
+  - { id: credentials, title: "Explains that the worker gets temporary credentials from an ECS task role whose trust policy names ecs-tasks.amazonaws.com, that the SDK's default chain picks them up, and that no access key exists anywhere", skill: aws-iam, max: 3 }
+  - { id: evaluation, title: "Answers the incident question correctly: an explicit Deny on DeleteTable wins over any Allow, the default deny already covers what is not granted, and names one guard rail beyond the role (an SCP or a permissions boundary)", skill: aws-iam, max: 3 }
+  - { id: verification, title: "Names at least two ways to find a missing or excess permission before or after deploying (IAM policy simulator, Access Analyzer policy generation or unused-access findings, CloudTrail AccessDenied events) and notes that the local emulator cannot reveal it", skill: aws-iam, max: 2 }
+  - { id: compute-choices, title: "Places the three workloads defensibly (the order API on ECS Fargate, the thumbnail job on Lambda triggered by the upload event or queue, the 40-minute export on a Fargate task started by an EventBridge schedule) with a reason tied to duration, load shape, connections or trigger for each", skill: aws-compute, max: 4 }
+  - { id: compute-trade-off, title: "Names one concrete cost or risk of each choice (for example idle Fargate cost, Lambda cold starts or database connections, the export's restart-from-zero on failure) and one thing that would change the decision", skill: aws-compute, max: 3 }

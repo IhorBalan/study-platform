@@ -1,0 +1,28 @@
+title: A reliable SQS worker
+type: repo
+skills: [aws-sqs]
+services: [aws]
+runner: nest
+hints:
+  - "Create the SQS client with `useQueueUrlAsEndpoint: false`. The emulator puts localhost in queue URLs, which is wrong inside the check sandbox."
+  - "ApproximateReceiveCount is only returned when you ask for it: `MessageSystemAttributeNames: ['ApproximateReceiveCount']`. It arrives as a string."
+  - "`sqs.send(command, { abortSignal })` makes a 20-second long poll abortable. The aborted call rejects; check your stopping flag before treating that as an error."
+  - "ChangeMessageVisibility with VisibilityTimeout N hides the message for N seconds from now. Use it twice: as a heartbeat while the handler runs, and to set the retry delay after a failure."
+  - "Clear the heartbeat timer in every path, or it keeps extending a message you already deleted and keeps the process alive."
+  - "The dead-letter queue is the queue's job (RedrivePolicy with maxReceiveCount). The worker's only part is never deleting a failed message."
+  - "In your tests, use small values (waitTimeSeconds 1, retryBaseSeconds 1) so each test finishes in a few seconds, and delete your queues in after()."
+criteria:
+  - { id: typechecks, title: tsc reports no type errors }
+  - { id: long-polling, title: "ReceiveMessage long-polls for 20 s, takes up to 10 messages and asks for the receive count" }
+  - { id: deletes-on-success, title: "Each message reaches the handler once, parsed, and is deleted after success" }
+  - { id: retry-backoff, title: "A failed message is kept and comes back after a doubling delay" }
+  - { id: dead-letter, title: A message that always fails ends in the dead-letter queue after maxReceiveCount attempts }
+  - { id: heartbeat, title: "A handler slower than the visibility timeout runs once, even with two workers" }
+  - { id: graceful-stop, title: "stop() ends an idle long poll quickly, waits for work in progress and receives nothing afterwards" }
+  - { id: own-tests, title: Your tests pass and catch a worker that swallows failures and one that handles messages twice }
+rubric:
+  - { id: delete-semantics, title: "The only path to DeleteMessage is a successful handler, and every failure path (bad JSON, handler error, heartbeat error) ends in a retry, never in a delete or a crash of the loop", skill: aws-sqs, max: 4 }
+  - { id: timers-and-shutdown, title: "Heartbeat timers are cleared on every path, the abort is used only for the pending receive, and stop() cannot resolve while a handler or delete is still running", skill: aws-sqs, max: 3 }
+  - { id: idempotency-explained, title: "README names at least two ways a message is processed twice (crash after the work, failed delete, expired visibility) and how a handler would make that harmless, keyed on a business id rather than MessageId", skill: aws-sqs, max: 4 }
+  - { id: runtime-choice, title: "README says where the worker runs next to a NestJS API (separate process or service, shutdown hooks, stop timeout) and names one concrete case where Lambda's SQS trigger is the better choice", skill: aws-sqs, max: 3 }
+limits: { timeoutSeconds: 120 }

@@ -1,0 +1,33 @@
+title: Load configuration from SSM and Secrets Manager
+type: repo
+skills: [aws-config-secrets]
+services: [aws]
+runner: nest
+hints:
+  - "GetParametersByPath returns at most 10 parameters per call. Loop while NextToken is set."
+  - "Without `WithDecryption: true` a SecureString comes back encrypted, and without `Recursive: true` nested names such as feature/x are left out."
+  - "Parameter names come back in full. Strip the path to get the relative name, and use the relative names as the keys of your zod schema so each issue's path names the parameter."
+  - "A StringList value is one comma-separated string."
+  - "z.stringbool({ truthy: ['true'], falsy: ['false'] }) accepts exactly those two strings."
+  - "Build issue text from the issue's path and message only. JSON.parse errors quote the input, so never pass them on for a secret."
+  - "A missing secret throws ResourceNotFoundException. Treat it as a configuration problem, and let other errors (network, permissions) through."
+  - "For the cache, keep the in-flight promise and hand it to every caller until it settles."
+criteria:
+  - { id: typechecks, title: tsc reports no type errors }
+  - { id: loads, title: "A valid tree and secret become the typed config, with defaults for optional values" }
+  - { id: paginates, title: "Every parameter is read, past the first page" }
+  - { id: decrypts, title: SecureString parameters arrive as plain text }
+  - { id: database-url, title: The secret becomes a connection URL with user name and password encoded }
+  - { id: reports-all, title: One ConfigError lists every invalid or missing value by name }
+  - { id: no-leaks, title: Errors never contain a parameter or secret value }
+  - { id: missing-secret, title: A missing secret is a ConfigError naming it }
+  - { id: few-calls, title: "One recursive, decrypted read of the tree and one secret read, with no per-parameter calls" }
+  - { id: cache, title: "Credentials are cached for ttlMs, shared by concurrent callers, and refreshed on demand" }
+  - { id: own-tests, title: Your tests pass and catch a loader that reads one page and one that does not decrypt }
+rubric:
+  - { id: single-schema, title: "The parameter names, types, ranges and defaults are declared once (one schema), and AppConfig cannot drift from it without a type error", skill: aws-config-secrets, max: 3 }
+  - { id: error-design, title: "Configuration problems and infrastructure failures are told apart: missing or invalid values become ConfigError issues, while network or permission errors are rethrown unchanged", skill: aws-config-secrets, max: 3 }
+  - { id: nest-wiring, title: "README shows loadConfig in a NestJS async provider (or equivalent) so the app cannot listen with bad configuration, and names the only environment variables still needed", skill: aws-config-secrets, max: 3 }
+  - { id: rotation-and-iam, title: "README explains the app's part in a password rotation using the cache, and lists least-privilege IAM permissions with concrete resources, including kms:Decrypt", skill: aws-config-secrets, max: 4 }
+  - { id: injection-trade-off, title: "README weighs ECS secrets injection against fetching with the SDK, naming the rotation consequence", skill: aws-config-secrets, max: 2 }
+limits: { timeoutSeconds: 120 }

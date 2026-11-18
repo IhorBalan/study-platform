@@ -1,0 +1,60 @@
+- id: sqs-sns-eventbridge
+  type: comparison
+  front: "Interview: SQS vs SNS vs EventBridge?"
+  back: "SQS is a queue that one group of workers pulls from. SNS pushes a copy to every subscriber. EventBridge routes events to targets by rules that match their content."
+  skills: [aws-fan-out]
+- id: fan-out-pattern
+  type: concept
+  front: Why put an SQS queue behind each SNS subscriber instead of subscribing workers directly?
+  back: "Each consumer gets its own buffer, retries, DLQ and pace. SNS does not store messages, so a down consumer would otherwise lose them."
+  skills: [aws-fan-out]
+- id: queue-policy-for-sns
+  type: concept
+  front: "An SQS queue is subscribed to an SNS topic, but on real AWS no messages arrive. What is the usual cause?"
+  back: "The queue policy does not allow `sqs:SendMessage` from `sns.amazonaws.com` for that topic's ARN."
+  skills: [aws-fan-out, aws-iam]
+- id: raw-delivery
+  type: term
+  front: Raw message delivery (SNS)
+  back: "A subscription attribute that delivers the published message as the SQS body, without the SNS JSON envelope."
+  skills: [aws-fan-out]
+- id: filter-scope
+  type: comparison
+  front: "SNS filter policy scope: MessageAttributes vs MessageBody"
+  back: "MessageAttributes (default) matches attributes the publisher must set. MessageBody matches fields of the JSON message itself."
+  skills: [aws-fan-out]
+- id: filter-logic
+  type: cloze
+  front: "In a filter policy, separate keys are combined with {{AND}} and values in one key's list with {{OR}}."
+  back: "AND; OR"
+  skills: [aws-fan-out]
+- id: subscribe-idempotent
+  type: concept
+  front: What happens when setup code calls SNS `Subscribe` again with the same endpoint and attributes? And with different attributes?
+  back: "Same attributes: it returns the existing subscription. Different attributes: it fails; use `SetSubscriptionAttributes`."
+  skills: [aws-fan-out]
+- id: eventbridge-envelope
+  type: concept
+  front: Which fields of an EventBridge event do you set when calling `PutEvents`?
+  back: "`Source`, `DetailType`, `Detail` (JSON) and the bus name. EventBridge adds `id`, `time`, `account` and `region`."
+  skills: [aws-fan-out]
+- id: putevents-partial
+  type: concept
+  front: "`PutEvents` returned without throwing. How do you know every event was accepted?"
+  back: "Check `FailedEntryCount` (and the per-entry error codes). It can partly fail."
+  skills: [aws-fan-out]
+- id: eventbridge-extras
+  type: concept
+  front: Name three things EventBridge offers that SNS does not.
+  back: "Central content-based rules, events from AWS services and SaaS partners, archive and replay, schedules (any three)."
+  skills: [aws-fan-out]
+- id: scheduler-use
+  type: concept
+  front: What replaces a server with a cron job for "send a reminder in three days" on AWS?
+  back: "An EventBridge Scheduler one-off schedule that calls a target (a queue or a function) at that time."
+  skills: [aws-fan-out]
+- id: fan-out-outbox
+  type: concept
+  front: Why should `Publish` or `PutEvents` be called from an outbox relay rather than the request handler?
+  back: "The database write and the publish are two systems; the outbox makes them commit together and publishes afterwards."
+  skills: [aws-fan-out]

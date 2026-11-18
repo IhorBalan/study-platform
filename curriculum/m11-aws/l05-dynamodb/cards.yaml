@@ -1,0 +1,63 @@
+- id: design-from-queries
+  type: concept
+  front: What do you list before designing a DynamoDB table?
+  back: "The access patterns: every question the app will ask. The keys are shaped so each one is a GetItem or a Query."
+  skills: [aws-dynamodb]
+- id: partition-and-sort-key
+  type: comparison
+  front: Partition key vs sort key
+  back: "The partition key is hashed to choose where items live and must be given exactly in a query. The sort key orders items within one partition and supports range conditions."
+  skills: [aws-dynamodb]
+- id: query-vs-scan
+  type: comparison
+  front: Query vs Scan in DynamoDB
+  back: "Query reads one partition key's items, in sort order. Scan reads and bills the whole table, however few items match."
+  skills: [aws-dynamodb]
+- id: filter-expression-cost
+  type: concept
+  front: Does a `FilterExpression` make a Scan cheaper?
+  back: No. It removes items after they were read and billed.
+  skills: [aws-dynamodb]
+- id: pagination-keys
+  type: cloze
+  front: "A Query response with more results carries {{`LastEvaluatedKey`}}; pass it back as {{`ExclusiveStartKey`}}."
+  back: "`LastEvaluatedKey`; `ExclusiveStartKey`"
+  skills: [aws-dynamodb]
+- id: hot-partition
+  type: concept
+  front: "Why is `pk = 'STATUS#open'` for every open order risky at scale?"
+  back: "All writes go to one partition key value, which is limited to one partition's throughput: a hot partition."
+  skills: [aws-dynamodb]
+- id: gsi-term
+  type: term
+  front: Global secondary index (GSI)
+  back: "A second, eventually consistent key on the table, maintained by DynamoDB, for another access pattern. E.g. orders by status and date."
+  skills: [aws-dynamodb]
+- id: sparse-index
+  type: concept
+  front: How can a GSI hold only open tasks?
+  back: Items without the GSI key attributes are left out of the index. Remove the attributes when a task closes.
+  skills: [aws-dynamodb]
+- id: create-no-overwrite
+  type: snippet
+  front: Create an item with PutCommand but never overwrite an existing one.
+  back: |-
+    ```ts
+    new PutCommand({ TableName, Item, ConditionExpression: 'attribute_not_exists(pk)' })
+    ```
+  skills: [aws-dynamodb]
+- id: optimistic-locking-ddb
+  type: concept
+  front: How do you implement optimistic locking in DynamoDB?
+  back: "Store a `version`; update with `ConditionExpression: 'version = :expected'` and `version = version + 1`. A mismatch throws ConditionalCheckFailedException."
+  skills: [aws-dynamodb]
+- id: ttl-lazy
+  type: concept
+  front: An item's TTL passed an hour ago. Can a read still return it?
+  back: "Yes. TTL deletion is lazy (usually within days), so filter expired items on read when it matters. TTL is in epoch seconds."
+  skills: [aws-dynamodb]
+- id: dynamo-vs-postgres
+  type: comparison
+  front: "Interview: DynamoDB vs Postgres for a new product's core data?"
+  back: "Postgres when queries are still unknown or need joins, ad-hoc filters and constraints. DynamoDB when access patterns are known, keyed and very high or spiky in volume."
+  skills: [aws-dynamodb]

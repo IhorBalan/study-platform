@@ -1,0 +1,30 @@
+title: An order repository on DynamoDB
+type: repo
+skills: [aws-dynamodb]
+services: [aws]
+runner: nest
+hints:
+  - "Write the access patterns down first. Each one must be a GetItem or a Query on the table or on gsi1; anything else would be a Scan."
+  - "Order ids sort by creation time, so a sort key built from the order id gives you newest first with `ScanIndexForward: false`."
+  - "A plain PutCommand replaces an existing item. `ConditionExpression: 'attribute_not_exists(pk)'` turns it into a create."
+  - "UpdateCommand creates the item when it does not exist, unless the condition requires `attribute_exists(pk)`."
+  - "`ReturnValuesOnConditionCheckFailure: 'ALL_OLD'` puts the current item on the error as `error.Item`, in DynamoDB's typed format ({ N: '2' }). No item means the order does not exist."
+  - "`status` is a reserved word in expressions. Use ExpressionAttributeNames: { '#status': 'status' }."
+  - "The status index only knows what you store in gsi1pk and gsi1sk. Change them in the same update as the status."
+  - "TTL deletion is lazy. Filter on expiresAt when you read; a FilterExpression is applied after Limit, so a page may come back short."
+criteria:
+  - { id: typechecks, title: tsc reports no type errors }
+  - { id: create-and-get, title: "create returns the order at version 1, and get returns exactly the domain fields" }
+  - { id: no-overwrite, title: Creating an existing order throws OrderExistsError and keeps the original }
+  - { id: list-by-customer, title: "A customer's orders come back newest first, paginated with a cursor, and nobody else's" }
+  - { id: list-by-status, title: "The status index lists orders oldest first and follows status changes" }
+  - { id: optimistic-locking, title: "updateStatus succeeds only at the expected version, and a missing order is never created" }
+  - { id: expired-hidden, title: Orders past expiresAt are not returned by any read }
+  - { id: no-scans, title: The repository never scans the table }
+  - { id: own-tests, title: Your tests pass and catch a repository that accepts duplicates and one that ignores the version }
+rubric:
+  - { id: key-design, title: "The key design is written down once (comment or README) as access pattern, operation and key, and the code builds every key through small helpers rather than string literals scattered across methods", skill: aws-dynamodb, max: 4 }
+  - { id: error-mapping, title: "ConditionalCheckFailedException is translated into OrderExistsError, VersionConflictError or OrderNotFoundError in one place each, using the returned old item to tell conflict from missing, and every other error is rethrown", skill: aws-dynamodb, max: 3 }
+  - { id: storage-boundary, title: "Storage attributes (pk, sk, gsi1pk, gsi1sk) never leave the repository, and the cursor is opaque to callers (encoded, validated when decoded)", skill: aws-dynamodb, max: 3 }
+  - { id: trade-offs, title: "README names the hot partition and a sharding fix, explains short pages, and gives one concrete feature that would favour Postgres", skill: aws-dynamodb, max: 4 }
+limits: { timeoutSeconds: 120 }

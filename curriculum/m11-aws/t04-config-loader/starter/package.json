@@ -1,0 +1,18 @@
+{
+  "name": "config-loader",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test --test-force-exit \"test/**/*.test.ts\"",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@aws-sdk/client-secrets-manager": "3.1169.0",
+    "@aws-sdk/client-ssm": "3.1169.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "7.0.2"
+  }
+}

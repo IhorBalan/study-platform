@@ -1,0 +1,17 @@
+{
+  "name": "order-fan-out",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "demo": "node src/demo.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@aws-sdk/client-sns": "3.1169.0",
+    "@aws-sdk/client-sqs": "3.1169.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "7.0.2"
+  }
+}

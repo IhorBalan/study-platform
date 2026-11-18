@@ -1,0 +1,55 @@
+- id: rest-graphql-grpc-when
+  type: concept
+  front: "REST vs GraphQL vs gRPC: when does each fit?"
+  back: "REST: public APIs and cacheable reads. GraphQL: many clients needing different views of connected data. gRPC: internal service-to-service calls, many languages, streaming."
+  skills: [api-paradigms]
+- id: graphql-n-plus-one
+  type: concept
+  front: "What is the N+1 problem in GraphQL?"
+  back: "A field resolver runs once per parent item, so a list of N items with a related field triggers 1 query for the list plus N queries for the relations."
+  skills: [api-paradigms]
+- id: dataloader-how
+  type: concept
+  front: "How does DataLoader fix N+1?"
+  back: "It collects every key requested in the same event-loop tick and calls one batch function with all of them, for example one `WHERE id IN (...)` query."
+  skills: [api-paradigms]
+- id: dataloader-per-request
+  type: concept
+  front: "Why must DataLoader instances be created per request?"
+  back: "A loader caches by key. A shared one would serve one user's data to another and never expire."
+  skills: [api-paradigms]
+- id: dataloader-order
+  type: cloze
+  front: "A DataLoader batch function must return {{...}}."
+  back: "one result per key, in the same order as the keys (an `Error` for keys not found)"
+  skills: [api-paradigms]
+- id: graphql-caching-cost
+  type: concept
+  front: "Why is HTTP caching harder with GraphQL than with REST?"
+  back: "Queries usually go as `POST` to one URL, so caches and CDNs have no URL per resource to key on. Persisted queries over `GET` help."
+  skills: [api-paradigms]
+- id: graphql-cost-limits
+  type: concept
+  front: "What must a public GraphQL server limit that a REST server mostly does not?"
+  back: "Query depth and complexity. A client can write one nested query that fans out into huge amounts of work."
+  skills: [api-paradigms]
+- id: grpc-term
+  type: term
+  front: gRPC
+  back: "An RPC framework: services and messages in a `.proto` file, Protocol Buffers over HTTP/2, generated clients, deadlines and streaming. Example: `rpc GetProject(GetProjectRequest) returns (Project);`"
+  skills: [api-paradigms]
+- id: grpc-browser
+  type: concept
+  front: "Why can't a browser call a gRPC service directly?"
+  back: "Browsers do not expose the HTTP/2 framing gRPC needs. You need gRPC-Web or the Connect protocol."
+  skills: [api-paradigms]
+- id: proto-field-numbers
+  type: concept
+  front: "In Protocol Buffers, why may you rename a field but never reuse its number?"
+  back: "The number identifies the field on the wire. A reused number makes old clients read new data as the old field."
+  skills: [api-paradigms]
+- id: trpc-fit
+  type: comparison
+  front: "tRPC vs REST with OpenAPI"
+  back: "tRPC: end-to-end types with no codegen, but only for TypeScript clients that import the server's types. REST with OpenAPI: a language-neutral contract for any client."
+  skills: [api-paradigms]

@@ -1,0 +1,53 @@
+- id: version-and-evolve
+  type: concept
+  front: "How do you version and evolve an API without breaking clients?"
+  back: "Prefer additive changes, deprecate with a date and measure usage before removing. Introduce a new major version only for changes that cannot be additive."
+  skills: [api-versioning]
+- id: breaking-change-definition
+  type: concept
+  front: "What makes an API change breaking?"
+  back: "A correct client written against the old contract stops working: removed or renamed fields, changed types or meanings, stricter validation, new required inputs."
+  skills: [api-versioning]
+- id: response-enum-value
+  type: concept
+  front: "Why can adding a value to a response enum break clients?"
+  back: "Clients with an exhaustive `switch` or a closed generated union do not handle the new value. Document enums as open from the start."
+  skills: [api-versioning]
+- id: tolerant-reader
+  type: term
+  front: Tolerant reader
+  back: "A client that ignores response fields it does not know, so additive changes never break it. Example: a zod response schema without `strictObject`."
+  skills: [api-versioning]
+- id: expand-contract-field
+  type: concept
+  front: "A single `owner` field must become a list. How do you ship it without a new version?"
+  back: "Add `owners` while keeping `owner` filled, accept both on write, mark `owner` deprecated, measure its use, remove it after the announced date."
+  skills: [api-versioning]
+- id: sunset-header
+  type: term
+  front: "`Sunset` header"
+  back: "RFC 8594: the date a resource is expected to stop working. Example: `Sunset: Wed, 30 Jun 2027 23:59:59 GMT`."
+  skills: [api-versioning]
+- id: deprecation-header
+  type: cloze
+  front: "`Deprecation: {{...}}` marks a resource as deprecated since 1 January 2026 (RFC 9745)."
+  back: "`@1767225600`: a structured-field date, `@` plus Unix seconds"
+  skills: [api-versioning]
+- id: uri-vs-header-versioning
+  type: comparison
+  front: "URI versioning (`/v2/...`) vs header versioning (`Api-Version: 2`)"
+  back: "URI: visible in logs and easy to route, cache and try with curl. Header: clean URLs, but the version is invisible unless you log it."
+  skills: [api-versioning]
+- id: nest-enable-versioning
+  type: snippet
+  front: "Turn on URI versioning in NestJS with `v1` as the default."
+  back: |-
+    ```ts
+    app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });
+    ```
+  skills: [api-versioning]
+- id: version-mapping-at-edge
+  type: concept
+  front: "Two API versions are live. Where should the difference live in the code?"
+  back: "In thin mappers at the edge between the shared domain model and each version's shape, not in duplicated services."
+  skills: [api-versioning]

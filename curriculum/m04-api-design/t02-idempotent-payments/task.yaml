@@ -1,0 +1,26 @@
+title: Idempotent payments
+type: repo
+skills: [api-idempotency, api-rest-design]
+services: []
+runner: nest
+hints:
+  - "Each key has three possible states: unknown, in flight and done. Write down what a request should get in each state before writing code."
+  - "Fingerprint the validated body, not the raw text. Then field order and whitespace do not matter, and a hash keeps the stored record small."
+  - "Check and reserve the key without an await in between. Otherwise two concurrent requests can both see 'unknown' and both charge."
+  - "Interceptors run before pipes. If you build this as an interceptor, a request that later fails validation has already reserved its key, so release the key when the request fails."
+  - "@Res({ passthrough: true }) gives you the response object to set a header while still returning the body as usual."
+criteria:
+  - { id: compiles, title: The project compiles with tsc }
+  - { id: creates-payment, title: "A POST with a new key creates one payment, and different keys create separate payments" }
+  - { id: requires-key, title: A POST without a usable Idempotency-Key is rejected with 400 and charges nothing }
+  - { id: replays, title: A retry with the same key and body returns the original response and charges once }
+  - { id: replay-header, title: "A replayed response carries Idempotent-Replayed: true and the original does not" }
+  - { id: rejects-different-body, title: Reusing a key with a different body gets 422 and changes nothing }
+  - { id: concurrent-duplicates, title: "While the first request is in flight, a duplicate gets 409 and the card is charged once" }
+  - { id: failed-request-releases-key, title: A request rejected with 400 does not use up its key }
+rubric:
+  - { id: state-machine, title: "The key's states (unknown, in flight, done) are explicit in the code, and every state has one clear outcome", skill: api-idempotency, max: 4 }
+  - { id: atomic-reserve, title: "Checking and reserving a key happen without an await in between, and the code or README says why", skill: api-idempotency, max: 3 }
+  - { id: separation, title: "Idempotency handling is a reusable unit (a service, store or interceptor) and the payments service does not know about keys", skill: api-idempotency, max: 3 }
+  - { id: production-notes, title: "README names a retention period and explains what must change to run on several instances, naming an atomic primitive in shared storage", skill: api-idempotency, max: 3 }
+limits: { timeoutSeconds: 120 }

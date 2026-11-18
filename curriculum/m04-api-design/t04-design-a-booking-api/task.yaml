@@ -1,0 +1,15 @@
+title: Design the API for a class-booking product
+type: text
+skills: [api-rest-design, api-pagination, api-idempotency, api-versioning]
+hints:
+  - "Start from the nouns in the product description. Each becomes a collection, an item, or a sub-resource. Then decide which verbs each one needs."
+  - "Booking a full class and cancelling too late are business rules, not malformed requests. Which status says 'the request was fine, but the current state does not allow it'?"
+  - "Ask which lists can grow without bound and which ones change while someone is paging through them."
+  - "For the instructors change, write down what an app version from last year does with the new response, field by field."
+rubric:
+  - { id: resources, title: "Lists the resources with their URLs as nouns (for example /classes, /classes/{id}, /bookings or /classes/{id}/bookings), with one consistent naming style and nesting no deeper than one level", skill: api-rest-design, max: 4 }
+  - { id: methods-and-status, title: "For at least six operations names the method, the success status (201 with Location for creation, 204 or 200 for deletion or cancellation) and the main failure statuses, using 404, 409 or 422 correctly for a full class and a late cancellation", skill: api-rest-design, max: 4 }
+  - { id: error-format, title: "Defines one error format based on RFC 9457 with a concrete example, including a type URI for at least one business error and how field-level validation errors are listed", skill: api-rest-design, max: 3 }
+  - { id: pagination, title: "Chooses a pagination style per list with a reason (cursor for an open-ended or changing list such as bookings history, offset acceptable for a small bounded one), and gives filters and sort parameters for the class schedule", skill: api-pagination, max: 3 }
+  - { id: idempotency, title: "Identifies booking creation as the operation that must be safe to retry, and describes the Idempotency-Key flow including what a retry with a different body gets", skill: api-idempotency, max: 3 }
+  - { id: evolution, title: "Ships the instructors change without breaking old clients: adds the new field while keeping the old one, marks the old one deprecated in the contract, announces a removal date (for example with Deprecation and Sunset headers), and says when a new major version would be justified instead", skill: api-versioning, max: 4 }

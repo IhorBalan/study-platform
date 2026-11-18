@@ -1,0 +1,59 @@
+- id: offset-vs-cursor-tradeoffs
+  type: comparison
+  front: "Offset vs cursor pagination: what are the trade-offs?"
+  back: "Offset: simple, can jump to page N, but slows down on deep pages and repeats or skips rows when data changes. Cursor: constant cost and stable under writes, but no jumping and no page count."
+  skills: [api-pagination]
+- id: offset-deep-page-cost
+  type: concept
+  front: "Why does `OFFSET 100000` get slow?"
+  back: "The database still produces the first 100,000 rows in order and discards them. Cost grows with the offset."
+  skills: [api-pagination]
+- id: offset-insert-duplicates
+  type: concept
+  front: "A newest-first feed uses offset pagination. Three rows are inserted between page 1 and page 2. What does the client see?"
+  back: "The last three items of page 1 again at the top of page 2: the offset counts rows, and the new rows pushed everything down."
+  skills: [api-pagination]
+- id: keyset-query
+  type: snippet
+  front: "Write the keyset query for the page after `($1, $2)`, newest first, 20 per page."
+  back: |-
+    ```sql
+    SELECT * FROM orders WHERE (created_at, id) < ($1, $2)
+    ORDER BY created_at DESC, id DESC LIMIT 21;
+    ```
+  skills: [api-pagination]
+- id: keyset-tie-breaker
+  type: concept
+  front: "Why must a keyset sort end with a unique column such as `id`?"
+  back: "Without it, rows with equal sort values have no fixed order, so a page boundary between them can skip or repeat rows."
+  skills: [api-pagination]
+- id: fetch-limit-plus-one
+  type: concept
+  front: "Why fetch `limit + 1` rows for a page?"
+  back: "The extra row tells you whether a next page exists, so the last page can return `nextCursor: null` without another query."
+  skills: [api-pagination]
+- id: opaque-cursor-why
+  type: concept
+  front: "Why should a pagination cursor be opaque to clients?"
+  back: "Clients only pass it back, so the server can change what is inside (fields, version, signature) without breaking them."
+  skills: [api-pagination]
+- id: keyset-index
+  type: cloze
+  front: "For `WHERE customer_id = $1 ORDER BY created_at DESC, id DESC`, the index is {{...}}."
+  back: "`(customer_id, created_at DESC, id DESC)`: equality columns first, then the sort columns in sort order."
+  skills: [api-pagination]
+- id: sort-allowlist
+  type: concept
+  front: "Why allowlist the fields a client may pass in `?sort=`?"
+  back: "Each sort needs a matching index. An arbitrary column turns deep pages into full scans that a client can trigger at will."
+  skills: [api-pagination]
+- id: cursor-bound-to-sort
+  type: concept
+  front: "A client changes `sort` while reusing a cursor from the old sort. What should the API do?"
+  back: "Reject it with `400`. A cursor is a position in one specific order and means nothing in another."
+  skills: [api-pagination]
+- id: limit-maximum
+  type: concept
+  front: "Why reject `limit` above the maximum instead of silently clamping it?"
+  back: "Clamping hides client bugs. A client that asked for 500 and got 100 may wrongly conclude it reached the end."
+  skills: [api-pagination]

@@ -1,0 +1,61 @@
+- id: sse-vs-websocket
+  type: comparison
+  front: "Server-Sent Events vs WebSockets"
+  back: "SSE: server to client over plain HTTP, with built-in reconnect and resume. WebSocket: both directions over an upgraded connection, with no reconnect or resume built in."
+  skills: [api-realtime]
+- id: sse-headers
+  type: cloze
+  front: "An SSE response needs `Content-Type: {{...}}` and `Cache-Control: no-cache`."
+  back: "`text/event-stream`"
+  skills: [api-realtime]
+- id: sse-last-event-id
+  type: concept
+  front: "How does an SSE client resume after a dropped connection?"
+  back: "`EventSource` reconnects on its own and sends the last `id:` it saw in the `Last-Event-ID` header; the server replays everything after it."
+  skills: [api-realtime]
+- id: sse-heartbeat
+  type: concept
+  front: "Why send a comment line such as `: ping` on an idle SSE stream?"
+  back: "Proxies and load balancers close connections that look idle. A comment keeps the connection open, and `EventSource` does not dispatch it as an event."
+  skills: [api-realtime]
+- id: sse-event-frame
+  type: snippet
+  front: "Write one SSE event with id 41, type `message` and a JSON payload."
+  back: |-
+    ```text
+    id: 41
+    event: message
+    data: {"text":"Deploy finished"}
+
+    ```
+  skills: [api-realtime]
+- id: socketio-vs-websocket
+  type: comparison
+  front: "Socket.IO vs a plain WebSocket"
+  back: "Socket.IO is its own protocol on top, adding reconnection, acknowledgements, rooms and a long-polling fallback. A plain WebSocket client cannot connect to it."
+  skills: [api-realtime]
+- id: nest-gateway-term
+  type: term
+  front: NestJS gateway
+  back: "A class decorated with `@WebSocketGateway()` whose `@SubscribeMessage('event')` methods handle socket messages, like a controller for sockets."
+  skills: [api-realtime]
+- id: gateway-scale-out
+  type: concept
+  front: "How do WebSocket gateways scale past one instance?"
+  back: "Each instance only knows its own sockets, so broadcasts go through a shared bus, for example the Socket.IO Redis adapter on Valkey pub/sub. Long-polling also needs sticky sessions."
+  skills: [api-realtime]
+- id: pubsub-forgets
+  type: concept
+  front: "A client was disconnected for ten seconds. Does Valkey pub/sub deliver the messages it missed?"
+  back: "No. Pub/sub only reaches current subscribers. Store messages (a table or a stream) and replay them on reconnect."
+  skills: [api-realtime]
+- id: sse-close-cleanup
+  type: concept
+  front: "What must an SSE handler do when the client disconnects?"
+  back: "On the response's `close` event, clear its timers and remove it from the subscriber list. Otherwise every closed tab leaks."
+  skills: [api-realtime]
+- id: gateway-auth-handleconnection
+  type: concept
+  front: "Why not authenticate a Socket.IO client in an async `handleConnection()` in NestJS?"
+  back: "The hook does not hold back the client's messages, so they can be handled before the check finishes. Reject in connection middleware (`server.use()`) instead."
+  skills: [api-realtime]

@@ -1,0 +1,16 @@
+title: Infrastructure as code with OpenTofu
+summary: >-
+  You can describe AWS resources in OpenTofu, read a plan before you apply it, keep state remote,
+  locked and out of reach of secrets, structure a configuration into modules and per-environment
+  root directories, refactor it with moved and import blocks without destroying anything, run it
+  safely from CI, and practise against a local AWS emulator.
+kind: core
+effort: M
+services: []
+skills:
+  - { id: iac-foundations, title: "Why infrastructure as code, and choosing a tool" }
+  - { id: iac-workflow, title: "The OpenTofu workflow and language" }
+  - { id: iac-state, title: "State, remote backends and locking" }
+  - { id: iac-modules-environments, title: "Modules, versions and environments" }
+  - { id: iac-team-practice, title: "IaC in a team: CI, credentials and safety rails" }
+  - { id: iac-local-practice, title: Practising IaC against an emulator }

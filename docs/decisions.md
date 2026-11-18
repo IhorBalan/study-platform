@@ -365,3 +365,10 @@ Decisions made while building are appended below.
 - **Why:** automated checks for a whole SaaS would force one fixed structure on a project whose point is making your own design decisions.
 - **Alternative:** hidden end-to-end checks per milestone. Rejected for the reason above, and because the earlier modules already check each building block.
 - **One task is hard on purpose:** in the report scheduler design task, the load does not fit the read replica's stated limit. The expected answer notices that and pushes back. Say so if you would rather have numbers that fit.
+
+### D-107 · Module 15 (infrastructure as code) was written without running OpenTofu — Accepted for now, 2026-11-18, needs a real run
+- **What happened:** the build environment's network rules block OpenTofu's download and registry hosts, so OpenTofu could not be installed. I did not work around that.
+- **What is in the module:** six lessons and four tasks. Every resource, argument and command was checked against the official OpenTofu and AWS provider documentation. The two code tasks are checked by reading the `.tf` files (structure, variables, backend, `moved` blocks, no hard-coded credentials). The checks do not run OpenTofu, because the check sandbox has no internet for provider downloads either.
+- **What is not verified:** that `tofu validate`, `plan` or `apply` accept these files, and that the lab AWS emulator supports every call the provider makes (including the conditional writes that S3 state locking needs). No output in the module is presented as captured from a real run; the one plan excerpt is labelled as illustrative.
+- **Alternatives:** leave the module out until it can be run (rejected: the path would have a hole, and a later run can correct it); checks based on a plan file you commit (rejected: I could not produce a real one to test the checks against).
+- **To close this:** run the walkthrough in lesson 6 and both task solutions with OpenTofu on your machine, or allow the hosts in the project's cloud environment so I can.

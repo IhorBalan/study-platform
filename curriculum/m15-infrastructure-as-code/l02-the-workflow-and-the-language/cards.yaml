@@ -1,0 +1,55 @@
+- id: resource-address
+  type: term
+  front: Resource address
+  back: "Type plus local name, which identifies a resource in the configuration and in state. Example: `aws_sqs_queue.jobs`."
+  skills: [iac-workflow]
+- id: reference-implies-order
+  type: concept
+  front: "`redrive_policy` refers to `aws_sqs_queue.jobs_dlq.arn`. What two things does OpenTofu learn from that reference?"
+  back: The value to fill in once the DLQ exists, and that the DLQ must be created before the jobs queue.
+  skills: [iac-workflow]
+- id: data-source
+  type: term
+  front: Data source
+  back: "A read-only lookup of something this configuration does not manage. Example: `data \"aws_caller_identity\" \"current\" {}` for the account id."
+  skills: [iac-workflow]
+- id: pessimistic-constraint
+  type: cloze
+  front: "`version = \"~> 6.0\"` allows {{any 6.x version from 6.0 up, but not 7.0}}."
+  back: any 6.x version from 6.0 up, but not 7.0
+  skills: [iac-workflow]
+- id: plan-out
+  type: concept
+  front: Why save a plan with `tofu plan -out=file` and then run `tofu apply file`?
+  back: The apply runs exactly the changes you reviewed, instead of computing a new plan that might differ.
+  skills: [iac-workflow]
+- id: plan-symbol-replace
+  type: cloze
+  front: "In a plan, `{{-/+}}` means the resource is destroyed and then created again."
+  back: "-/+"
+  skills: [iac-workflow]
+- id: forces-replacement
+  type: concept
+  front: A plan line ends in `# forces replacement`. What does that tell you?
+  back: That argument cannot be changed in place, so the object will be deleted and recreated, losing anything stored in it.
+  skills: [iac-workflow]
+- id: count-vs-for-each
+  type: comparison
+  front: "`count` vs `for_each` for a list of queue names"
+  back: "`count` addresses instances by position, so removing an item shifts and replaces the rest. `for_each` addresses them by key, so only the removed one is destroyed."
+  skills: [iac-workflow]
+- id: depends-on
+  type: concept
+  front: When do you need `depends_on`?
+  back: When one resource must come after another but has no reference to it, for example a noncurrent-version lifecycle rule after the versioning resource.
+  skills: [iac-workflow]
+- id: sensitive-limit
+  type: concept
+  front: "What does `sensitive = true` on a variable do, and what does it not do?"
+  back: It hides the value in plan and apply output. The value is still written to state in plain text.
+  skills: [iac-workflow]
+- id: variable-sources
+  type: snippet
+  front: Pass `environment = dev` to a plan in three different ways.
+  back: "`tofu plan -var environment=dev`, a `-var-file` containing `environment = \"dev\"`, or `TF_VAR_environment=dev` in the environment."
+  skills: [iac-workflow]

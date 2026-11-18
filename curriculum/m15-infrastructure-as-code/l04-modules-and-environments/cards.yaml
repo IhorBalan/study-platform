@@ -1,0 +1,55 @@
+- id: interview-environments
+  type: concept
+  front: "Interview: how do you manage environments with Terraform or OpenTofu?"
+  back: "Shared modules, plus a small root directory per environment with its own backend key, provider credentials (ideally its own account) and input values."
+  skills: [iac-modules-environments]
+- id: module-as-function
+  type: concept
+  front: "If a module is a function, what are its variables, outputs and resources?"
+  back: "Variables are the parameters, outputs the return value, resources the body."
+  skills: [iac-modules-environments]
+- id: module-address
+  type: cloze
+  front: "A resource `aws_sqs_queue.this` inside `module \"jobs\"` has the address {{module.jobs.aws_sqs_queue.this}}."
+  back: module.jobs.aws_sqs_queue.this
+  skills: [iac-modules-environments]
+- id: no-provider-in-module
+  type: concept
+  front: Why should a reusable module not contain a `provider` block?
+  back: "The root module owns provider configuration and passes it down. A provider inside a child module makes it hard to reuse with other regions or accounts, and hard to remove."
+  skills: [iac-modules-environments]
+- id: module-inputs
+  type: concept
+  front: Which values should become a module's input variables?
+  back: Only the ones that differ between callers. A value every caller sets the same belongs inside the module.
+  skills: [iac-modules-environments]
+- id: pin-remote-modules
+  type: concept
+  front: How do you pin a module from a registry, and one from Git?
+  back: "A `version` constraint for a registry module; `?ref=` with a tag or commit in the Git source URL."
+  skills: [iac-modules-environments]
+- id: lock-file
+  type: term
+  front: "`.terraform.lock.hcl`"
+  back: "The exact provider versions and checksums chosen by `tofu init`. Commit it; update it with `tofu init -upgrade`."
+  skills: [iac-modules-environments]
+- id: workspaces-vs-directories
+  type: comparison
+  front: Workspaces vs a directory per environment
+  back: "Workspaces share one directory, backend and credentials, and the current one is invisible. Directories give each environment its own backend and credentials, and the path shows where you are."
+  skills: [iac-modules-environments]
+- id: workspaces-good-for
+  type: concept
+  front: When are workspaces a reasonable choice?
+  back: "Short-lived copies of the same stack, such as one per feature branch, that share credentials anyway."
+  skills: [iac-modules-environments]
+- id: split-state
+  type: concept
+  front: Why split one big configuration into several root modules with separate states?
+  back: "Smaller blast radius and faster plans: a mistake or a broken plan in the service's queues cannot touch the database."
+  skills: [iac-modules-environments]
+- id: default-tags
+  type: snippet
+  front: Tag every AWS resource in a configuration with the same tags.
+  back: "In the provider: `default_tags { tags = local.tags }`."
+  skills: [iac-modules-environments]

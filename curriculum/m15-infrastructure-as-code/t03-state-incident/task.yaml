@@ -1,0 +1,17 @@
+title: Two applies, one state file
+type: text
+skills: [iac-state, iac-team-practice]
+hints:
+  - "Draw two timelines side by side: what each run read from the state when it planned, what it changed in AWS, and what it wrote back at the end."
+  - "Without a lock, the backend does not merge two states. The last write replaces the earlier one."
+  - "A plan starts by refreshing: it reads the real settings of every resource that is in the state. Which drift can a refresh see, and which can it not?"
+  - "An apply is not a transaction. When one resource fails, the ones that already succeeded stay changed."
+  - "An `import` block adopts an existing object into the state. An SQS queue is imported by its URL, an SSM parameter by its name."
+rubric:
+  - { id: race, title: "Explains that both runs planned from the same state version, CI wrote a state with the new queue and parameter, and Dana's later write replaced it with a state that has only her change, so both objects exist in AWS but are missing from state", skill: iac-state, max: 4 }
+  - { id: refresh, title: "States that the lifecycle rule in AWS is 30 days (Dana's plan saw no difference and did not touch it) and that Wednesday's plan shows no lifecycle change because the refresh reads the real value of a resource that is still in state", skill: iac-state, max: 3 }
+  - { id: wednesday, title: "Says the two creates are wrong (the objects exist and must be imported), the maxReceiveCount change would silently revert Dana's hotfix because it never reached main, and the parameter failed because it already exists; notes the failed apply may already have changed or adopted other resources, so the state must be checked again before any next step", skill: iac-state, max: 3 }
+  - { id: recovery, title: "Gives an ordered procedure: stop all applies (disable the CI apply, tell the team), back up the current state (tofu state pull, or note the S3 object version), bring the queue and parameter under management with import blocks or tofu import using the queue URL and parameter name, put Dana's change into main through a PR, and finish when a plan shows no changes", skill: iac-state, max: 4 }
+  - { id: restore-trade-off, title: "Assesses restoring CI's state version from S3 versioning: it would bring back the queue and parameter, but would then lack Dana's change and still need a refresh and review; and says why deleting the queue or parameter by hand to let OpenTofu recreate them is the wrong fix", skill: iac-state, max: 2 }
+  - { id: prevention, title: "Names at least three preventions, each tied to a cause: state locking (use_lockfile), applies only from CI with a single concurrency group, laptop roles limited to read and plan, and hotfixes always going through a PR to main", skill: iac-team-practice, max: 3 }
+  - { id: clarity, title: "Written as a timeline followed by a numbered runbook, within the word limit", max: 1 }

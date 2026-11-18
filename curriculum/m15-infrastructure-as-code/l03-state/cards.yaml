@@ -1,0 +1,60 @@
+- id: interview-what-state-holds
+  type: concept
+  front: "Interview: what does Terraform or OpenTofu state hold?"
+  back: "For each managed resource: its address, provider, the real object's id and all its attributes, and its dependencies. Plus the root outputs. It maps code to real objects."
+  skills: [iac-state]
+- id: why-state-exists
+  type: concept
+  front: Why can OpenTofu not simply look resources up by name instead of keeping state?
+  back: A name does not prove ownership. State records which real object each address manages, so OpenTofu can tell its own queue from someone else's.
+  skills: [iac-state]
+- id: state-is-secret
+  type: concept
+  front: Why must the state file be treated as a secret?
+  back: "Every attribute is stored in plain text, including passwords and SecureString values passed through OpenTofu."
+  skills: [iac-state]
+- id: s3-native-locking
+  type: cloze
+  front: "In OpenTofu 1.10 and later, `{{use_lockfile = true}}` in a `backend \"s3\"` block turns on locking with a lock object next to the state."
+  back: use_lockfile = true
+  skills: [iac-state]
+- id: lost-update
+  type: concept
+  front: Two applies run at once against an unlocked backend. What can go wrong?
+  back: Both read the same state and both write. The second write replaces the first, so resources the first run created exist in AWS but are missing from state.
+  skills: [iac-state]
+- id: state-bucket-versioning
+  type: concept
+  front: Why turn on versioning for the bucket that holds state?
+  back: Every write keeps the previous version, so an overwritten or corrupted state can be restored.
+  skills: [iac-state]
+- id: client-side-encryption
+  type: comparison
+  front: "S3 backend `encrypt = true` vs OpenTofu state encryption"
+  back: "`encrypt` protects the object at rest inside S3, but readers with bucket access see plain text. OpenTofu's `encryption` block encrypts on the client, so the stored file is unreadable without the key."
+  skills: [iac-state]
+- id: moved-block
+  type: concept
+  front: What does a `moved` block prevent when you rename a resource or move it into a module?
+  back: A destroy of the old address and a create of the new one. The plan records a move instead.
+  skills: [iac-state]
+- id: import-block
+  type: snippet
+  front: Adopt the existing parameter `/orders/prod/api-url` into `aws_ssm_parameter.api_url`.
+  back: "Next to the resource block, an `import` block with `to = aws_ssm_parameter.api_url` and `id = \"/orders/prod/api-url\"`. Then run a plan."
+  skills: [iac-state]
+- id: removed-block
+  type: concept
+  front: How do you stop managing a resource without destroying it?
+  back: "A `removed` block with `from` set to its address and `lifecycle { destroy = false }`."
+  skills: [iac-state]
+- id: refresh-only
+  type: concept
+  front: What does `tofu plan -refresh-only` show?
+  back: Only the differences between state and the real resources, without proposing changes to AWS. Applying it records reality in state.
+  skills: [iac-state]
+- id: deleted-by-hand
+  type: concept
+  front: A queue that exists in AWS is missing from state, and the plan wants to create it. What is the safe fix?
+  back: Import it. Deleting the real queue so OpenTofu can recreate it loses its messages.
+  skills: [iac-state]

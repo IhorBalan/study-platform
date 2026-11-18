@@ -1,0 +1,55 @@
+- id: drift
+  type: term
+  front: Configuration drift
+  back: "The real resource no longer matches its definition, usually after a manual change. Example: a queue timeout raised in the console that the code still says is 60."
+  skills: [iac-foundations]
+- id: iac-three-benefits
+  type: concept
+  front: Name three problems infrastructure as code solves that console clicks do not.
+  back: "Drift becomes visible in a plan; changes are reviewed in a pull request; environments can be recreated from the same files."
+  skills: [iac-foundations]
+- id: declarative-vs-imperative
+  type: comparison
+  front: Declarative vs imperative infrastructure
+  back: "Imperative scripts list the steps (create, then modify). Declarative configuration describes the end result, and the tool computes the steps by comparing it with what exists."
+  skills: [iac-foundations]
+- id: declarative-rerun
+  type: concept
+  front: Why is running the same OpenTofu configuration twice safe, when running a `create-queue` script twice is not?
+  back: The second run finds that reality already matches the description and plans no changes.
+  skills: [iac-foundations]
+- id: react-analogy
+  type: concept
+  front: "In the React analogy, what plays the role of the previous virtual DOM for OpenTofu?"
+  back: "The state: OpenTofu's record of the objects it manages, which it compares with the configuration and with reality."
+  skills: [iac-foundations]
+- id: opentofu-origin
+  type: concept
+  front: Why does OpenTofu exist?
+  back: "HashiCorp moved Terraform to the Business Source License in 2023. OpenTofu is the fork of the last open-source version, run by the Linux Foundation under the MPL."
+  skills: [iac-foundations]
+- id: tofu-terraform-compat
+  type: concept
+  front: What do OpenTofu and Terraform still share, and where have they diverged?
+  back: "They share the HCL language and the providers. Since the fork each has added its own features, for example state encryption in OpenTofu."
+  skills: [iac-foundations]
+- id: pulumi-vs-tofu
+  type: comparison
+  front: Pulumi vs OpenTofu
+  back: "Pulumi describes infrastructure in a general-purpose language such as TypeScript. OpenTofu uses HCL, which is more limited but easier to review and predict."
+  skills: [iac-foundations]
+- id: cdk-model
+  type: concept
+  front: Where does the AWS CDK keep track of what it has deployed?
+  back: It synthesises CloudFormation templates, and CloudFormation keeps the state of each stack inside AWS.
+  skills: [iac-foundations]
+- id: sst-engine
+  type: concept
+  front: What does SST use under the hood to deploy?
+  back: "Pulumi's engine, with Terraform providers bridged through Pulumi."
+  skills: [iac-foundations]
+- id: what-not-in-iac
+  type: concept
+  front: "A bucket, its objects, a table and its rows: which belong in IaC?"
+  back: The bucket and the table. Objects and rows are data, written by the application through the SDK.
+  skills: [iac-foundations]

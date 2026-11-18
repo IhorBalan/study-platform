@@ -49,6 +49,8 @@ The first digit is the family: `2xx` success, `3xx` further action needed, `4xx`
 - `400` malformed request, `401` not authenticated, `403` authenticated but not allowed, `404` no such resource, `405` wrong method for this resource (requires an `Allow` header), `409` conflict with current state, `413` body too large, `415` unsupported `Content-Type`, `422` well-formed but semantically invalid, `429` rate limited (often with `Retry-After`).
 - `500` a bug or unhandled error, `502` and `504` come from a proxy that got a bad or no answer from upstream, `503` temporarily unable to serve.
 
+Where `400` ends and `422` begins is a convention, not a law. Some APIs answer `422` for any body that parses but fails validation; others, including NestJS by default, answer `400` for everything a schema can catch and keep `422` for business rules. Module 4 picks one rule for your own APIs. What matters is that one API is consistent and documents its choice.
+
 ## Headers that matter
 
 **Content negotiation.** `Content-Type` describes the body being sent. `Accept`, `Accept-Encoding` and `Accept-Language` say what the client can handle. The server answers with `Content-Type` and `Content-Encoding`. If the response depends on a request header, list that header in `Vary` so caches store one variant per value.

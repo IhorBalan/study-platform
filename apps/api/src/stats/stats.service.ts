@@ -5,22 +5,14 @@ import { CurriculumService } from '../curriculum/curriculum.service.js';
 import { InjectDb, type Database } from '../database/database.module.js';
 import { PlanService } from '../plan/plan.service.js';
 import { SettingsService } from '../settings/settings.service.js';
-import { startOfLocalDay } from '../srs/time.js';
+import { addLocalDays, localDayKey, localDayKeys, startOfLocalDay } from '../srs/time.js';
 import { WeakSkillsService } from './weak-skills.service.js';
 
-const DAY_MS = 86_400_000;
 /** Cards with an interval of three weeks or more count as mature, as in Anki. */
 const MATURE_DAYS = 21;
 
 /** How many days ahead the Stats page shows cards coming due. */
 const FORECAST_DAYS = 14;
-
-function localDayKey(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
 
 /** Counts consecutive days with activity, ending today or yesterday. */
 export function streak(activeDays: Set<string>, now: Date): number {
@@ -46,8 +38,9 @@ export class StatsService {
 
   async get(now = new Date()): Promise<StatsResponse> {
     const today = startOfLocalDay(now);
-    const windowStart = new Date(today.getTime() - 29 * DAY_MS);
-    const yearAgo = new Date(today.getTime() - 365 * DAY_MS);
+    // Calendar steps, not multiples of 24 hours: a daylight saving change makes a day 23 or 25 hours long.
+    const windowStart = addLocalDays(today, -29);
+    const yearAgo = addLocalDays(today, -365);
 
     const sessions = await this.db.execute<{
       activity: 'lesson' | 'task' | 'review';
@@ -63,9 +56,7 @@ export class StatsService {
     `);
 
     const byDay = new Map<string, number>();
-    for (let i = 0; i < 30; i += 1) {
-      byDay.set(localDayKey(new Date(windowStart.getTime() + i * DAY_MS)), 0);
-    }
+    for (const key of localDayKeys(windowStart, 30)) byDay.set(key, 0);
     const byActivity = new Map<string, number>();
     const byModule = new Map<string, number>();
     const studyDays = new Set<string>();
@@ -140,20 +131,18 @@ export class StatsService {
       if (row.bucket in cardsByState) cardsByState[row.bucket as keyof typeof cardsByState] = row.n;
     }
 
-    const endOfToday = new Date(today.getTime() + DAY_MS);
+    const endOfToday = addLocalDays(today, 1);
     const due = await this.db.execute<{ n: number }>(sql`
       select count(*)::int as n from cards c join card_schedules cs on cs.card_id = c.id
       where c.status = 'active' and cs.state <> 'new' and cs.due < ${endOfToday}
     `);
-    const horizon = new Date(today.getTime() + FORECAST_DAYS * DAY_MS);
+    const horizon = addLocalDays(today, FORECAST_DAYS);
     const upcoming = await this.db.execute<{ due: Date }>(sql`
       select cs.due from cards c join card_schedules cs on cs.card_id = c.id
       where c.status = 'active' and cs.state <> 'new' and cs.due < ${horizon}
     `);
     const dueByDay = new Map<string, number>();
-    for (let i = 0; i < FORECAST_DAYS; i += 1) {
-      dueByDay.set(localDayKey(new Date(today.getTime() + i * DAY_MS)), 0);
-    }
+    for (const key of localDayKeys(today, FORECAST_DAYS)) dueByDay.set(key, 0);
     const todayKey = localDayKey(today);
     for (const row of upcoming.rows) {
       const due = new Date(row.due);

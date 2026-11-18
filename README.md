@@ -117,19 +117,20 @@ The platform was built and tested in a Linux environment. Three things could not
 
 ## Commands
 
-| Command                           | What it does                                                         |
-| --------------------------------- | -------------------------------------------------------------------- |
-| `pnpm dev`                        | Start the database and all apps in watch mode                        |
-| `pnpm full:up` / `pnpm full:down` | Run the API, worker and web app as containers                        |
-| `pnpm bridge`                     | Run only the host bridge (for full Docker mode)                      |
-| `pnpm backup` / `pnpm restore`    | Save the platform database to `backups/`, or load one backup back    |
-| `pnpm lab <command>`              | Lab repository, check images and practice services (`pnpm lab help`) |
-| `pnpm build`                      | Build every package                                                  |
-| `pnpm typecheck`                  | Type-check every package                                             |
-| `pnpm test`                       | Run tests (the API tests start PostgreSQL with Testcontainers)       |
-| `pnpm lint` / `pnpm format`       | oxlint / Prettier                                                    |
-| `pnpm curriculum:check`           | Validate every file under `curriculum/`                              |
-| `pnpm db:generate`                | Generate a SQL migration after editing `packages/db/src/schema.ts`   |
+| Command                           | What it does                                                                |
+| --------------------------------- | --------------------------------------------------------------------------- |
+| `pnpm dev`                        | Start the database and all apps in watch mode                               |
+| `pnpm full:up` / `pnpm full:down` | Run the API, worker and web app as containers                               |
+| `pnpm bridge`                     | Run only the host bridge (for full Docker mode)                             |
+| `pnpm backup` / `pnpm restore`    | Save the platform database to `backups/`, or load one backup back           |
+| `pnpm lab <command>`              | Lab repository, check images and practice services (`pnpm lab help`)        |
+| `pnpm build`                      | Build every package                                                         |
+| `pnpm typecheck`                  | Type-check every package                                                    |
+| `pnpm test`                       | Run tests (the API tests start PostgreSQL with Testcontainers)              |
+| `pnpm lint` / `pnpm format`       | oxlint / Prettier                                                           |
+| `pnpm curriculum:check`           | Validate every file under `curriculum/`                                     |
+| `pnpm curriculum:verify [id…]`    | Run every task's checks on its solution (must pass) and starter (must fail) |
+| `pnpm db:generate`                | Generate a SQL migration after editing `packages/db/src/schema.ts`          |
 
 ## Layout
 

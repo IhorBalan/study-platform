@@ -1,0 +1,1 @@
+ALTER TABLE "settings" ADD COLUMN "editor" text DEFAULT 'vscode' NOT NULL;

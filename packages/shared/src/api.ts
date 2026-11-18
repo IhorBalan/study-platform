@@ -221,12 +221,17 @@ export const SubmitReviewResponse = z.object({
 });
 export type SubmitReviewResponse = z.infer<typeof SubmitReviewResponse>;
 
+export const Editor = z.enum(['vscode', 'cursor', 'none']);
+export type Editor = z.infer<typeof Editor>;
+
 export const SettingsDto = z.object({
   reviewMode: ReviewMode,
   newCardsPerDay: z.number().int().min(0).max(200),
   reviewsPerDay: z.number().int().min(1).max(2000),
   desiredRetention: z.number().min(0.7).max(0.97),
   labRepoPath: z.string().nullable(),
+  /** The editor that task pages offer to open the task folder in. */
+  editor: Editor,
 });
 export type SettingsDto = z.infer<typeof SettingsDto>;
 

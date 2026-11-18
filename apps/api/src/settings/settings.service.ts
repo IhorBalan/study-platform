@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { schema } from '@study/db';
-import type { SettingsDto, UpdateSettings } from '@study/shared';
+import { Editor, type SettingsDto, type UpdateSettings } from '@study/shared';
 import { eq } from 'drizzle-orm';
 import { InjectDb, type Database } from '../database/database.module.js';
 
@@ -20,6 +20,8 @@ export class SettingsService {
       reviewsPerDay: row.reviewsPerDay,
       desiredRetention: row.desiredRetention,
       labRepoPath: row.labRepoPath,
+      // The column is plain text; anything unknown falls back to no link.
+      editor: Editor.safeParse(row.editor).data ?? 'none',
     };
   }
 

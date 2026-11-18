@@ -1,4 +1,4 @@
-import type { SettingsDto, UpdateSettings } from '@study/shared';
+import { Editor, type SettingsDto, type UpdateSettings } from '@study/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, type FormEvent } from 'react';
@@ -100,6 +100,19 @@ function SettingsPage() {
             value={form.labRepoPath ?? ''}
             onChange={(e) => set('labRepoPath', e.target.value.trim() || null)}
           />
+        </Field>
+        <Field
+          label="Editor"
+          hint="Code task pages show a link that opens the task folder in this editor."
+        >
+          <Select
+            value={form.editor}
+            onChange={(e) => set('editor', Editor.catch('none').parse(e.target.value))}
+          >
+            <option value="vscode">VS Code</option>
+            <option value="cursor">Cursor</option>
+            <option value="none">No link</option>
+          </Select>
         </Field>
         <div className="flex items-center gap-3">
           <Button type="submit" disabled={save.isPending}>

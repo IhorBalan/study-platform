@@ -512,7 +512,7 @@ A second workflow, `Curriculum checks`, builds the two sandbox images, starts th
 
 ### D-138 · A grade can be undone for ten minutes — 2026-11-18
 
-A mis-pressed key in a review used to be permanent (UX review). Each review row now keeps `schedule_before`, a copy of the card's schedule as it was, and `POST /api/review/:cardId/undo` deletes the card's latest review and restores that copy, in one transaction under the same row lock a grade takes. Restoring the stored copy, instead of recomputing with FSRS, makes the undo exact, and deleting the row keeps the daily counts and retention statistics as if the grade never happened. Only the latest grade of a card, and only within ten minutes: the point is fixing a slip, not rewriting history. Reviews saved before this change have no copy and cannot be undone. The Review page offers "Undo" (key Z, matched by physical key) for the last card graded on that page.
+A mis-pressed key in a review used to be permanent (UX review). Each review row now keeps `schedule_before`, a copy of the card's schedule as it was, and `POST /api/review/:cardId/undo` deletes the card's latest review and restores that copy, in one transaction under the same row lock a grade takes. Restoring the stored copy, instead of recomputing with FSRS, makes the undo exact, and deleting the row keeps the daily counts and retention statistics as if the grade never happened. Only the latest grade of a card, and only within ten minutes: the point is fixing a slip, not rewriting history. Reviews saved before this change have no copy and cannot be undone. The Review page offers "Undo" (key Z, matched by physical key) for the last card graded on that page. Undoing twice in a row on the same card takes back the grade before it as well, as long as that one is also inside the ten minutes (for example Again, then Good while relearning). Each row holds the schedule from before its own grade, so the steps chain exactly, and this is intended.
 
 ### D-139 · The Plan shows one line per module and overall progress — 2026-11-18
 
@@ -546,17 +546,17 @@ A count of cards does not say whether there is time for them before work. The re
 
 The last part of notes (D-143, D-144). `GET /api/search` reads the notes on every search and matches them by the words of the note, so a note is found the moment it is saved and there is no index to keep in step. A note result is marked `inNote`, links to its lesson or task, and ranks above an equal match in lesson text, because the learner's own words are what they are most likely looking for. The title of the page does not count for the note, or every titled match would appear twice.
 
-### D-148 · Restore loads the backup into a new database and swaps it in — 2026-11-18
-
-`pnpm restore` used `pg_restore --clean` on the live database, which drops only what the backup contains. A backup from before a migration that adds a table left that table in place while the list of applied migrations went back, so the next start failed with "relation already exists" (post-merge code review). Restore now creates an empty database, loads the backup into it in one transaction, renames the current database out of the way, renames the new one to `study` and drops the old one. The result is exactly the backup, whatever migrations came later, and the migrator then brings it up to date on the next start. A backup that cannot be read never touches the current data, and the safety backup from D-134 is still written first. `--force` now closes the other connections, because a database in use cannot be renamed.
-
 ### D-147 · Review can be narrowed to one module — 2026-11-18
 
 Before an interview on one topic, or after a week away from it, the learner wants that topic's cards and not the whole queue (feature proposals, focused review). The Review page has a "Cards from" list, and `GET /api/review/queue?module=<id>` returns only cards that come from that module's lessons. The choice is in the address, so a reload keeps it. The rules do not change: the same cards are due, and the daily limits still count every review of the day, so this is a filter and not a second scheduler. Manual cards and Claude's cards without a lesson belong to no module and appear only under "All modules". An unknown module is a 404. Reviewing cards before they are due is a separate question and is not part of this.
 
-### D-152 · Lesson cards follow the curriculum after the lesson is finished — 2026-11-18
+### D-148 · Restore loads the backup into a new database and swaps it in — 2026-11-18
 
-A lesson's deck is copied into the database when the lesson is completed (D-077: the queue should hold only what was read). The copy never changed afterwards, so a card corrected by a content review, or added to a lesson later, never reached a learner who had finished that lesson. At start-up the API now compares the learner's lesson cards with the files. Where the type, front or back differ, the text is replaced and the schedule is kept. Cards that are new in a finished lesson are added as new cards. Two things belong to the learner and are respected: a card whose text they changed (`cards.edited_at`) is not overwritten, and a lesson card they deleted (`removed_lesson_cards`) is not added again, also not when the lesson is completed a second time. A card that leaves the curriculum stays with the learner, who may be half-way through learning it. Skill links of existing cards are not re-synced.
+`pnpm restore` used `pg_restore --clean` on the live database, which drops only what the backup contains. A backup from before a migration that adds a table left that table in place while the list of applied migrations went back, so the next start failed with "relation already exists" (post-merge code review). Restore now creates an empty database, loads the backup into it in one transaction, renames the current database out of the way, renames the new one to `study` and drops the old one. The result is exactly the backup, whatever migrations came later, and the migrator then brings it up to date on the next start. A backup that cannot be read never touches the current data, and the safety backup from D-134 is still written first. `--force` now closes the other connections, because a database in use cannot be renamed.
+
+### D-149 · The daily new-card limit shapes the queue and is not enforced on grading — 2026-11-18
+
+The backend tester noted that `POST /api/review/:cardId` accepts a grade for a new card after the day's new-card limit is used up. That stays. The limit decides what the queue offers, which is the only way the app reaches a card, and a single-user local tool has nobody to defend the limit against. Refusing the grade would also break the case where the learner lowers the limit in Settings while a card from the old queue is still on screen.
 
 ### D-150 · Settings shows when the last backup was made — 2026-11-18
 
@@ -565,6 +565,10 @@ Backups happen quietly when `pnpm dev` starts, so there was no way to see from t
 ### D-151 · Lessons and tasks return to where you were on Back and reload — 2026-11-18
 
 Going Back to a long lesson, or reloading it, landed at the top, because the Markdown is rendered after the first paint and the page is still short when the browser restores the position. Lesson and task pages now keep their scroll position per history entry in `sessionStorage` and return to it once the page is tall enough, or after three seconds at the latest. Scrolling by hand during the wait cancels it. The position belongs to the history entry, not to the lesson, so opening a lesson from a link always starts at the top: jumping into the middle of a page the learner chose to open again would be a surprise.
+
+### D-152 · Lesson cards follow the curriculum after the lesson is finished — 2026-11-18
+
+A lesson's deck is copied into the database when the lesson is completed (D-077: the queue should hold only what was read). The copy never changed afterwards, so a card corrected by a content review, or added to a lesson later, never reached a learner who had finished that lesson. At start-up the API now compares the learner's lesson cards with the files. Where the type, front or back differ, the text is replaced and the schedule is kept. Cards that are new in a finished lesson are added as new cards. Two things belong to the learner and are respected: a card whose text they changed (`cards.edited_at`) is not overwritten, and a lesson card they deleted (`removed_lesson_cards`) is not added again, also not when the lesson is completed a second time. A card that leaves the curriculum stays with the learner, who may be half-way through learning it. Skill links of existing cards are not re-synced.
 
 ---
 

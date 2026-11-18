@@ -2,8 +2,12 @@ import { CardType, type CardDto } from '@study/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, type FormEvent } from 'react';
-import { Button, Field, PageHeader, Select, Textarea } from '../components/ui';
+import { Button, Field, Input, PageHeader, Select, Textarea } from '../components/ui';
+import { filterCards } from '../lib/filterCards';
 import { api } from '../lib/api';
+
+/** How many deck cards are shown before "Show more". */
+const PAGE = 50;
 
 export const Route = createFileRoute('/cards')({ component: CardsPage });
 
@@ -19,6 +23,10 @@ function CardsPage() {
   const [front, setFront] = useState('');
   const [back, setBack] = useState('');
   const [blank, setBlank] = useState(false);
+  const [filter, setFilter] = useState('');
+  const [shown, setShown] = useState(PAGE);
+  // Deleting a card throws away its review history, so it takes a second click.
+  const [confirmId, setConfirmId] = useState<string | null>(null);
 
   const create = useMutation({
     mutationFn: () => api.createCard({ type, front, back, skills: [] }),
@@ -51,6 +59,8 @@ function CardsPage() {
   const all = cards.data?.cards ?? [];
   const pending = all.filter((c) => c.status === 'pending');
   const rest = all.filter((c) => c.status !== 'pending');
+  const matching = filterCards(rest, filter);
+  const visible = matching.slice(0, shown);
 
   return (
     <section>
@@ -113,26 +123,72 @@ function CardsPage() {
         </CardList>
       )}
 
-      <CardList title={`Your deck (${rest.length})`} cards={rest}>
-        {(card) => (
-          <>
-            <Button
-              variant="secondary"
-              onClick={() =>
-                update.mutate({
-                  id: card.id,
-                  status: card.status === 'suspended' ? 'active' : 'suspended',
-                })
-              }
-            >
-              {card.status === 'suspended' ? 'Resume' : 'Suspend'}
-            </Button>
-            <Button variant="danger" onClick={() => remove.mutate(card.id)}>
-              Delete
-            </Button>
-          </>
-        )}
+      <CardList
+        title={`Your deck (${filter.trim() ? `${matching.length} of ${rest.length}` : rest.length})`}
+        cards={visible}
+        empty={rest.length === 0 ? 'No cards yet.' : 'No card matches that text.'}
+        tools={
+          rest.length > 0 && (
+            <Input
+              type="search"
+              aria-label="Filter your deck"
+              placeholder="Filter by text, type or state"
+              value={filter}
+              onChange={(e) => {
+                setFilter(e.target.value);
+                setShown(PAGE);
+              }}
+              className="mt-2 sm:max-w-sm"
+            />
+          )
+        }
+      >
+        {(card) =>
+          confirmId === card.id ? (
+            <>
+              <Button
+                variant="danger"
+                onClick={() => {
+                  setConfirmId(null);
+                  remove.mutate(card.id);
+                }}
+              >
+                Delete for good
+              </Button>
+              <Button variant="secondary" onClick={() => setConfirmId(null)}>
+                Keep
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="secondary"
+                onClick={() =>
+                  update.mutate({
+                    id: card.id,
+                    status: card.status === 'suspended' ? 'active' : 'suspended',
+                  })
+                }
+              >
+                {card.status === 'suspended' ? 'Resume' : 'Suspend'}
+              </Button>
+              <Button variant="danger" onClick={() => setConfirmId(card.id)}>
+                Delete
+              </Button>
+            </>
+          )
+        }
       </CardList>
+      {matching.length > visible.length && (
+        <div className="mt-3 flex items-center gap-3 text-sm text-zinc-600 dark:text-zinc-300">
+          <Button variant="secondary" onClick={() => setShown((n) => n + PAGE)}>
+            Show {Math.min(PAGE, matching.length - visible.length)} more
+          </Button>
+          <span>
+            Showing {visible.length} of {matching.length}
+          </span>
+        </div>
+      )}
     </section>
   );
 }
@@ -140,17 +196,22 @@ function CardsPage() {
 function CardList({
   title,
   cards,
+  empty = 'No cards yet.',
+  tools,
   children,
 }: {
   title: string;
   cards: CardDto[];
+  empty?: string;
+  tools?: React.ReactNode;
   children: (card: CardDto) => React.ReactNode;
 }) {
   return (
     <section className="mt-8">
       <h2 className="text-sm font-semibold">{title}</h2>
+      {tools}
       {cards.length === 0 ? (
-        <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">No cards yet.</p>
+        <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">{empty}</p>
       ) : (
         <ul className="mt-2 divide-y divide-zinc-200 rounded-lg border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
           {cards.map((card) => (

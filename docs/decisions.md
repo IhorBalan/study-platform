@@ -15,6 +15,7 @@ Decisions agreed with Ihor before this log existed are at the end of this file, 
 - **Why:** this session can only push to that branch. Ihor confirmed.
 - **Alternatives:** continue on the handoff branch (not permitted).
 - **Revisit if:** you want a different branch or a `main` branch as the default. The repo currently has no `main`.
+- **Superseded by D-112 and D-113:** `main` now exists and every change is a pull request into it.
 
 ### D-002 · Build without an approval gate, log decisions here — Accepted, 2026-11-18
 - **Chosen:** go from research straight into the build, recording each decision in this file.
@@ -293,6 +294,7 @@ Decisions made while building are appended below.
 - **Added now:** requests that carry an `Origin` header are refused.
 - **Two deliberate differences:** a commit id may be 7 to 40 hex characters (hex only, so it cannot carry an option; the bridge resolves it to the full id before use), and `host.docker.internal` stays an accepted host name because the worker uses it in full Docker mode.
 - **Still to do, tracked here:** S-011 applies when one-click review is built (CLI flags, strip `.claude/`, `.mcp.json` and `CLAUDE.md` from the export). S-010 applies when the Lambda profile is added (socket proxy, separate network). S-013: pin images by digest. Remove the temporary package release-age exceptions after 2026-11-19 08:00 UTC.
+- **Update:** the release-age exceptions were removed the same day (D-109).
 
 ### D-096 · Copy-paste review of code tasks is done in Claude Code inside the lab repository — Accepted, 2026-11-18
 - **Chosen:** for a code task the prompt names the task folder and the commit, and Claude Code reads the files itself. For a written answer the prompt contains the answer, so claude.ai works too.
@@ -401,9 +403,11 @@ Decisions made while building are appended below.
 - **Why:** with 130 lessons, the plan page alone does not answer "where was idempotency explained". The API already holds every page in memory, so a scan answers in about a millisecond.
 - **Alternatives:** PostgreSQL full-text search (needs the lesson text copied into the database and kept in step with the files) and a client-side index (ships every lesson to the browser). Both are more moving parts for no gain at this size.
 - **Limits:** no stemming or typo tolerance, and flashcards are not searched.
+
 ### D-115 · CI validates the real curriculum — 2026-11-18
 - **What:** the `verify` job runs `pnpm curriculum:check`.
 - **Why:** the tests load a small fixture curriculum, so a broken `task.yaml` or card file under `curriculum/` passed CI and then stopped `pnpm dev`, because the API refuses to start on a content problem. Found by the code review (R1).
+
 ### D-116 · The worker fails check runs it finds running at start-up — 2026-11-18
 - **What:** before taking jobs, the worker marks every check run still in `running` as an error with "The checker restarted while this run was in progress. Submit again."
 - **Why:** jobs are not retried, so a run interrupted by a crash or a closed laptop stayed `running`. The task page polled for ever and that submission could never be reviewed. Found by the code review (R2a).
@@ -418,9 +422,11 @@ Decisions made while building are appended below.
 ### D-120 · A pasted review reply is stored once — 2026-11-18
 - **What:** storing a review result now claims the run in the same statement (`status <> 'passed'`), inside the transaction. A second reply for the same review gets 409. `rubric_scores` has a unique index on run and rubric item, and the migration removes duplicates that already exist.
 - **Why:** two replies arriving together (a double click, two tabs) both passed the "already has a result" check and stored the scores and the suggested cards twice. Found by the code review (R3) and the backend tester (BE-3).
+
 ### D-121 · The bridge keeps only the tail of a program's output while it runs — 2026-11-18
 - **What:** `exec()` drops old output chunks as new ones arrive and never holds more than the output limit plus one chunk per stream.
 - **Why:** it used to keep every chunk and trim at the end. A submission printing in a loop grew the bridge from 98 MB to 12.7 GB in a minute until the kernel killed it, which also failed every queued run. Found by the backend tester (BE-1).
+
 ### D-122 · The API reads JSON bodies up to 1 MB — 2026-11-18
 - **What:** the JSON body limit is 1 MB instead of the framework default of 100 kB.
 - **Why:** the schemas allow a 90,000-character review reply and a 50,000-character answer. With JSON escaping or Cyrillic text those pass 100 kB and were refused with 413 before validation ran. Found by the backend tester (BE-4).
@@ -446,6 +452,7 @@ Decisions made while building are appended below.
 - **Why:** saving two words marked the task as finished on the Plan and in the statistics. Found by the UX review.
 - **Alternatives:** a "mark as done" button for learners who skip reviews. Not added: every task has a rubric, and the copy-and-paste review needs no setup.
 - **Effect on existing data:** answers saved without a review go back to in progress.
+
 ### D-119 · "Run checks" is disabled until the lab repository path is set — 2026-11-18
 - **What:** on a code task with checks, the task page says to set the lab repository path and links to Settings, and the button is disabled until the path exists.
 - **Why:** a new learner's first submission could only fail with "set the path", and that failed attempt was stored. Found by the UX review.
@@ -464,6 +471,10 @@ A submission that used more memory than its task allows had every criterion mark
 
 `PATCH /api/sessions/:id` stored whatever number of active seconds the browser sent, so one wrong heartbeat could add a day to the statistics. The stored value is now capped at the seconds since the session started (server clock), and still never goes down.
 
+### D-129 · A submission that forges its own check results is accepted as out of scope — 2026-11-18
+
+The submission and the result reporter run as the same user in the sandbox, so code written for that purpose can append `passed: true` lines to the results file (backend test finding BE-7). Closing this fully needs a second user or a separate reporter process per run. It is left as is: the platform has one learner, on their own machine, and the only person such a submission fools is its author. The 1 MB limit on results (D-125) already stops the cases that could hurt the bridge. Revisit if results are ever shown to someone other than the learner.
+
 ### D-130 · RabbitMQ gets one theory lesson; `main` is the default branch — Decided by Ihor, 2026-11-18
 
 - **RabbitMQ:** one theory lesson, no task and no practice service. It is lesson 6 of the Kafka and event streaming module, next to the lesson that compares messaging tools, with its own skill and 12 cards. The code in it was type-checked against amqplib 2.4.0 but not run against a broker.
@@ -474,6 +485,7 @@ A submission that used more memory than its task allows had every criterion mark
 Builds the first half of D-201. `pnpm backup` runs `pg_dump --format=custom` inside the platform database container and streams it to `backups/` (or `BACKUP_DIR`); the file gets its final name only when the dump is complete, and the newest 14 are kept. The job queue's schema (`pgboss`) is left out: it holds nothing worth keeping, and its partitioned tables made `pg_restore --clean` fail. `pnpm restore <file>` asks for the word "restore", then runs `pg_restore --clean --if-exists --single-transaction --exit-on-error`, so a bad file leaves the data as it was. Tried against the local database: changed and deleted rows came back, and a file that is not a dump changed nothing. The daily automatic backup and the Settings line are a separate change.
 
 **Daily backup, added later the same day:** `pnpm dev` runs the backup with `--daily` after the database is up. It does nothing when the newest backup is under 24 hours old or the database has no tables yet, and a failure only prints a warning, so it can never stop the platform from starting. The "Last backup" line in Settings is left out for now: the API can run in a container that does not see the backup folder.
+
 ### D-132 · "Continue" on the Plan comes from the last study session — 2026-11-18
 
 The plan response carries `continueWith`: the lesson or task of the newest study session that has an item, when that item is not done and is not already the next lesson. No new table: sessions already record what was opened. It is the first row of "Next up". Remembering the scroll position inside a lesson is left for a separate change.

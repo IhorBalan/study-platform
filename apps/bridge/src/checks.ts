@@ -1,12 +1,13 @@
 import { spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { chmod, mkdir, mkdtemp, readFile, rm, stat } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, rm, stat } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import type { LoadedTask } from '@study/curriculum';
 import type { CheckResultDto, RunChecksRequest, RunChecksResponse } from '@study/shared';
 import type { Config } from './config.js';
-import { exec } from './exec.js';
+import { exec, TailBuffer } from './exec.js';
+import { readResults, watchFolderSize, type ReportedResult } from './results.js';
 import { prepareServices } from './services.js';
 
 const RUNNER_IMAGES = { node: 'study-runner-node', nest: 'study-runner-nest' } as const;
@@ -59,48 +60,22 @@ export function exportFolder(
       stdio: ['ignore', 'pipe', 'pipe'],
     });
     const tar = spawn('tar', ['-x', '-C', dest], { stdio: ['pipe', 'ignore', 'pipe'] });
-    let stderr = '';
-    git.stderr.on('data', (c: Buffer) => (stderr += c.toString()));
-    tar.stderr.on('data', (c: Buffer) => (stderr += c.toString()));
+    // Only the end of the error output is shown, so only that much is kept.
+    const stderr = new TailBuffer(16 * 1024);
+    git.stderr.on('data', (c: Buffer) => stderr.push(c));
+    tar.stderr.on('data', (c: Buffer) => stderr.push(c));
     git.stdout.pipe(tar.stdin);
-    git.on('error', (e) => (stderr += e.message));
-    tar.on('error', (e) => (stderr += e.message));
+    git.on('error', (e) => stderr.push(Buffer.from(e.message)));
+    tar.on('error', (e) => stderr.push(Buffer.from(e.message)));
     // The two processes can finish in either order, so wait for both exit codes.
     const exited = (child: typeof git | typeof tar) =>
       new Promise<number | null>((done) => child.on('close', done));
     void Promise.all([exited(git), exited(tar)]).then(([gitCode, tarCode]) => {
-      resolve(gitCode === 0 && tarCode === 0 ? null : stderr.trim() || 'git archive failed');
+      resolve(
+        gitCode === 0 && tarCode === 0 ? null : stderr.toString().trim() || 'git archive failed',
+      );
     });
   });
-}
-
-interface ReportedResult {
-  id: string;
-  name: string;
-  passed: boolean;
-  message: string | null;
-}
-
-async function readResults(file: string): Promise<ReportedResult[]> {
-  const text = await readFile(file, 'utf8').catch(() => '');
-  const results: ReportedResult[] = [];
-  for (const line of text.split('\n')) {
-    if (!line.trim()) continue;
-    try {
-      const row = JSON.parse(line) as Partial<ReportedResult>;
-      if (typeof row.id === 'string' && typeof row.passed === 'boolean') {
-        results.push({
-          id: row.id,
-          name: typeof row.name === 'string' ? row.name : row.id,
-          passed: row.passed,
-          message: typeof row.message === 'string' ? row.message : null,
-        });
-      }
-    } catch {
-      // A partly written last line after a kill. The criterion counts as not reported.
-    }
-  }
-  return results;
 }
 
 /** One entry per criterion in the task file, in that order. */
@@ -223,6 +198,10 @@ export async function runChecks(
     const cpus = task.limits.cpus ?? 1;
     const timeoutSeconds = task.limits.timeoutSeconds ?? DEFAULT_TIMEOUT_SECONDS;
 
+    // Stop the run if it writes far more results than any check suite does.
+    const resultsSize = watchFolderSize(resultsDir, () => {
+      void exec(config.DOCKER_BIN, ['kill', name], { timeoutMs: 15_000 });
+    });
     const run = await exec(
       config.DOCKER_BIN,
       [
@@ -266,8 +245,22 @@ export async function runChecks(
       },
     );
 
-    const reported = await readResults(path.join(resultsDir, 'results.jsonl'));
+    resultsSize.stop();
+    const read = await readResults(path.join(resultsDir, 'results.jsonl'));
     const log = `${run.stdout}${run.stderr ? `\n${run.stderr}` : ''}`.slice(-32_000);
+
+    if (read === null || resultsSize.exceeded()) {
+      return {
+        status: 'failed',
+        message:
+          'The checks wrote far more to their results folder than expected, so the run was stopped and its results were discarded.',
+        commitSha: sha,
+        results: matchCriteria(task, []),
+        log,
+        durationMs: Date.now() - startedAt,
+      };
+    }
+    const reported = read;
 
     if (run.timedOut) {
       return {

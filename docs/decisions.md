@@ -434,6 +434,11 @@ Decisions made while building are appended below.
 - **What:** the grade endpoint logs a failure of the weak-skill evaluation and still answers with the saved grade. `review_tasks` has a partial unique index, one open refresh per skill, and the evaluation ignores a conflict.
 - **Why:** the evaluation runs after the grade is committed. If it failed, the client saw a 500, and a retry was refused because the card was no longer due. Two evaluations at once could also open two refreshes for the same skill. Found by the code review (R4).
 
+### D-125 · A check run may write at most 1 MB of results — 2026-11-18
+- **What:** the bridge watches the results folder while a run is in progress and stops the container when it passes 1 MB. A results file over the limit is never read. The run is reported as failed with a message that says why. The error output of `git archive` is also kept as a tail only.
+- **Why:** the results folder is the one place the sandbox writes on the host, and the submission's own code runs there. It could fill the disk for the whole time limit, and the bridge then read the file into memory in one go. Found by the code review, as a follow-up to BE-1.
+- **Alternatives:** a small tmpfs for results, copied out with `docker cp`. It needs the container to outlive the run, which changes how runs are cleaned up.
+
 ---
 
 ## Agreed before this log

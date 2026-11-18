@@ -43,11 +43,13 @@ export class PlanService {
           submissions: number;
           passed: number;
           checked: number;
+          reviewed: number;
         }>(sql`
           select s.task_id,
                  count(distinct s.id)::int as submissions,
                  count(*) filter (where r.stage = 'checks' and r.status = 'passed')::int as passed,
-                 count(*) filter (where r.stage = 'checks')::int as checked
+                 count(*) filter (where r.stage = 'checks')::int as checked,
+                 count(*) filter (where r.stage = 'review' and r.status = 'passed')::int as reviewed
           from submissions s left join verification_runs r on r.submission_id = s.id
           group by s.task_id
         `),
@@ -69,8 +71,10 @@ export class PlanService {
     const taskStatus = (id: string): ProgressStatus => {
       const row = progress.get(id);
       if (!row) return 'not_started';
-      // Tasks without automated checks are done once an answer is saved.
-      if (row.passed > 0 || row.checked === 0) return 'done';
+      if (row.passed > 0) return 'done';
+      // Without automated checks, a stored review is what finishes a task. A saved
+      // answer alone is work in progress.
+      if (row.checked === 0 && row.reviewed > 0) return 'done';
       return 'in_progress';
     };
 

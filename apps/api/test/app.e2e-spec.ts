@@ -240,6 +240,13 @@ describe('API (e2e, real Postgres)', () => {
         runs: [],
         review: null,
       });
+
+      // A saved answer is work in progress until a review is stored.
+      const plan = await http().get('/api/plan').expect(200);
+      const task = plan.body.modules[0].tasks.find(
+        (t: { id: string }) => t.id === 'm00-demo/t01-explain',
+      );
+      expect(task.status).toBe('in_progress');
     });
 
     it('queues automated checks for a code submission', async () => {
@@ -669,7 +676,7 @@ describe('API (e2e, real Postgres)', () => {
       const { nextUp, modules } = res.body;
       expect(nextUp.lesson).toMatchObject({ moduleTitle: 'Demo module' });
       const tasks = modules[0].tasks;
-      // A written answer was saved earlier; the code task was submitted but never passed.
+      // The written answer has a stored review; the code task was submitted but never passed.
       expect(tasks.find((t: { id: string }) => t.id === 'm00-demo/t01-explain').status).toBe(
         'done',
       );

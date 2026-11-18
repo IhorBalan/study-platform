@@ -441,6 +441,12 @@ Decisions made while building are appended below.
 - **Known limit:** the size is polled once a second, so a fast writer can pass 1 MB by a wide margin before the container is stopped. It is bounded by disk speed and the run's time limit.
 - **Alternatives:** a small tmpfs for results, copied out with `docker cp`, would be the strict fix. It needs the container to outlive the run, which changes how runs are cleaned up.
 
+### D-118 · A task without automated checks is done only after a review — 2026-11-18
+- **What:** a written task, or a code task with no check suite, counts as done once a Claude review of one of its answers is stored. A saved answer alone shows as in progress, and the answer says "counts as done after a Claude review".
+- **Why:** saving two words marked the task as finished on the Plan and in the statistics. Found by the UX review.
+- **Alternatives:** a "mark as done" button for learners who skip reviews. Not added: every task has a rubric, and the copy-and-paste review needs no setup.
+- **Effect on existing data:** answers saved without a review go back to in progress.
+
 ---
 
 ## Agreed before this log

@@ -5,8 +5,8 @@
   skills: [nest-config]
 - id: fail-fast-why
   type: concept
-  front: Why validate all environment variables at start-up instead of where each one is used?
-  back: A bad value then stops the deploy with one clear message, instead of failing some request later while the app looks healthy.
+  front: "The factory of the config provider throws on an invalid environment. What happens to `NestFactory.create()`?"
+  back: It rejects while Nest builds the container, so the process stops before the server listens and the deploy fails with one clear message.
   skills: [nest-config]
 - id: env-values-are-strings
   type: concept
@@ -50,6 +50,6 @@
   skills: [nest-config]
 - id: error-names-not-values
   type: concept
-  front: What should a start-up error about invalid configuration contain, and what must it leave out?
-  back: The variable names and the rules they broke. Never the received values, because one of them may be a secret.
+  front: What must a start-up error about invalid configuration never contain?
+  back: The received values, because one of them may be a secret. It names the variables and the rules they broke.
   skills: [nest-config]

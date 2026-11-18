@@ -29,9 +29,14 @@
   back: "Read Committed takes a new snapshot for every statement, so it sees commits made in between."
   skills: [transactions-isolation]
 - id: lost-update
+  type: term
+  front: Lost update
+  back: "Two transactions read the same value and both write back a result computed from it, so one of the changes is overwritten."
+  skills: [transactions-isolation]
+- id: lost-update-fix
   type: concept
-  front: "What is a lost update, and the simplest fix in Postgres?"
-  back: "Two transactions read the same value and both write back a result, so one change is lost. Fix: `set stock = stock - 1 where stock >= 1` in one statement."
+  front: "What is the simplest fix for a lost update on a counter in Postgres?"
+  back: "Do the arithmetic in one statement: `set stock = stock - 1 where stock >= 1`."
   skills: [transactions-isolation]
 - id: write-skew
   type: term

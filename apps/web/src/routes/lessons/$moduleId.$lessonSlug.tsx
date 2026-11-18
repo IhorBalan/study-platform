@@ -5,6 +5,7 @@ import { Markdown } from '../../components/Markdown';
 import { NotesBox } from '../../components/NotesBox';
 import { api } from '../../lib/api';
 import { lessonOutline, readingMinutes } from '../../lib/lessonOutline';
+import { useScrollMemory } from '../../lib/useScrollMemory';
 import { useStudySession } from '../../lib/useStudySession';
 
 const lessonQuery = (id: string) =>
@@ -28,6 +29,7 @@ function LessonPage() {
   const queryClient = useQueryClient();
   const outline = useMemo(() => lessonOutline(lesson.markdown), [lesson.markdown]);
   useStudySession('lesson', id);
+  useScrollMemory(id);
   const [notice, setNotice] = useState<{ lessonId: string; text: string } | null>(null);
 
   const progress = useMutation({

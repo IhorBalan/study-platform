@@ -13,7 +13,7 @@ import { AppModule } from '../src/app.module.js';
 import { DeckSyncService } from '../src/curriculum/deck-sync.service.js';
 import { JSON_BODY_LIMIT } from '../src/common/body-limit.js';
 import { QueueService } from '../src/queue/queue.service.js';
-import { WeakSkillsService } from '../src/stats/weak-skills.service.js';
+import { WeakSkillsService } from '../src/srs/weak-skills.service.js';
 import { DB, type Database } from '../src/database/database.module.js';
 
 describe('API (e2e, real Postgres)', () => {

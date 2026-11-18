@@ -10,3 +10,17 @@ export function untilLabel(iso: string, now = Date.now()): string {
   if (months < 12) return `${months} mo`;
   return `${(days / 365).toFixed(1)} y`;
 }
+
+/** "1 h 20 min", "12 min", "under a minute". */
+export function durationLabel(seconds: number): string {
+  if (seconds < 60) return seconds === 0 ? '0 min' : 'under a minute';
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`;
+}
+
+export function percentLabel(share: number): string {
+  return `${Math.round(share * 100)}%`;
+}

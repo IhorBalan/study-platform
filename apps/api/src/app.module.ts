@@ -13,6 +13,10 @@ import { SubmissionReviewController } from './review/review.controller.js';
 import { SubmissionReviewService } from './review/review.service.js';
 import { SettingsController } from './settings/settings.controller.js';
 import { SettingsService } from './settings/settings.service.js';
+import { SessionsService } from './stats/sessions.service.js';
+import { StatsController } from './stats/stats.controller.js';
+import { StatsService } from './stats/stats.service.js';
+import { WeakSkillsService } from './stats/weak-skills.service.js';
 import { SubmissionsController } from './submissions/submissions.controller.js';
 import { SubmissionsService } from './submissions/submissions.service.js';
 import { CardsService } from './srs/cards.service.js';
@@ -29,6 +33,7 @@ import { SrsController } from './srs/srs.controller.js';
     SubmissionsController,
     SubmissionReviewController,
     BridgeController,
+    StatsController,
   ],
   providers: [
     PlanService,
@@ -38,6 +43,9 @@ import { SrsController } from './srs/srs.controller.js';
     QueueService,
     SubmissionsService,
     SubmissionReviewService,
+    StatsService,
+    SessionsService,
+    WeakSkillsService,
     { provide: APP_FILTER, useClass: ProblemDetailsFilter },
     {
       // Validates every parameter declared with a `schema` option, e.g.

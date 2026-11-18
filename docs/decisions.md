@@ -300,3 +300,19 @@ Decisions made while building are appended below.
 - **Alternatives:** have the bridge inline every file into the prompt (works in claude.ai, but long and needs the bridge running).
 - **Validation:** a pasted reply is accepted only if it is valid JSON in the expected shape, has exactly one score per rubric item, and no score exceeds its maximum. Otherwise the page lists what is wrong so Claude can be asked to correct it.
 - **Suggested cards** are stored as "waiting for approval" and stay out of the review queue until approved on the Cards page.
+
+### D-097 · When a task counts as done — Accepted, 2026-11-18
+- **Code task with automated checks:** done when any submission passes all checks.
+- **Task without checks (written answers, for now diagrams):** done when an answer is saved. A Claude review is encouraged but not required, because review is optional by design (no API key, copy-paste by default).
+- **Revisit if:** you want a minimum review score before a written task counts.
+
+### D-098 · Time tracking counts active seconds only — Accepted, 2026-11-18
+- **Chosen:** the browser counts a second only when the tab is visible and there was keyboard, pointer or scroll input in the last 3 minutes. A session is recorded after 5 active seconds, and the count is sent every 20 seconds.
+- **Why:** wall-clock time between opening and closing a page overstates study time badly (a tab left open overnight).
+- **Limit:** time spent in the editor and terminal on a task is not seen. Task time therefore means time on the task page.
+- **Alternatives:** manual timers (friction); tracking through the lab repository's commit times (coarse and misleading).
+
+### D-099 · "Next up" order and the weak-skill trigger — Accepted, 2026-11-18
+- **Order on the plan page:** card reviews, skills that need a refresh, the next lesson (core modules first, optional modules never block), open tasks of modules already started, cards waiting for approval.
+- **Weak skill:** as defined in the spec (at least 10 qualifying reviews in 30 days and retention more than 10 points under the target). It is re-evaluated after every card review. A refresh item links to the first lesson that teaches the skill, closes by itself when retention recovers, and can be dismissed.
+- **Statistics definitions:** "young" and "mature" split at a 21-day interval, as in Anki. Streaks count local days and stay alive until the end of the following day.

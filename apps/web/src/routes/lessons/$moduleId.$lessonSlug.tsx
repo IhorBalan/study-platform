@@ -3,6 +3,7 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { Markdown } from '../../components/Markdown';
 import { api } from '../../lib/api';
+import { useStudySession } from '../../lib/useStudySession';
 
 const lessonQuery = (id: string) =>
   queryOptions({ queryKey: ['lesson', id], queryFn: () => api.lesson(id) });
@@ -23,6 +24,7 @@ function LessonPage() {
   const id = `${moduleId}/${lessonSlug}`;
   const { data: lesson } = useSuspenseQuery(lessonQuery(id));
   const queryClient = useQueryClient();
+  useStudySession('lesson', id);
   const [notice, setNotice] = useState<{ lessonId: string; text: string } | null>(null);
 
   const progress = useMutation({

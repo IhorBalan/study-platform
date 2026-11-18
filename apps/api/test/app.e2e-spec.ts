@@ -55,8 +55,8 @@ describe('API (e2e, real Postgres)', () => {
           { id: 'm00-demo/l02-second', status: 'not_started' },
         ],
         tasks: [
-          { id: 'm00-demo/t01-explain', type: 'text' },
-          { id: 'm00-demo/t02-code', type: 'repo' },
+          { id: 'm00-demo/t01-explain', type: 'text', status: 'not_started' },
+          { id: 'm00-demo/t02-code', type: 'repo', status: 'not_started' },
         ],
       });
     });
@@ -349,6 +349,62 @@ describe('API (e2e, real Postgres)', () => {
     it('validates settings', async () => {
       const res = await http().patch('/api/settings').send({ desiredRetention: 1.5 });
       expect(res.status).toBe(400);
+    });
+  });
+
+  describe('plan, time and statistics', () => {
+    it('points to the next lesson and lists open tasks', async () => {
+      const res = await http().get('/api/plan').expect(200);
+      const { nextUp, modules } = res.body;
+      expect(nextUp.lesson).toMatchObject({ moduleTitle: 'Demo module' });
+      const tasks = modules[0].tasks;
+      // A written answer was saved earlier; the code task was submitted but never passed.
+      expect(tasks.find((t: { id: string }) => t.id === 'm00-demo/t01-explain').status).toBe(
+        'done',
+      );
+      expect(tasks.find((t: { id: string }) => t.id === 'm00-demo/t02-code').status).toBe(
+        'in_progress',
+      );
+      expect(nextUp.tasks.map((t: { id: string }) => t.id)).toEqual(['m00-demo/t02-code']);
+      expect(nextUp.pendingCards).toBe(1);
+    });
+
+    it('records active time and never lets it go down', async () => {
+      const started = await http()
+        .post('/api/sessions')
+        .send({ activity: 'lesson', itemId: 'm00-demo/l01-first' })
+        .expect(201);
+      const id = started.body.id;
+      await http().patch(`/api/sessions/${id}`).send({ activeSeconds: 90 }).expect(204);
+      await http().patch(`/api/sessions/${id}`).send({ activeSeconds: 30 }).expect(204);
+
+      const stats = await http().get('/api/stats').expect(200);
+      const { learning, memory } = stats.body;
+      expect(learning.totalSeconds).toBe(90);
+      expect(learning.secondsByDay).toHaveLength(30);
+      expect(learning.secondsByDay.at(-1).seconds).toBe(90);
+      expect(learning.secondsByModule).toEqual([
+        { moduleId: 'm00-demo', title: 'Demo module', seconds: 90 },
+      ]);
+      expect(learning.studyStreakDays).toBe(1);
+      expect(learning.tasksDone).toBe(1);
+      expect(learning.rubricBySkill).toEqual([
+        { skillId: 'http-basics', title: 'HTTP basics', average: 0.75, reviews: 1 },
+      ]);
+      expect(memory.reviewStreakDays).toBe(1);
+      expect(memory.desiredRetention).toBe(0.9);
+      const total = Object.values(memory.cardsByState as Record<string, number>).reduce(
+        (a, b) => a + b,
+        0,
+      );
+      expect(total).toBeGreaterThan(0);
+    });
+
+    it('rejects a heartbeat for an unknown session', async () => {
+      const res = await http()
+        .patch('/api/sessions/00000000-0000-4000-8000-000000000000')
+        .send({ activeSeconds: 5 });
+      expect(res.status).toBe(404);
     });
   });
 });

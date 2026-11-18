@@ -9,6 +9,8 @@ import {
   ReviewQueueResponse,
   BridgeStatusResponse,
   ReviewDto,
+  SessionDto,
+  StatsResponse,
   SettingsDto,
   SubmissionDto,
   SubmissionListResponse,
@@ -16,6 +18,7 @@ import {
   TaskDetail,
   type CardStatus,
   type CreateCard,
+  type Activity,
   type CreateSubmission,
   type Grade,
   type ProgressStatus,
@@ -94,6 +97,14 @@ export const api = {
     request(`/cards/${id}`, CardDto, { method: 'PATCH', body: patch }),
   deleteCard: (id: string) =>
     request(`/cards/${id}`, z.undefined(), { method: 'DELETE', body: {} }),
+
+  stats: () => request('/stats', StatsResponse),
+  startSession: (activity: Activity, itemId: string | null) =>
+    request('/sessions', SessionDto, { method: 'POST', body: { activity, itemId } }),
+  updateSession: (id: string, activeSeconds: number) =>
+    request(`/sessions/${id}`, z.undefined(), { method: 'PATCH', body: { activeSeconds } }),
+  dismissReviewTask: (id: string) =>
+    request(`/review-tasks/${id}/dismiss`, z.undefined(), { method: 'POST', body: {} }),
 
   settings: () => request('/settings', SettingsDto),
   updateSettings: (patch: UpdateSettings) =>

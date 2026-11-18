@@ -6,6 +6,7 @@ import { Markdown } from '../components/Markdown';
 import { Button, PageHeader } from '../components/ui';
 import { api } from '../lib/api';
 import { untilLabel } from '../lib/format';
+import { useStudySession } from '../lib/useStudySession';
 
 export const Route = createFileRoute('/review')({ component: ReviewPage });
 
@@ -23,6 +24,7 @@ function renderFront(card: QueueCard): string {
 
 function ReviewPage() {
   const queryClient = useQueryClient();
+  useStudySession('review', null);
   const queue = useQuery({ queryKey: ['review-queue'], queryFn: api.reviewQueue });
   // Remember which card was revealed, so the next card starts hidden without a reset.
   const [revealedId, setRevealedId] = useState<string | null>(null);
@@ -41,7 +43,10 @@ function ReviewPage() {
       if (!cardId) throw new Error('no card');
       return api.submitReview(cardId, grade, Date.now() - shownAt.current);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['review-queue'] }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['plan'] });
+      return queryClient.invalidateQueries({ queryKey: ['review-queue'] });
+    },
   });
 
   const { mutate, isPending } = submit;

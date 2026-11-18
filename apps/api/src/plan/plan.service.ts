@@ -1,37 +1,78 @@
 import { Injectable } from '@nestjs/common';
 import { schema } from '@study/db';
-import type { ModuleSummary, PlanResponse } from '@study/shared';
-import { asc, eq } from 'drizzle-orm';
+import type { ModuleSummary, NextUp, PlanResponse, ProgressStatus } from '@study/shared';
+import { asc, eq, sql } from 'drizzle-orm';
+import { CurriculumService } from '../curriculum/curriculum.service.js';
 import { InjectDb, type Database } from '../database/database.module.js';
+import { ReviewService } from '../srs/review.service.js';
 
 @Injectable()
 export class PlanService {
-  constructor(@InjectDb() private readonly db: Database) {}
+  constructor(
+    @InjectDb() private readonly db: Database,
+    private readonly curriculum: CurriculumService,
+    private readonly review: ReviewService,
+  ) {}
 
-  /** Modules in recommended order with their lessons, tasks and lesson progress. */
-  async getPlan(): Promise<PlanResponse> {
-    const { modules, lessons, tasks, lessonProgress } = schema;
+  /** Modules in recommended order with progress, plus what to do next. */
+  async getPlan(now = new Date()): Promise<PlanResponse> {
+    const { modules, lessons, tasks, lessonProgress, reviewTasks, skills } = schema;
 
-    const [moduleRows, lessonRows, taskRows] = await Promise.all([
-      this.db
-        .select()
-        .from(modules)
-        .where(eq(modules.present, true))
-        .orderBy(asc(modules.position)),
-      this.db
-        .select({
-          id: lessons.id,
-          moduleId: lessons.moduleId,
-          title: lessons.title,
-          position: lessons.position,
-          status: lessonProgress.status,
-        })
-        .from(lessons)
-        .leftJoin(lessonProgress, eq(lessonProgress.lessonId, lessons.id))
-        .where(eq(lessons.present, true))
-        .orderBy(asc(lessons.position)),
-      this.db.select().from(tasks).where(eq(tasks.present, true)).orderBy(asc(tasks.position)),
-    ]);
+    const [moduleRows, lessonRows, taskRows, taskProgress, openReviewTasks, queue] =
+      await Promise.all([
+        this.db
+          .select()
+          .from(modules)
+          .where(eq(modules.present, true))
+          .orderBy(asc(modules.position)),
+        this.db
+          .select({
+            id: lessons.id,
+            moduleId: lessons.moduleId,
+            title: lessons.title,
+            position: lessons.position,
+            status: lessonProgress.status,
+          })
+          .from(lessons)
+          .leftJoin(lessonProgress, eq(lessonProgress.lessonId, lessons.id))
+          .where(eq(lessons.present, true))
+          .orderBy(asc(lessons.position)),
+        this.db.select().from(tasks).where(eq(tasks.present, true)).orderBy(asc(tasks.position)),
+        this.db.execute<{
+          task_id: string;
+          submissions: number;
+          passed: number;
+          checked: number;
+        }>(sql`
+          select s.task_id,
+                 count(distinct s.id)::int as submissions,
+                 count(*) filter (where r.stage = 'checks' and r.status = 'passed')::int as passed,
+                 count(*) filter (where r.stage = 'checks')::int as checked
+          from submissions s left join verification_runs r on r.submission_id = s.id
+          group by s.task_id
+        `),
+        this.db
+          .select({
+            id: reviewTasks.id,
+            skillId: reviewTasks.skillId,
+            skillTitle: skills.title,
+            reason: reviewTasks.reason,
+          })
+          .from(reviewTasks)
+          .innerJoin(skills, eq(skills.id, reviewTasks.skillId))
+          .where(eq(reviewTasks.status, 'open'))
+          .orderBy(asc(reviewTasks.createdAt)),
+        this.review.queue(now),
+      ]);
+
+    const progress = new Map(taskProgress.rows.map((r) => [r.task_id, r]));
+    const taskStatus = (id: string): ProgressStatus => {
+      const row = progress.get(id);
+      if (!row) return 'not_started';
+      // Tasks without automated checks are done once an answer is saved.
+      if (row.passed > 0 || row.checked === 0) return 'done';
+      return 'in_progress';
+    };
 
     const result: ModuleSummary[] = moduleRows.map((m) => ({
       id: m.id,
@@ -56,9 +97,52 @@ export class PlanService {
           title: t.title,
           position: t.position,
           type: t.submissionType,
+          status: taskStatus(t.id),
         })),
     }));
 
-    return { modules: result };
+    // The next lesson comes from the core path first; optional modules never block it.
+    const ordered = [
+      ...result.filter((m) => m.kind === 'core'),
+      ...result.filter((m) => m.kind !== 'core'),
+    ];
+    let lesson: NextUp['lesson'] = null;
+    for (const m of ordered) {
+      const next = m.lessons.find((l) => l.status !== 'done');
+      if (next) {
+        lesson = { id: next.id, title: next.title, moduleTitle: m.title };
+        break;
+      }
+    }
+    const started = result.filter(
+      (m) =>
+        m.lessons.some((l) => l.status !== 'not_started') ||
+        m.tasks.some((t) => t.status !== 'not_started'),
+    );
+    const openTasks = started
+      .flatMap((m) =>
+        m.tasks
+          .filter((t) => t.status !== 'done')
+          .map((t) => ({ id: t.id, title: t.title, moduleTitle: m.title, type: t.type })),
+      )
+      .slice(0, 6);
+
+    const lessonForSkill = (skillId: string): string | null =>
+      this.curriculum
+        .allModules()
+        .flatMap((m) => m.lessons)
+        .find((l) => l.skills.includes(skillId))?.id ?? null;
+
+    return {
+      modules: result,
+      nextUp: {
+        lesson,
+        tasks: openTasks,
+        dueCards: queue.counts.due,
+        newCards: queue.counts.newAvailable,
+        pendingCards: queue.counts.pendingApproval,
+        reviewTasks: openReviewTasks.map((t) => ({ ...t, lessonId: lessonForSkill(t.skillId) })),
+      },
+    };
   }
 }

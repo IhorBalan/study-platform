@@ -22,6 +22,7 @@ import {
 } from '@study/shared';
 import { z } from 'zod';
 import { CardsService } from './cards.service.js';
+import { WeakSkillsService } from '../stats/weak-skills.service.js';
 import { ReviewService } from './review.service.js';
 
 const ListQuery = z.object({ status: CardStatus.optional(), lessonId: z.string().optional() });
@@ -32,6 +33,7 @@ export class SrsController {
   constructor(
     private readonly cards: CardsService,
     private readonly review: ReviewService,
+    private readonly weakSkills: WeakSkillsService,
   ) {}
 
   @Get('cards')
@@ -65,10 +67,13 @@ export class SrsController {
 
   @Post('review/:cardId')
   @HttpCode(200)
-  submit(
+  async submit(
     @Param('cardId', ParseUUIDPipe) cardId: string,
     @Body({ schema: SubmitReview }) body: SubmitReview,
   ): Promise<SubmitReviewResponse> {
-    return this.review.submit(cardId, body);
+    const result = await this.review.submit(cardId, body);
+    // A lapse can push a skill below the threshold, and a success can lift it back.
+    await this.weakSkills.evaluate();
+    return result;
   }
 }

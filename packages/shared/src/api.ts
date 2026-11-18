@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  Activity,
   CardSource,
   CardState,
   CardStatus,
@@ -34,6 +35,8 @@ export const TaskSummary = z.object({
   title: z.string(),
   position: z.number().int(),
   type: SubmissionType,
+  /** `done` once the automated checks pass, or once an answer is saved for tasks without checks. */
+  status: ProgressStatus,
 });
 export type TaskSummary = z.infer<typeof TaskSummary>;
 
@@ -51,7 +54,30 @@ export const ModuleSummary = z.object({
 });
 export type ModuleSummary = z.infer<typeof ModuleSummary>;
 
-export const PlanResponse = z.object({ modules: z.array(ModuleSummary) });
+const NextItem = z.object({ id: z.string(), title: z.string(), moduleTitle: z.string() });
+
+/** What to do next. No dates: the platform is self-paced. */
+export const NextUp = z.object({
+  lesson: NextItem.nullable(),
+  /** Tasks of modules the learner has started, not yet done. */
+  tasks: z.array(NextItem.extend({ type: SubmissionType })),
+  dueCards: z.number().int(),
+  newCards: z.number().int(),
+  pendingCards: z.number().int(),
+  /** Skills whose recall has dropped, with the lesson to reread. */
+  reviewTasks: z.array(
+    z.object({
+      id: z.string().uuid(),
+      skillId: z.string(),
+      skillTitle: z.string(),
+      reason: z.string(),
+      lessonId: z.string().nullable(),
+    }),
+  ),
+});
+export type NextUp = z.infer<typeof NextUp>;
+
+export const PlanResponse = z.object({ modules: z.array(ModuleSummary), nextUp: NextUp });
 export type PlanResponse = z.infer<typeof PlanResponse>;
 
 /** RFC 9457 problem details: the error format every endpoint returns. */
@@ -365,3 +391,91 @@ export const SubmitReviewResult = z.object({
   raw: z.string().trim().min(2).max(90_000),
 });
 export type SubmitReviewResult = z.infer<typeof SubmitReviewResult>;
+
+// ---------------------------------------------------------------------------
+// Time tracking and statistics
+// ---------------------------------------------------------------------------
+
+export const StartSession = z.object({
+  activity: Activity,
+  itemId: z.string().max(200).nullish(),
+});
+export type StartSession = z.infer<typeof StartSession>;
+
+export const SessionDto = z.object({ id: z.string().uuid() });
+
+/** Total seconds the tab has been active so far. Sent as a heartbeat. */
+export const UpdateSession = z.object({
+  activeSeconds: z
+    .number()
+    .int()
+    .min(0)
+    .max(24 * 3600),
+  ended: z.boolean().optional(),
+});
+export type UpdateSession = z.infer<typeof UpdateSession>;
+
+export const StatsResponse = z.object({
+  learning: z.object({
+    /** Last 30 local days, oldest first. Days without study are included with zero. */
+    secondsByDay: z.array(z.object({ day: z.string(), seconds: z.number().int() })),
+    secondsByActivity: z.array(z.object({ activity: Activity, seconds: z.number().int() })),
+    secondsByModule: z.array(
+      z.object({ moduleId: z.string(), title: z.string(), seconds: z.number().int() }),
+    ),
+    totalSeconds: z.number().int(),
+    lessonsDone: z.number().int(),
+    lessonsTotal: z.number().int(),
+    tasksDone: z.number().int(),
+    tasksTotal: z.number().int(),
+    /** Share of code tasks whose first submission passed the checks. Null without data. */
+    firstAttemptPassRate: z.number().nullable(),
+    averageAttemptsPerTask: z.number().nullable(),
+    /** Consecutive days, ending today or yesterday, with any study activity. */
+    studyStreakDays: z.number().int(),
+    modules: z.array(
+      z.object({
+        moduleId: z.string(),
+        title: z.string(),
+        lessonsDone: z.number().int(),
+        lessonsTotal: z.number().int(),
+        tasksDone: z.number().int(),
+        tasksTotal: z.number().int(),
+      }),
+    ),
+    /** Average review score per skill, as a share of the maximum. */
+    rubricBySkill: z.array(
+      z.object({
+        skillId: z.string(),
+        title: z.string(),
+        average: z.number(),
+        reviews: z.number().int(),
+      }),
+    ),
+  }),
+  memory: z.object({
+    dueToday: z.number().int(),
+    reviewStreakDays: z.number().int(),
+    /** Reviews of cards in the Review state not graded Again, over the last 30 days. */
+    retention: z.number().nullable(),
+    retentionReviews: z.number().int(),
+    desiredRetention: z.number(),
+    cardsByState: z.object({
+      new: z.number().int(),
+      learning: z.number().int(),
+      young: z.number().int(),
+      mature: z.number().int(),
+      suspended: z.number().int(),
+    }),
+    weakestSkills: z.array(
+      z.object({
+        skillId: z.string(),
+        title: z.string(),
+        retention: z.number(),
+        reviews: z.number().int(),
+        weak: z.boolean(),
+      }),
+    ),
+  }),
+});
+export type StatsResponse = z.infer<typeof StatsResponse>;

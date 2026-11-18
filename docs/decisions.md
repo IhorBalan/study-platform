@@ -401,6 +401,9 @@ Decisions made while building are appended below.
 - **Why:** with 130 lessons, the plan page alone does not answer "where was idempotency explained". The API already holds every page in memory, so a scan answers in about a millisecond.
 - **Alternatives:** PostgreSQL full-text search (needs the lesson text copied into the database and kept in step with the files) and a client-side index (ships every lesson to the browser). Both are more moving parts for no gain at this size.
 - **Limits:** no stemming or typo tolerance, and flashcards are not searched.
+### D-115 · CI validates the real curriculum — 2026-11-18
+- **What:** the `verify` job runs `pnpm curriculum:check`.
+- **Why:** the tests load a small fixture curriculum, so a broken `task.yaml` or card file under `curriculum/` passed CI and then stopped `pnpm dev`, because the API refuses to start on a content problem. Found by the code review (R1).
 
 ---
 

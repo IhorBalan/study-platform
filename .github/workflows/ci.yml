@@ -32,6 +32,9 @@ jobs:
       - run: pnpm format:check
       - run: pnpm build
       - run: pnpm typecheck
+      # The tests use a small fixture curriculum, so the real one is validated here.
+      # The API refuses to start when a content file is wrong.
+      - run: pnpm curriculum:check
       # The API e2e test starts PostgreSQL with Testcontainers; hosted runners ship Docker.
       - run: pnpm test
 

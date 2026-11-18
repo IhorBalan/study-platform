@@ -1,6 +1,7 @@
 import { queryOptions, useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useEffect } from 'react';
+import { Command } from '../../components/CopyButton';
 import { Markdown } from '../../components/Markdown';
 import { SubmitPanel } from '../../components/SubmitPanel';
 import { api } from '../../lib/api';
@@ -88,9 +89,8 @@ function TaskPage() {
 
       {task.type === 'repo' && (
         <p className="mt-6 rounded-lg border border-zinc-200 p-4 text-sm dark:border-zinc-800">
-          Run <code className="font-mono">pnpm lab start {task.id}</code> to copy the starter files,
-          then work in <code className="font-mono">{task.labFolder}</code> inside your lab
-          repository.
+          Run <Command>{`pnpm lab start ${task.id}`}</Command> to copy the starter files, then work
+          in <code className="font-mono">{task.labFolder}</code> inside your lab repository.
           {task.services.length > 0 && <> Needs: {task.services.join(', ')}.</>}
         </p>
       )}

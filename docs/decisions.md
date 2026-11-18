@@ -324,3 +324,10 @@ Decisions made while building are appended below.
 - **What is verified:** every flag exists in the CLI's help text (version 2.1.327), and the whole flow passes with a stand-in program in place of the CLI.
 - **What is not verified:** a real run with your Claude login. I did not run the real CLI here, because it would have used this session's credentials. The setting is off by default (Settings, "Claude review"). Please try it once on a task; if the CLI answers in a different shape, the page shows the error and copy-paste still works.
 - **Dropped:** `--max-turns`, which this CLI version does not list. The bridge stops a review after 6 minutes instead.
+
+### D-101 · Full Docker mode — Accepted, 2026-11-18, bridge link needs a test on your Mac
+- **What it is:** `pnpm full:up` builds and runs the API, worker and web app as containers (web on http://localhost:8080). Each runs read-only, without capabilities, with a memory limit. Measured here: about 170 MiB in total, plus Postgres.
+- **Verified:** the three images build, the stack starts healthy, pages and API answer through the web container.
+- **Not verified:** the containers reaching the host bridge at `host.docker.internal`. That name exists on Docker Desktop and OrbStack for macOS, not in the Linux environment this was built in. If checks show "bridge not running" in full mode while `pnpm bridge` is up, tell me.
+- **The curriculum is baked into the API image,** so a content change needs a rebuild in full mode. Dev mode reads the files directly.
+- **Web server:** an unprivileged nginx image that serves the built files and passes `/api` to the API container.

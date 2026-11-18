@@ -1,9 +1,10 @@
 import { CardType, type CardDto } from '@study/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { useState, type FormEvent } from 'react';
 import { Button, Field, Input, PageHeader, Select, Textarea } from '../components/ui';
 import { filterCards } from '../lib/filterCards';
+import { lessonParams } from '../lib/format';
 import { api } from '../lib/api';
 
 /** How many deck cards are shown before "Show more". */
@@ -222,6 +223,18 @@ function CardList({
                 <p className="mt-1 text-xs text-zinc-400">
                   {card.type} · {card.source} ·{' '}
                   {card.status === 'suspended' ? 'suspended' : card.state}
+                  {card.lessonId && (
+                    <>
+                      {' · '}
+                      <Link
+                        to="/lessons/$moduleId/$lessonSlug"
+                        params={lessonParams(card.lessonId)}
+                        className="underline"
+                      >
+                        lesson
+                      </Link>
+                    </>
+                  )}
                 </p>
               </div>
               <div className="flex shrink-0 gap-2">{children(card)}</div>

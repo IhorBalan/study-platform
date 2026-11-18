@@ -24,3 +24,9 @@ export function durationLabel(seconds: number): string {
 export function percentLabel(share: number): string {
   return `${Math.round(share * 100)}%`;
 }
+
+/** Route parameters for a lesson id such as "m00-foundations/l01-http-in-depth". */
+export function lessonParams(lessonId: string): { moduleId: string; lessonSlug: string } {
+  const [moduleId = '', lessonSlug = ''] = lessonId.split('/');
+  return { moduleId, lessonSlug };
+}

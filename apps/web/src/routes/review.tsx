@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Markdown } from '../components/Markdown';
 import { Button, PageHeader } from '../components/ui';
 import { api } from '../lib/api';
-import { untilLabel } from '../lib/format';
+import { lessonParams, untilLabel } from '../lib/format';
 import { useStudySession } from '../lib/useStudySession';
 
 /** "in 14 hours", "in 3 days": how long until a moment in the future. */
@@ -131,6 +131,17 @@ function ReviewPage() {
             {revealed && (
               <div className="mt-6 border-t border-zinc-200 pt-6 dark:border-zinc-800">
                 <Markdown>{card.back}</Markdown>
+                {card.lessonId && (
+                  <p className="mt-4 text-sm">
+                    <Link
+                      to="/lessons/$moduleId/$lessonSlug"
+                      params={lessonParams(card.lessonId)}
+                      className="text-zinc-600 underline dark:text-zinc-300"
+                    >
+                      Open the lesson this card comes from
+                    </Link>
+                  </p>
+                )}
               </div>
             )}
           </div>

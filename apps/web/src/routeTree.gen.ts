@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CardsRouteImport } from './routes/cards'
 import { Route as ReviewRouteImport } from './routes/review'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as StatsRouteImport } from './routes/stats'
 import { Route as LessonsModuleIdLessonSlugRouteImport } from './routes/lessons/$moduleId.$lessonSlug'
@@ -30,6 +31,11 @@ const CardsRoute = CardsRouteImport.update({
 const ReviewRoute = ReviewRouteImport.update({
   id: '/review',
   path: '/review',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -58,6 +64,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cards': typeof CardsRoute
   '/review': typeof ReviewRoute
+  '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
   '/lessons/$moduleId/$lessonSlug': typeof LessonsModuleIdLessonSlugRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cards': typeof CardsRoute
   '/review': typeof ReviewRoute
+  '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
   '/lessons/$moduleId/$lessonSlug': typeof LessonsModuleIdLessonSlugRoute
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/cards': typeof CardsRoute
   '/review': typeof ReviewRoute
+  '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
   '/lessons/$moduleId/$lessonSlug': typeof LessonsModuleIdLessonSlugRoute
@@ -88,6 +97,7 @@ export interface FileRouteTypes {
     | '/'
     | '/cards'
     | '/review'
+    | '/search'
     | '/settings'
     | '/stats'
     | '/lessons/$moduleId/$lessonSlug'
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/'
     | '/cards'
     | '/review'
+    | '/search'
     | '/settings'
     | '/stats'
     | '/lessons/$moduleId/$lessonSlug'
@@ -106,6 +117,7 @@ export interface FileRouteTypes {
     | '/'
     | '/cards'
     | '/review'
+    | '/search'
     | '/settings'
     | '/stats'
     | '/lessons/$moduleId/$lessonSlug'
@@ -116,6 +128,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CardsRoute: typeof CardsRoute
   ReviewRoute: typeof ReviewRoute
+  SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
   StatsRoute: typeof StatsRoute
   LessonsModuleIdLessonSlugRoute: typeof LessonsModuleIdLessonSlugRoute
@@ -143,6 +156,13 @@ declare module '@tanstack/react-router' {
       path: '/review'
       fullPath: '/review'
       preLoaderRoute: typeof ReviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -180,6 +200,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CardsRoute: CardsRoute,
   ReviewRoute: ReviewRoute,
+  SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
   StatsRoute: StatsRoute,
   LessonsModuleIdLessonSlugRoute: LessonsModuleIdLessonSlugRoute,

@@ -393,6 +393,15 @@ Decisions made while building are appended below.
 ### D-112 · `main` is the main branch — Decided by Ihor, 2026-11-18
 - **What:** a `main` branch is created from the branch that held the handoff, and the build is merged into it.
 
+### D-113 · Work continues as small pull requests into `main` — Decided by Ihor, 2026-11-18
+- **What:** each improvement is one pull request with one purpose, branched from `main` and merged when CI is green. Testers and reviewers send findings, which are triaged here.
+
+### D-114 · Search is a scan of the curriculum held in memory — 2026-11-18
+- **What:** a Search page finds lessons and tasks by words in the title or the text. Every word must appear on the page, title matches rank first, and at most 20 results are shown with a snippet.
+- **Why:** with 130 lessons, the plan page alone does not answer "where was idempotency explained". The API already holds every page in memory, so a scan answers in about a millisecond.
+- **Alternatives:** PostgreSQL full-text search (needs the lesson text copied into the database and kept in step with the files) and a client-side index (ships every lesson to the browser). Both are more moving parts for no gain at this size.
+- **Limits:** no stemming or typo tolerance, and flashcards are not searched.
+
 ---
 
 ## Agreed before this log

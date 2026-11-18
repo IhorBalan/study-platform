@@ -41,6 +41,7 @@ Open the web app and start with the Plan page. It lists the modules in order and
 - **Lessons** end with "Mark as done", which adds the lesson's flashcards to your deck.
 - **Review** shows the cards that are due. Scheduling uses FSRS, and the daily limits are on the Settings page.
 - **Tasks** are either code tasks, checked automatically, or written tasks, reviewed by Claude against a rubric.
+- **Search** finds a lesson or a task by a word in its title or text.
 - **Stats** shows study time, streaks, lessons and tasks done, and how well you remember your cards.
 
 ### Working on code tasks

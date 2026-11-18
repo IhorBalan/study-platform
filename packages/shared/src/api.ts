@@ -519,3 +519,26 @@ export const StatsResponse = z.object({
   }),
 });
 export type StatsResponse = z.infer<typeof StatsResponse>;
+
+// ---------------------------------------------------------------------------
+// Search
+
+export const SearchQuery = z.object({ q: z.string().trim().max(100).default('') });
+export type SearchQuery = z.infer<typeof SearchQuery>;
+
+export const SearchResult = z.object({
+  kind: z.enum(['lesson', 'task']),
+  /** "<module>/<slug>", which is also the URL path of the lesson or task. */
+  id: z.string(),
+  title: z.string(),
+  moduleTitle: z.string(),
+  /** A short piece of the text around the first match. Empty when only the title matched. */
+  snippet: z.string(),
+});
+export type SearchResult = z.infer<typeof SearchResult>;
+
+export const SearchResponse = z.object({
+  query: z.string(),
+  results: z.array(SearchResult),
+});
+export type SearchResponse = z.infer<typeof SearchResponse>;

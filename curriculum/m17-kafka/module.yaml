@@ -3,7 +3,7 @@ summary: >-
   You can explain how a log differs from a job queue, reason about topics, partitions, keys and
   consumer groups, choose a delivery guarantee and make consumers safe under it, design events that
   leave Postgres through an outbox, and decide honestly whether a product needs Kafka, SQS, BullMQ
-  or just Postgres.
+  or just Postgres, and explain where RabbitMQ and its routing fit.
 kind: core
 effort: S
 services: []
@@ -13,3 +13,4 @@ skills:
   - { id: kafka-consumer-groups, title: "Consumer groups, offsets and delivery guarantees" }
   - { id: kafka-event-design, title: "Event design, schemas, the outbox and CDC" }
   - { id: kafka-vs-queues, title: "Choosing between Kafka, SQS, BullMQ and Postgres" }
+  - { id: rabbitmq-basics, title: "RabbitMQ exchanges, acknowledgements and durability" }

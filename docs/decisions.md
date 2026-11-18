@@ -458,6 +458,10 @@ Decisions made while building are appended below.
 
 A submission that used more memory than its task allows had every criterion marked "stopped before this one reported a result", with nothing saying why. The test runner itself survives (the kernel kills the child process), so the exit code does not show it. The sandbox container is now started without `--rm`; after it exits the bridge reads `State.OOMKilled` from `docker inspect`, reports "The checks ran out of memory" with the task's limit, and removes the container itself. Checked with a suite that allocates without bound under a 128 MB limit.
 
+### D-128 · Reported study time cannot exceed the age of its session — 2026-11-18
+
+`PATCH /api/sessions/:id` stored whatever number of active seconds the browser sent, so one wrong heartbeat could add a day to the statistics. The stored value is now capped at the seconds since the session started (server clock), and still never goes down.
+
 ---
 
 ## Agreed before this log

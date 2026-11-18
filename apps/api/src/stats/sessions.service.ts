@@ -24,8 +24,10 @@ export class SessionsService {
     const rows = await this.db
       .update(studySessions)
       .set({
-        // Heartbeats can arrive out of order; the count never goes down.
-        activeSeconds: sql`greatest(${studySessions.activeSeconds}, ${input.activeSeconds})`,
+        // Heartbeats can arrive out of order; the count never goes down. It also cannot
+        // be more than the time since the session started, so a stuck or wrong client
+        // cannot inflate the statistics.
+        activeSeconds: sql`greatest(${studySessions.activeSeconds}, least(${input.activeSeconds}, ceil(extract(epoch from now() - ${studySessions.startedAt}))::int))`,
         endedAt: new Date(),
       })
       .where(eq(studySessions.id, id))

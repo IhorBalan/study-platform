@@ -693,6 +693,20 @@ describe('API (e2e, real Postgres)', () => {
         .send({ activity: 'lesson', itemId: 'm00-demo/l01-first' })
         .expect(201);
       const id = started.body.id;
+      // A report longer than the session has existed is cut down to its age.
+      await http().patch(`/api/sessions/${id}`).send({ activeSeconds: 86_400 }).expect(204);
+      const db = app.get<Database>(DB);
+      const [fresh] = await db
+        .select({ activeSeconds: schema.studySessions.activeSeconds })
+        .from(schema.studySessions)
+        .where(eq(schema.studySessions.id, id));
+      expect(fresh?.activeSeconds).toBeLessThan(60);
+
+      // Pretend the session started two minutes ago.
+      await db
+        .update(schema.studySessions)
+        .set({ startedAt: new Date(Date.now() - 120_000) })
+        .where(eq(schema.studySessions.id, id));
       await http().patch(`/api/sessions/${id}`).send({ activeSeconds: 90 }).expect(204);
       await http().patch(`/api/sessions/${id}`).send({ activeSeconds: 30 }).expect(204);
 

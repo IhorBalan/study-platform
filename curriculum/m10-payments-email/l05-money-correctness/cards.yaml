@@ -1,0 +1,60 @@
+- id: minor-units
+  type: concept
+  front: Why store money as integers in minor units?
+  back: "Binary floats cannot represent most decimal fractions, so sums drift and rounding goes wrong (`0.1 + 0.2`). `1999 * 3` is exactly `5997`."
+  skills: [payment-reconciliation]
+- id: zero-decimal
+  type: concept
+  front: "What does `amount: 500` mean in a Stripe request with currency `jpy`?"
+  back: "500 yen. JPY is a zero-decimal currency, so the amount is not divided by 100."
+  skills: [payment-reconciliation]
+- id: pg-bigint-string
+  type: concept
+  front: "What does the `pg` driver return for a `bigint` column, and why does it matter for money?"
+  back: "A string, because a JS number cannot hold every 64-bit integer. Adding two of them concatenates: convert before summing."
+  skills: [payment-reconciliation]
+- id: format-money
+  type: snippet
+  front: Format an amount in minor units for display without assuming two decimals.
+  back: "`const f = new Intl.NumberFormat('en-US', { style: 'currency', currency }); f.format(minor / 10 ** f.resolvedOptions().maximumFractionDigits)`"
+  skills: [payment-reconciliation]
+- id: stripe-idempotency-saved
+  type: concept
+  front: What does Stripe return when you retry a v1 POST with the same idempotency key?
+  back: "The saved status and body of the first request, even a 500. Different parameters with the same key are rejected."
+  skills: [payment-reconciliation]
+- id: idempotency-key-lifetime
+  type: concept
+  front: How long can you rely on a Stripe v1 idempotency key?
+  back: "About a day: keys may be pruned once they are 24 hours old. They guard retries, not permanent deduplication."
+  skills: [payment-reconciliation]
+- id: refunds-as-rows
+  type: concept
+  front: Why record refunds as their own rows instead of lowering the order's amount?
+  back: "Revenue stays `amount - refunded`, every cent is explained, and partial and repeated refunds fit naturally."
+  skills: [payment-reconciliation]
+- id: reconciliation-interview
+  type: concept
+  front: "Interview: how do you keep your database in sync with the payment provider?"
+  back: "Webhooks for real-time updates, plus a scheduled reconciliation job that lists Stripe objects for a window, matches them to local rows and reports missing, mismatched and orphaned records."
+  skills: [payment-reconciliation]
+- id: recon-classes
+  type: comparison
+  front: "Reconciliation: missing vs orphaned"
+  back: "Missing: Stripe has a succeeded charge you have no record of (lost webhook). Orphaned: you record money Stripe never received (you may be giving product away)."
+  skills: [payment-reconciliation]
+- id: recon-match-succeeded
+  type: concept
+  front: When matching on PaymentIntent id, which charge do you compare against?
+  back: "The succeeded one. A PaymentIntent can have earlier failed charges from declined attempts."
+  skills: [payment-reconciliation]
+- id: stripe-listen-secret
+  type: concept
+  front: Which signing secret does your app need while `stripe listen` forwards events?
+  back: "The `whsec_` that `stripe listen` prints. It signs forwarded events with its own secret, not the Dashboard endpoint's."
+  skills: [payment-reconciliation]
+- id: merchant-of-record
+  type: comparison
+  front: Stripe directly vs a merchant of record (Paddle, Polar, Stripe Managed Payments)
+  back: "Directly: lower fees and full control, but tax and disputes are yours. MoR: it resells your product and handles global tax and disputes, for a higher fee."
+  skills: [payment-reconciliation]

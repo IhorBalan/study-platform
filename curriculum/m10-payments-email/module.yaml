@@ -1,0 +1,17 @@
+title: "Payments, email and webhooks"
+summary: >-
+  You can take payments with Stripe without touching card data, fulfil orders and keep subscriptions
+  in sync from signed webhooks that may arrive twice or out of order, keep money correct in integer
+  minor units and reconcile it against Stripe, send transactional email that arrives once and lands
+  in the inbox, and run a webhook system of your own that customers can trust.
+kind: core
+effort: M
+services: [postgres, mailpit]
+skills:
+  - { id: payments-fundamentals, title: How card payments work for a developer }
+  - { id: stripe-checkout, title: "Stripe Checkout and order fulfilment" }
+  - { id: webhook-handling, title: Receiving webhooks safely }
+  - { id: subscription-billing, title: "Subscriptions, trials and entitlements" }
+  - { id: payment-reconciliation, title: "Money correctness and reconciliation" }
+  - { id: transactional-email, title: Transactional email }
+  - { id: outbound-webhooks, title: Designing outbound webhooks }

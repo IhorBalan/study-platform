@@ -1,0 +1,19 @@
+{
+  "name": "order-email",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test --test-concurrency=1 \"dist/test/*.test.js\""
+  },
+  "dependencies": {
+    "nodemailer": "10.6.0",
+    "pg": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/nodemailer": "^8.0.2",
+    "@types/pg": "^8.15.0",
+    "typescript": "7.0.2"
+  }
+}

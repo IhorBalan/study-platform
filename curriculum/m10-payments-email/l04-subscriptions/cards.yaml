@@ -1,0 +1,55 @@
+- id: integrate-subscriptions
+  type: concept
+  front: "Interview: how do you integrate Stripe subscriptions?"
+  back: "Checkout in subscription mode (or the API) creates it; webhooks keep a local subscriptions table in sync; access checks read that table; the customer portal handles changes; test clocks test renewals."
+  skills: [subscription-billing]
+- id: access-statuses
+  type: concept
+  front: Which subscription statuses normally grant access?
+  back: "`trialing` and `active`, plus `past_due` during dunning if you choose. Not `incomplete`, `incomplete_expired`, `unpaid`, `canceled` or `paused`."
+  skills: [subscription-billing]
+- id: incomplete-window
+  type: term
+  front: "Subscription status `incomplete`"
+  back: "The first payment has not succeeded. The customer has 23 hours to pay, after which it becomes `incomplete_expired`."
+  skills: [subscription-billing]
+- id: local-entitlements
+  type: concept
+  front: Why keep subscription state in your own database instead of asking Stripe on each request?
+  back: "Calling Stripe per request adds latency and makes Stripe an outage dependency. Webhooks keep a local copy that access checks read."
+  skills: [subscription-billing]
+- id: period-on-item
+  type: concept
+  front: Where is `current_period_end` in current Stripe API versions?
+  back: "On each subscription item (`items.data[i].current_period_end`), not on the subscription itself."
+  skills: [subscription-billing]
+- id: trial-will-end
+  type: concept
+  front: "When does `customer.subscription.trial_will_end` fire by default, and what do you do with it?"
+  back: "Three days before the trial ends. Remind the customer before the first charge, which prevents surprise disputes."
+  skills: [subscription-billing]
+- id: proration-behaviors
+  type: comparison
+  front: "`proration_behavior`: create_prorations vs always_invoice vs none"
+  back: "create_prorations adds credit and charge to the next invoice (the default); always_invoice bills the difference now; none applies the new price from the next period."
+  skills: [subscription-billing]
+- id: dunning
+  type: term
+  front: Dunning
+  back: "Recovering failed renewal payments: retries (such as Smart Retries), reminder emails and a final action (cancel, unpaid or stay past_due)."
+  skills: [subscription-billing]
+- id: customer-portal
+  type: snippet
+  front: Send a customer to Stripe's hosted billing portal.
+  back: "`stripe.billingPortal.sessions.create({ customer, return_url })`, then redirect to `session.url`."
+  skills: [subscription-billing]
+- id: cancel-at-period-end
+  type: concept
+  front: "What does `cancel_at_period_end: true` do?"
+  back: "The subscription stays active until the current period ends, then becomes `canceled`. The customer keeps what they paid for."
+  skills: [subscription-billing]
+- id: test-clocks
+  type: concept
+  front: What do Stripe test clocks let you test?
+  back: "Renewals, trial endings and failed payments in simulated time: attach a customer to a clock, advance it, and real events reach your webhook."
+  skills: [subscription-billing]

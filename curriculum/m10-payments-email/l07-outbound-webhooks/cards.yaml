@@ -1,0 +1,55 @@
+- id: outbound-outbox
+  type: concept
+  front: Why write outbound webhook events in the same transaction as the business change?
+  back: "It is an outbox: the event exists if and only if the change committed, and a worker delivers it later with retries."
+  skills: [outbound-webhooks]
+- id: standard-webhooks-headers
+  type: term
+  front: The three Standard Webhooks headers
+  back: "`webhook-id` (stable event id), `webhook-timestamp` (Unix seconds) and `webhook-signature` (`v1,` plus a base64 HMAC)."
+  skills: [outbound-webhooks]
+- id: standard-webhooks-signed
+  type: cloze
+  front: "Standard Webhooks signs {{the event id, the timestamp and the raw body, joined with dots}} using HMAC-SHA256."
+  back: "the event id, the timestamp and the raw body, joined with dots (`id.timestamp.body`)"
+  skills: [outbound-webhooks]
+- id: stable-event-id
+  type: concept
+  front: Why must an outbound webhook keep the same id on every retry?
+  back: "Receivers deduplicate on it. A new id per attempt makes every retry look like a new event."
+  skills: [outbound-webhooks]
+- id: thin-vs-full-payload
+  type: comparison
+  front: Thin vs full webhook payloads
+  back: "Thin: ids only, the receiver fetches current data; leaks less and is never stale. Full: the object itself; no extra call, but can be stale or overshared."
+  skills: [outbound-webhooks]
+- id: outbound-retry-policy
+  type: concept
+  front: Which responses count as a successful webhook delivery, and what is special about 410?
+  back: "Only 2xx. Redirects, 4xx, 5xx and timeouts are retried with backoff and jitter; 410 Gone means disable the endpoint."
+  skills: [outbound-webhooks]
+- id: outbound-rotation
+  type: concept
+  front: How do you rotate a customer's webhook secret without breaking their endpoint?
+  back: "Keep old and new secrets for a grace period and send one signature per secret; the receiver accepts any match. Then drop the old one."
+  skills: [outbound-webhooks]
+- id: webhook-ssrf
+  type: concept
+  front: Why are customer-supplied webhook URLs an SSRF risk?
+  back: "Your server sends requests to them, so a URL like `http://169.254.169.254/` or `http://10.0.0.5/admin` reaches internal services from inside your network."
+  skills: [outbound-webhooks]
+- id: dns-rebinding
+  type: concept
+  front: Why check the resolved IP at connect time rather than the hostname at registration?
+  back: "DNS rebinding: a hostname can resolve to a public IP when saved and to 127.0.0.1 later. A `lookup` hook checks the address actually used."
+  skills: [outbound-webhooks]
+- id: no-redirects
+  type: concept
+  front: Why should a webhook sender not follow redirects?
+  back: "A redirect can point to an internal address and bypass your SSRF checks. Treat 3xx as a failure and ask the customer to fix the URL."
+  skills: [outbound-webhooks]
+- id: delivery-log
+  type: concept
+  front: What does a webhook delivery log give your customers?
+  back: "Each attempt with time, status and duration, plus a resend button, so they can debug their endpoint without a support ticket."
+  skills: [outbound-webhooks]

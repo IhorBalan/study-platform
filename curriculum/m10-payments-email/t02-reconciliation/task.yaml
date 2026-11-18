@@ -1,0 +1,32 @@
+title: Reconcile payments against Stripe
+type: repo
+skills: [payment-reconciliation]
+services: [postgres]
+runner: nest
+hints:
+  - "Read every charge first with for await (const c of charges). It works for arrays and for async iterables such as stripe.charges.list()."
+  - "Only status 'succeeded' moved money. Filter the others out before matching, and both the 'declined then paid' and 'only declined' cases fall out naturally."
+  - "pg returns bigint columns as strings: '1999' + '500' is '1999500'. Convert with Number() and check Number.isSafeInteger."
+  - "payment_intent is a string, or an object with an id when the list was expanded, or null."
+  - "Look payments up by PaymentIntent id across the whole table, but look for orphans only among payments created inside the window."
+  - "Write down the expected local status for a charge first: no refund is 'succeeded', a partial refund 'partially_refunded', a full one 'refunded'."
+criteria:
+  - { id: compiles, title: The project compiles with tsc }
+  - { id: matches-clean, title: Payments that agree with Stripe are counted as matched and nothing else is reported }
+  - { id: missing, title: Succeeded charges without a local payment are reported as missing }
+  - { id: mismatched, title: "Amount, currency, status and refund differences are reported per field" }
+  - { id: currency-case, title: EUR in the table and eur at Stripe are the same currency }
+  - { id: orphaned, title: Local payments that claim money without a succeeded charge are orphaned }
+  - { id: ignores-failed-charges, title: Failed attempts are neither missing nor compared }
+  - { id: totals, title: Net totals per currency are integers in minor units }
+  - { id: async-charges, title: Charges can be an async iterable that pages through the API }
+  - { id: expanded-intent, title: A charge whose payment_intent is an expanded object still matches }
+  - { id: window, title: "Payments outside the window are not orphaned, but a charge still finds its payment" }
+  - { id: own-tests, title: Your tests pass and catch a reconcile() that treats failed charges as succeeded }
+rubric:
+  - { id: integer-money, title: "Amounts stay integers in minor units end to end: bigint strings are converted once with a safety check, no float arithmetic or division by 100 appears, and totals are kept per currency", skill: payment-reconciliation, max: 4 }
+  - { id: one-pass, title: "The local side is read with one query (not one query per charge), and matching uses a map keyed by PaymentIntent id", skill: payment-reconciliation, max: 3 }
+  - { id: read-only, title: "reconcile() only reports and never changes the payments table, and the README explains which differences could be fixed automatically and which must go to a human", skill: payment-reconciliation, max: 3 }
+  - { id: readme-schedule, title: "README proposes a schedule and window (for example daily on Stripe's created, re-run later for late refunds and disputes) and names one source of drift the report would catch", skill: payment-reconciliation, max: 3 }
+  - { id: tests, title: "Own tests cover each report list, a failed attempt before a successful charge, totals and an async iterable", skill: payment-reconciliation, max: 3 }
+limits: { timeoutSeconds: 120 }

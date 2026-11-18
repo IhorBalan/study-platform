@@ -1,0 +1,60 @@
+- id: transactional-vs-marketing
+  type: comparison
+  front: Transactional vs marketing email
+  back: "Transactional: one recipient, triggered by their action, expected (receipts, resets). Marketing: bulk, sent by you, needs consent and unsubscribe. Keep them on separate domains or streams."
+  skills: [transactional-email]
+- id: smtp-vs-api
+  type: comparison
+  front: Sending through SMTP vs a provider's HTTP API
+  back: "SMTP is standard and portable: switch providers by changing config. An HTTP API is often faster and adds provider features such as stored templates, tags and idempotency."
+  skills: [transactional-email]
+- id: spf
+  type: term
+  front: SPF
+  back: "A DNS TXT record listing the servers allowed to send mail for your domain, e.g. `v=spf1 include:_spf.provider.example ~all`."
+  skills: [transactional-email]
+- id: dkim
+  type: term
+  front: DKIM
+  back: "The sending server signs each message with a private key; receivers verify it with the public key in your DNS. Proves origin and integrity."
+  skills: [transactional-email]
+- id: dmarc
+  type: term
+  front: DMARC
+  back: "A DNS policy (`_dmarc.example.com`) requiring SPF or DKIM to align with the visible From domain, saying what to do on failure and where to send reports."
+  skills: [transactional-email]
+- id: text-part
+  type: concept
+  front: Why send a plain-text part alongside the HTML?
+  back: "Some clients and screen readers use it, and spam filters treat HTML-only mail as suspicious."
+  skills: [transactional-email]
+- id: hard-vs-soft-bounce
+  type: comparison
+  front: Hard bounce vs soft bounce
+  back: "Hard: the address does not exist; suppress it for good. Soft: a temporary problem such as a full mailbox; the provider retries."
+  skills: [transactional-email]
+- id: suppression-list
+  type: concept
+  front: Why keep a suppression list for bounces and complaints?
+  back: "Repeatedly mailing bad or complaining addresses ruins your sender reputation, and providers suspend accounts with high bounce or complaint rates."
+  skills: [transactional-email]
+- id: email-from-job
+  type: concept
+  front: Why send email from a job instead of inside the request's transaction?
+  back: "A rollback after sending tells the customer about something that never happened, and a crash before sending loses the mail. Commit an outbox row, then send with retries."
+  skills: [transactional-email]
+- id: email-once
+  type: concept
+  front: How do you send one order confirmation per order despite retries and duplicate webhooks?
+  back: "Claim a row keyed by (kind, order id) with `insert ... on conflict do nothing` before sending; release the claim if sending fails."
+  skills: [transactional-email]
+- id: email-gap
+  type: concept
+  front: What duplicate can an email claim table not prevent?
+  back: "SMTP accepted the message, then the process died before marking it sent. A retry sends again; a lease or a provider idempotency key only narrows the gap."
+  skills: [transactional-email]
+- id: mailpit
+  type: concept
+  front: What does Mailpit give you in development and tests?
+  back: "A fake SMTP server that catches every message, with a UI and a JSON API to search, read and delete them. Nothing is delivered."
+  skills: [transactional-email]

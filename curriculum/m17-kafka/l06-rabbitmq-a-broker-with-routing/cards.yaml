@@ -1,0 +1,65 @@
+- id: rabbitmq-exchange-term
+  type: term
+  front: Exchange (RabbitMQ)
+  back: "The thing producers publish to. It stores nothing and copies each message to the queues whose bindings match. Example: a topic exchange `orders`."
+  skills: [rabbitmq-basics]
+- id: rabbitmq-topic-wildcards
+  type: concept
+  front: "Which of `order.eu.paid` and `order.eu.refunded` reach a queue bound with `order.*.paid`, and which reach one bound with `order.eu.#`?"
+  back: "`order.*.paid` gets only `order.eu.paid`. `order.eu.#` gets both. `*` is exactly one word, `#` is zero or more."
+  skills: [rabbitmq-basics]
+- id: rabbitmq-default-exchange
+  type: concept
+  front: How does `sendToQueue('email.orders', ...)` reach the queue without any binding you declared?
+  back: "It publishes to the default exchange (empty name), a direct exchange to which every queue is bound by its own name."
+  skills: [rabbitmq-basics]
+- id: rabbitmq-unroutable
+  type: concept
+  front: What happens to a message whose routing key matches no binding?
+  back: "It is dropped silently, and still confirmed. Publish with `mandatory: true` or set an alternate exchange to catch it."
+  skills: [rabbitmq-basics]
+- id: rabbitmq-durability-three
+  type: concept
+  front: What three things must all be in place for a message to survive a RabbitMQ restart without the producer losing track of it?
+  back: "A durable queue, a persistent message, and publisher confirms."
+  skills: [rabbitmq-basics]
+- id: rabbitmq-prefetch
+  type: cloze
+  front: "`await ch.prefetch(20)` means the consumer holds at most {{20 unacknowledged messages}} at a time."
+  back: 20 unacknowledged messages
+  skills: [rabbitmq-basics]
+- id: rabbitmq-nack-requeue
+  type: comparison
+  front: "`nack` with requeue vs `nack` without requeue"
+  back: "With requeue the message goes back to the queue for another delivery. Without, it is dropped, or dead-lettered if the queue has a DLX."
+  skills: [rabbitmq-basics]
+- id: rabbitmq-retry-delay
+  type: concept
+  front: How do you retry a message after 30 seconds with plain RabbitMQ features?
+  back: "Dead-letter it into a retry queue with `x-message-ttl` 30000 whose own DLX routes it back to the work queue."
+  skills: [rabbitmq-basics]
+- id: rabbitmq-quorum-vs-classic
+  type: comparison
+  front: Quorum queue vs classic queue
+  back: "A quorum queue is replicated across nodes with Raft and counts deliveries. A classic queue lives on one node."
+  skills: [rabbitmq-basics]
+- id: rabbitmq-ordering
+  type: concept
+  front: Why can a RabbitMQ queue be FIFO and still process messages out of order?
+  back: "Competing consumers finish at different speeds, and a requeued message is redelivered after newer ones."
+  skills: [rabbitmq-basics]
+- id: rabbitmq-confirm-snippet
+  type: snippet
+  front: Publish a persistent message to exchange `orders` with key `order.eu.paid` and wait for the broker's confirm (amqplib).
+  back: |-
+    ```ts
+    const pub = await conn.createConfirmChannel();
+    pub.publish('orders', 'order.eu.paid', body, { persistent: true });
+    await pub.waitForConfirms();
+    ```
+  skills: [rabbitmq-basics]
+- id: interview-rabbitmq-vs-kafka
+  type: comparison
+  front: "Interview: RabbitMQ vs Kafka"
+  back: "RabbitMQ routes messages to queues and deletes them once acked. Kafka keeps a partitioned log that many groups read and replay."
+  skills: [rabbitmq-basics]

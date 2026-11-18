@@ -464,6 +464,11 @@ A submission that used more memory than its task allows had every criterion mark
 
 `PATCH /api/sessions/:id` stored whatever number of active seconds the browser sent, so one wrong heartbeat could add a day to the statistics. The stored value is now capped at the seconds since the session started (server clock), and still never goes down.
 
+### D-130 · RabbitMQ gets one theory lesson; `main` is the default branch — Decided by Ihor, 2026-11-18
+
+- **RabbitMQ:** one theory lesson, no task and no practice service. It is lesson 6 of the Kafka and event streaming module, next to the lesson that compares messaging tools, with its own skill and 12 cards. The code in it was type-checked against amqplib 2.4.0 but not run against a broker.
+- **Default branch:** `main` is the repository's default branch, confirmed with `git ls-remote --symref origin HEAD`. The branch that held the handoff is no longer needed.
+
 ---
 
 ## Agreed before this log

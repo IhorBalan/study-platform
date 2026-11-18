@@ -562,6 +562,10 @@ A lesson's deck is copied into the database when the lesson is completed (D-077:
 
 Backups happen quietly when `pnpm dev` starts, so there was no way to see from the app that they work (feature proposals). The backup folder is on the host, where the API cannot look when it runs in Docker, so the host bridge reads it: its health answer carries the time of the newest `study-*.dump`, the API passes it on in `GET /api/bridge`, and Settings shows "The last backup was made 3 hours ago." Safety copies written by a restore do not count. The bridge honours `BACKUP_DIR` the same way the backup script does.
 
+### D-151 · Lessons and tasks return to where you were on Back and reload — 2026-11-18
+
+Going Back to a long lesson, or reloading it, landed at the top, because the Markdown is rendered after the first paint and the page is still short when the browser restores the position. Lesson and task pages now keep their scroll position per history entry in `sessionStorage` and return to it once the page is tall enough, or after three seconds at the latest. Scrolling by hand during the wait cancels it. The position belongs to the history entry, not to the lesson, so opening a lesson from a link always starts at the top: jumping into the middle of a page the learner chose to open again would be a surprise.
+
 ---
 
 ## Product direction

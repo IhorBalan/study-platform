@@ -7,6 +7,7 @@ import { NotesBox } from '../../components/NotesBox';
 import { SubmitPanel } from '../../components/SubmitPanel';
 import { api } from '../../lib/api';
 import { editorLink, taskFolder } from '../../lib/editorLink';
+import { useScrollMemory } from '../../lib/useScrollMemory';
 import { useStudySession } from '../../lib/useStudySession';
 
 const taskQuery = (id: string) =>
@@ -40,6 +41,7 @@ function TaskPage() {
   const { moduleId, taskSlug } = Route.useParams();
   const { data: task } = useSuspenseQuery(taskQuery(`${moduleId}/${taskSlug}`));
   useStudySession('task', task.id);
+  useScrollMemory(task.id);
 
   // The folder on this computer, once the lab repository path is known.
   const settings = useQuery({

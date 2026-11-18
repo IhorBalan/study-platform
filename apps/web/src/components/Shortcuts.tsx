@@ -100,6 +100,12 @@ export function Shortcuts() {
         </div>
         <div className="contents">
           <dt>
+            <Key>z</Key>
+          </dt>
+          <dd>In a review: undo the last grade</dd>
+        </div>
+        <div className="contents">
+          <dt>
             <Key>?</Key>
           </dt>
           <dd>Show or hide this list</dd>

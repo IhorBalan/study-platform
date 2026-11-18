@@ -7,7 +7,9 @@ import type {
   SubmitReview,
   SubmitReviewResponse,
 } from '@study/shared';
-import { and, asc, count, eq, gt, gte, lte, min, ne } from 'drizzle-orm';
+import { CardState } from '@study/shared';
+import { and, asc, count, desc, eq, gt, gte, lte, min, ne } from 'drizzle-orm';
+import { z } from 'zod';
 import { InjectDb, type Database } from '../database/database.module.js';
 import { SettingsService } from '../settings/settings.service.js';
 import { CardsService } from './cards.service.js';
@@ -15,6 +17,22 @@ import { loadCard, previewCard, reviewCard } from './scheduler.js';
 import { startOfLocalDay } from './time.js';
 
 const { cards, cardSchedules, reviews } = schema;
+
+/** A grade can be taken back for this long. After that it is history. */
+export const UNDO_WINDOW_MS = 10 * 60 * 1000;
+
+/** What a review row keeps of the schedule it replaced. */
+const ScheduleSnapshot = z.object({
+  state: CardState,
+  due: z.string(),
+  stability: z.number(),
+  difficulty: z.number(),
+  reps: z.number().int(),
+  lapses: z.number().int(),
+  lastReviewAt: z.string().nullable(),
+  fsrs: z.unknown(),
+});
+type ScheduleSnapshot = z.infer<typeof ScheduleSnapshot>;
 
 /** How many cards one queue request returns. The client asks again when it runs out. */
 const BATCH = 20;
@@ -146,6 +164,17 @@ export class ReviewService {
         now,
       );
 
+      const before = row.card_schedules;
+      const scheduleBefore: ScheduleSnapshot = {
+        state: before.state,
+        due: before.due.toISOString(),
+        stability: before.stability,
+        difficulty: before.difficulty,
+        reps: before.reps,
+        lapses: before.lapses,
+        lastReviewAt: before.lastReviewAt?.toISOString() ?? null,
+        fsrs: before.fsrs,
+      };
       await tx.insert(reviews).values({
         cardId,
         grade: input.grade,
@@ -154,6 +183,7 @@ export class ReviewService {
         answerMs: input.answerMs ?? null,
         mode: 'self',
         fsrsLog: log,
+        scheduleBefore,
       });
       await tx
         .update(cardSchedules)
@@ -170,6 +200,54 @@ export class ReviewService {
         .where(eq(cardSchedules.cardId, cardId));
 
       return { state: next.state, due: next.due.toISOString() };
+    });
+  }
+
+  /**
+   * Takes back the card's latest grade: removes that review and puts the schedule
+   * back exactly as it was. Only a grade from the last few minutes can be undone.
+   */
+  async undo(cardId: string, now = new Date()): Promise<SubmitReviewResponse> {
+    return this.db.transaction(async (tx) => {
+      // Same lock as a grade, so an undo and a grade of one card cannot interleave.
+      const [schedule] = await tx
+        .select()
+        .from(cardSchedules)
+        .where(eq(cardSchedules.cardId, cardId))
+        .for('update');
+      if (!schedule) throw new NotFoundException(`Card "${cardId}" does not exist`);
+      const [last] = await tx
+        .select()
+        .from(reviews)
+        .where(eq(reviews.cardId, cardId))
+        .orderBy(desc(reviews.reviewedAt))
+        .limit(1);
+      if (!last) throw new ConflictException('This card has no grade to undo.');
+      if (now.getTime() - last.reviewedAt.getTime() > UNDO_WINDOW_MS) {
+        throw new ConflictException(
+          'This grade is more than 10 minutes old and can no longer be undone.',
+        );
+      }
+      const snapshot = ScheduleSnapshot.safeParse(last.scheduleBefore);
+      if (!snapshot.success) {
+        throw new ConflictException('This grade was saved without what is needed to undo it.');
+      }
+      const before = snapshot.data;
+      await tx.delete(reviews).where(eq(reviews.id, last.id));
+      await tx
+        .update(cardSchedules)
+        .set({
+          state: before.state,
+          due: new Date(before.due),
+          stability: before.stability,
+          difficulty: before.difficulty,
+          reps: before.reps,
+          lapses: before.lapses,
+          lastReviewAt: before.lastReviewAt ? new Date(before.lastReviewAt) : null,
+          fsrs: before.fsrs,
+        })
+        .where(eq(cardSchedules.cardId, cardId));
+      return { state: before.state, due: before.due };
     });
   }
 

@@ -1,0 +1,1 @@
+ALTER TABLE "reviews" ADD COLUMN "schedule_before" jsonb;

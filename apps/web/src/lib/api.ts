@@ -94,6 +94,9 @@ export const api = {
       body: { grade, answerMs },
     }),
 
+  undoReview: (cardId: string) =>
+    request(`/review/${cardId}/undo`, SubmitReviewResponse, { method: 'POST', body: {} }),
+
   cards: (status?: CardStatus) =>
     request(`/cards${status ? `?status=${status}` : ''}`, CardListResponse),
   createCard: (card: CreateCard) => request('/cards', CardDto, { method: 'POST', body: card }),

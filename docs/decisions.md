@@ -538,6 +538,10 @@ There was nowhere to write your own words, which is what you reread before an in
 
 Part 2 of notes. `GET /api/notes` walks the curriculum and returns the notes it finds, with the lesson or task title and module, so the page reads in the order of the plan and needs no second request for titles. A note whose lesson or task no longer exists stays in the table but is not listed; it comes back if the content does. The page renders notes as Markdown and links each to its lesson or task. Notes is in the navigation and under `g n`. Notes in Search are still to do.
 
+### D-145 · Review time estimate from the learner's own pace — 2026-11-18
+
+A count of cards does not say whether there is time for them before work. The review queue and the Plan's "Review cards" row now add an estimate ("32 due, 5 new · about 9 min"): cards times the median answer time of the last 14 days. The median ignores the one card left open during a coffee break, which a mean would not. Answers under half a second or over two minutes are left out, and with fewer than ten timed reviews the estimate uses 8 seconds per card. The figure comes from the API as `secondsPerCard` in the queue and in Next up.
+
 ---
 
 ## Product direction

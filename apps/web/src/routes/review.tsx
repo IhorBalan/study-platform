@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Markdown } from '../components/Markdown';
 import { Button, PageHeader } from '../components/ui';
 import { api } from '../lib/api';
-import { lessonParams, untilLabel } from '../lib/format';
+import { lessonParams, reviewEstimate, untilLabel } from '../lib/format';
 import { useStudySession } from '../lib/useStudySession';
 
 /** "in 14 hours", "in 3 days": how long until a moment in the future. */
@@ -118,7 +118,10 @@ function ReviewPage() {
   return (
     <section>
       <PageHeader title="Review">
-        {counts.due} due · {counts.newAvailable} new · {counts.reviewedToday} reviewed today ·{' '}
+        {counts.due} due · {counts.newAvailable} new
+        {counts.due + counts.newAvailable > 0 &&
+          ` · ${reviewEstimate(counts.due + counts.newAvailable, queue.data.secondsPerCard)}`}{' '}
+        · {counts.reviewedToday} reviewed today ·{' '}
         <Link to="/cards" className="underline">
           Manage cards
         </Link>

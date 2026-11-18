@@ -8,7 +8,7 @@ import type {
   SubmitReviewResponse,
 } from '@study/shared';
 import { CardState } from '@study/shared';
-import { and, asc, count, desc, eq, gt, gte, lte, min, ne } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gt, gte, lte, min, ne, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { InjectDb, type Database } from '../database/database.module.js';
 import { SettingsService } from '../settings/settings.service.js';
@@ -33,6 +33,14 @@ const ScheduleSnapshot = z.object({
   fsrs: z.unknown(),
 });
 type ScheduleSnapshot = z.infer<typeof ScheduleSnapshot>;
+
+/** The pace estimate: defaults and what counts as a real answer time. */
+const DEFAULT_SECONDS_PER_CARD = 8;
+const PACE_WINDOW_DAYS = 14;
+const MIN_TIMED_REVIEWS = 10;
+/** Under half a second is a mis-key; over two minutes the learner walked away. */
+const MIN_ANSWER_MS = 500;
+const MAX_ANSWER_MS = 120_000;
 
 /** How many cards one queue request returns. The client asks again when it runs out. */
 const BATCH = 20;
@@ -122,6 +130,7 @@ export class ReviewService {
         pendingApproval: pending[0]?.n ?? 0,
       },
       nextDue: upcoming[0]?.due?.toISOString() ?? null,
+      secondsPerCard: await this.secondsPerCard(now),
     };
   }
 
@@ -249,6 +258,25 @@ export class ReviewService {
         .where(eq(cardSchedules.cardId, cardId));
       return { state: before.state, due: before.due };
     });
+  }
+
+  /**
+   * The median answer time over the last 14 days. With fewer than ten timed
+   * reviews there is nothing to go on, so a default is used.
+   */
+  private async secondsPerCard(now: Date): Promise<number> {
+    const since = new Date(now.getTime() - PACE_WINDOW_DAYS * 24 * 60 * 60 * 1000);
+    const result = await this.db.execute<{ n: number; median_ms: number | null }>(sql`
+      select count(*)::int as n,
+             percentile_cont(0.5) within group (order by answer_ms)::float8 as median_ms
+      from reviews
+      where reviewed_at >= ${since} and answer_ms is not null
+            and answer_ms between ${MIN_ANSWER_MS} and ${MAX_ANSWER_MS}
+    `);
+    const row = result.rows[0];
+    if (!row || row.n < MIN_TIMED_REVIEWS || row.median_ms === null)
+      return DEFAULT_SECONDS_PER_CARD;
+    return Math.round(row.median_ms / 100) / 10;
   }
 
   private async countReviews(since: Date, firstSight: boolean): Promise<number> {

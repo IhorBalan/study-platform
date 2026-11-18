@@ -171,6 +171,7 @@ export class PlanService {
         tasks: openTasks,
         dueCards: queue.counts.due,
         newCards: queue.counts.newAvailable,
+        secondsPerCard: queue.secondsPerCard,
         pendingCards: queue.counts.pendingApproval,
         reviewTasks: openReviewTasks.map((t) => ({ ...t, lessonId: lessonForSkill(t.skillId) })),
       },

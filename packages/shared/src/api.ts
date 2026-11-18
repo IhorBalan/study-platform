@@ -68,6 +68,8 @@ export const NextUp = z.object({
   tasks: z.array(NextItem.extend({ type: SubmissionType })),
   dueCards: z.number().int(),
   newCards: z.number().int(),
+  /** Typical seconds per card, for an estimate of how long the reviews will take. */
+  secondsPerCard: z.number(),
   pendingCards: z.number().int(),
   /** Skills whose recall has dropped, with the lesson to reread. */
   reviewTasks: z.array(
@@ -205,6 +207,11 @@ export const ReviewQueueResponse = z.object({
   }),
   /** When the next card that is not due yet becomes due. Null when no such card exists. */
   nextDue: z.string().nullable(),
+  /**
+   * Typical seconds this learner spends on one card: the median of the last 14 days,
+   * or 8 until there are enough reviews to tell.
+   */
+  secondsPerCard: z.number(),
 });
 export type ReviewQueueResponse = z.infer<typeof ReviewQueueResponse>;
 

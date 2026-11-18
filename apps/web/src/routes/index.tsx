@@ -3,6 +3,7 @@ import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from '@ta
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { SetupPanel } from '../components/SetupPanel';
 import { api } from '../lib/api';
+import { reviewEstimate } from '../lib/format';
 
 const planQuery = queryOptions({ queryKey: ['plan'], queryFn: api.plan });
 
@@ -158,6 +159,7 @@ function NextUpPanel({ nextUp }: { nextUp: NextUp }) {
               </Link>{' '}
               <span className="text-zinc-500 dark:text-zinc-400">
                 {nextUp.dueCards} due, {nextUp.newCards} new
+                {cards > 0 && ` · ${reviewEstimate(cards, nextUp.secondsPerCard)}`}
               </span>
             </li>
           )}

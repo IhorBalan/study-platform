@@ -1,4 +1,5 @@
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
+import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -33,6 +34,35 @@ describe('check results', () => {
     const file = path.join(dir, 'results.jsonl');
     await writeFile(file, '{"id":"a","passed":true}\n' + 'x'.repeat(5000));
     expect(await readResults(file, 4096)).toBeNull();
+  });
+
+  it('refuses a results file that is a link, without following it', async () => {
+    const file = path.join(dir, 'results.jsonl');
+    // /dev/zero reports size 0 and never ends: following it would read for ever.
+    await symlink('/dev/zero', file);
+    expect(await readResults(file)).toBeNull();
+
+    await rm(file);
+    const real = path.join(dir, 'real.jsonl');
+    await writeFile(real, '{"id":"a","passed":true}\n');
+    await symlink(real, file);
+    expect(await readResults(file)).toBeNull();
+  });
+
+  it('refuses a results file that is a named pipe, without waiting on it', async () => {
+    const file = path.join(dir, 'results.jsonl');
+    execFileSync('mkfifo', [file]);
+    expect(await readResults(file)).toBeNull();
+  });
+
+  it('counts files in subfolders and treats links and pipes as over any limit', async () => {
+    await mkdir(path.join(dir, 'a', 'b'), { recursive: true });
+    await writeFile(path.join(dir, 'a', 'b', 'big.bin'), 'x'.repeat(3000));
+    await writeFile(path.join(dir, 'results.jsonl'), 'x'.repeat(100));
+    expect(await folderBytes(dir)).toBe(3100);
+
+    await symlink('/dev/zero', path.join(dir, 'a', 'link'));
+    expect(await folderBytes(dir)).toBe(Infinity);
   });
 
   it('notices once when the folder grows past the limit', async () => {

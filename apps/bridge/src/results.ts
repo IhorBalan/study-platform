@@ -1,4 +1,5 @@
-import { readdir, readFile, stat } from 'node:fs/promises';
+import { constants } from 'node:fs';
+import { lstat, open, readdir } from 'node:fs/promises';
 import path from 'node:path';
 
 /**
@@ -14,15 +15,26 @@ export interface ReportedResult {
   message: string | null;
 }
 
-/** Total size of the files directly inside a folder. Missing files count as empty. */
+/**
+ * Total size of the regular files in a folder and its subfolders. Links are
+ * never followed. Anything that is not a plain file or folder (a symbolic link,
+ * a pipe, a device) has no place in a results folder and counts as infinite.
+ */
 export async function folderBytes(dir: string): Promise<number> {
-  const names = await readdir(dir).catch(() => [] as string[]);
+  const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
   let total = 0;
-  for (const name of names) {
-    total += await stat(path.join(dir, name)).then(
-      (s) => s.size,
-      () => 0,
-    );
+  for (const entry of entries) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      total += await folderBytes(full);
+    } else if (entry.isFile()) {
+      total += await lstat(full).then(
+        (s) => s.size,
+        () => 0,
+      );
+    } else {
+      return Infinity;
+    }
   }
   return total;
 }
@@ -54,19 +66,49 @@ export function watchFolderSize(
 }
 
 /**
+ * Reads at most `limit` bytes of a file the sandbox wrote. Returns `null` when
+ * the file is larger, or is not a regular file.
+ *
+ * The sandbox controls this path, so it may be a symbolic link to a host file
+ * or to /dev/zero, or a named pipe. The file is opened without following links
+ * and without blocking, and it is checked and read through the same handle, so
+ * what was checked is what is read.
+ */
+async function readBounded(file: string, limit: number): Promise<string | null> {
+  let handle;
+  try {
+    handle = await open(file, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+  } catch (error) {
+    // No file means the checks reported nothing. A link (ELOOP) is refused.
+    return (error as NodeJS.ErrnoException).code === 'ENOENT' ? '' : null;
+  }
+  try {
+    const info = await handle.stat();
+    if (!info.isFile() || info.size > limit) return null;
+    const buffer = Buffer.alloc(limit + 1);
+    let length = 0;
+    while (length < buffer.length) {
+      const { bytesRead } = await handle.read(buffer, length, buffer.length - length, length);
+      if (bytesRead === 0) break;
+      length += bytesRead;
+    }
+    // The file may have grown between the size check and the read.
+    return length > limit ? null : buffer.toString('utf8', 0, length);
+  } finally {
+    await handle.close();
+  }
+}
+
+/**
  * Reads the results the check suite reported. Returns `null` when the file is
- * larger than any real results file, so it is never loaded into memory.
+ * not something a check suite writes: too large, a link, or a special file.
  */
 export async function readResults(
   file: string,
   limit = MAX_RESULTS_BYTES,
 ): Promise<ReportedResult[] | null> {
-  const size = await stat(file).then(
-    (s) => s.size,
-    () => 0,
-  );
-  if (size > limit) return null;
-  const text = await readFile(file, 'utf8').catch(() => '');
+  const text = await readBounded(file, limit);
+  if (text === null) return null;
   const results: ReportedResult[] = [];
   for (const line of text.split('\n')) {
     if (!line.trim()) continue;

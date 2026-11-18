@@ -1,3 +1,4 @@
+import type { SearchResult } from '@study/shared';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
@@ -5,6 +6,11 @@ import { Input, PageHeader } from '../components/ui';
 import { api } from '../lib/api';
 
 const MIN_LENGTH = 2;
+
+function resultLabel(result: SearchResult): string {
+  if (result.inNote) return `Your note on a ${result.kind}`;
+  return result.kind === 'lesson' ? 'Lesson' : 'Task';
+}
 
 export const Route = createFileRoute('/search')({
   // The search text lives in the address, so a search can be bookmarked and survives a reload.
@@ -49,12 +55,12 @@ function SearchPage() {
   return (
     <section>
       <PageHeader title="Search">
-        Find a lesson or a task by a word in its title or text.
+        Find a lesson, a task or one of your notes by a word in it.
       </PageHeader>
       <Input
         type="search"
         autoFocus
-        aria-label="Search lessons and tasks"
+        aria-label="Search lessons, tasks and notes"
         placeholder="For example: idempotency, EXPLAIN, refresh token"
         maxLength={100}
         value={text}
@@ -77,9 +83,9 @@ function SearchPage() {
             {results.map((result) => {
               const [moduleId = '', slug = ''] = result.id.split('/');
               return (
-                <li key={`${result.kind}:${result.id}`} className="py-3">
+                <li key={`${result.kind}:${result.id}:${result.inNote}`} className="py-3">
                   <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                    {result.kind === 'lesson' ? 'Lesson' : 'Task'} · {result.moduleTitle}
+                    {resultLabel(result)} · {result.moduleTitle}
                   </p>
                   {result.kind === 'lesson' ? (
                     <Link

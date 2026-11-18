@@ -206,6 +206,7 @@ describe('API (e2e, real Postgres)', () => {
           title: 'First lesson',
           moduleTitle: expect.any(String),
           snippet: 'Hello world.',
+          inNote: false,
         },
       ]);
 
@@ -826,6 +827,21 @@ describe('API (e2e, real Postgres)', () => {
         body: 'Second **draft**',
       });
       await http().put('/api/notes/m00-demo/t01-explain').send({ body: '' }).expect(200);
+
+      // Search finds a note by its own words, and ranks it above the page it is on.
+      const found = await http().get('/api/search?q=draft').expect(200);
+      expect(found.body.results).toEqual([
+        {
+          kind: 'lesson',
+          id: lessonId,
+          title: 'First lesson',
+          moduleTitle: 'Demo module',
+          snippet: 'Second draft',
+          inNote: true,
+        },
+      ]);
+      const both = await http().get('/api/search?q=first').expect(200);
+      expect(both.body.results.map((r: { inNote: boolean }) => r.inNote)).toEqual([false]);
 
       // An emptied note is removed, not stored as blank text.
       await http().put(`/api/notes/${lessonId}`).send({ body: '   ' }).expect(200);

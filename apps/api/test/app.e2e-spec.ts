@@ -17,6 +17,8 @@ describe('API (e2e, real Postgres)', () => {
   let app: INestApplication;
   let bridge: Server;
   const bridgeReplies: unknown[] = [];
+  /** How long the stand-in bridge takes to answer, to imitate a review in progress. */
+  let bridgeDelayMs = 0;
   const http = () => request(app.getHttpServer());
   /** Moves a card's due date into the past, as if its interval had elapsed. */
   const makeDue = async (cardId: string) => {
@@ -37,19 +39,21 @@ describe('API (e2e, real Postgres)', () => {
       if (req.method === 'POST' && req.url === '/review/run') {
         req.resume();
         req.on('end', () => {
-          res.writeHead(200, { 'content-type': 'application/json' });
-          res.end(
-            JSON.stringify(
-              bridgeReplies.shift() ?? {
-                status: 'error',
-                message: 'no reply queued',
-                output: '',
-                model: null,
-                costUsd: null,
-                durationMs: 1,
-              },
-            ),
-          );
+          setTimeout(() => {
+            res.writeHead(200, { 'content-type': 'application/json' });
+            res.end(
+              JSON.stringify(
+                bridgeReplies.shift() ?? {
+                  status: 'error',
+                  message: 'no reply queued',
+                  output: '',
+                  model: null,
+                  costUsd: null,
+                  durationMs: 1,
+                },
+              ),
+            );
+          }, bridgeDelayMs);
         });
         return;
       }
@@ -377,8 +381,13 @@ describe('API (e2e, real Postgres)', () => {
           .expect(201);
         const start = () =>
           http().post(`/api/submissions/${created.body.id}/reviews`).send({ mode: 'bridge' });
-        const replies = await Promise.all([start(), start(), start()]);
-        expect(replies.map((r) => r.status).toSorted()).toEqual([201, 409, 409]);
+        bridgeDelayMs = 1000;
+        try {
+          const replies = await Promise.all([start(), start(), start()]);
+          expect(replies.map((r) => r.status).toSorted()).toEqual([201, 409, 409]);
+        } finally {
+          bridgeDelayMs = 0;
+        }
       });
 
       it('passes on the reason when the CLI is not signed in', async () => {

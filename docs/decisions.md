@@ -530,6 +530,10 @@ Settings has a Theme choice: same as the system (default), light or dark (UX rev
 
 Finishing several lessons in a burst creates a pile of reviews a week later, and nothing showed it coming (feature proposal 5). Stats now has "Cards coming due, next 14 days": one bar per local day from `card_schedules.due`, for active cards already seen. Today's bar includes overdue cards, so it equals "Due today". New cards are left out because the daily limit, not a due date, decides when they appear. This is a forecast of work, not a schedule, so it stays within the "no dates" rule. The time estimate ("about 9 min") and the note after "Mark as done" from the same proposal are separate steps.
 
+### D-143 · Notes: one Markdown note per lesson or task, saved as you type — 2026-11-18
+
+There was nowhere to write your own words, which is what you reread before an interview (feature proposal 6, part 1). Each lesson and task page has a "My notes" box, closed until there is a note. A new `notes` table keeps one row per item, keyed by the lesson or task id, so notes survive curriculum edits and are part of every backup. `GET` and `PUT /api/notes/:module/:slug` read and save it; the id must be an existing lesson or task, an emptied note deletes the row, and a note is at most 20,000 characters. The box saves 0.8 seconds after typing stops, and at once (with `keepalive`) when the page is left or the tab closes, so the last words are not lost. A Notes page that lists all notes, and notes in Search, are the second part.
+
 ---
 
 ## Product direction

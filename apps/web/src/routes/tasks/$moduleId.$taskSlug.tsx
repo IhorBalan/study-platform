@@ -3,6 +3,7 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { Command } from '../../components/CopyButton';
 import { Markdown } from '../../components/Markdown';
+import { NotesBox } from '../../components/NotesBox';
 import { SubmitPanel } from '../../components/SubmitPanel';
 import { api } from '../../lib/api';
 import { editorLink, taskFolder } from '../../lib/editorLink';
@@ -151,6 +152,7 @@ function TaskPage() {
       )}
 
       <SubmitPanel task={task} />
+      <NotesBox key={task.id} itemId={task.id} />
 
       {(previous || next) && (
         <nav

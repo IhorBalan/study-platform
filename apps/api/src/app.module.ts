@@ -17,6 +17,8 @@ import { ENV, type Env } from './config/env.js';
 import { DatabaseModule } from './database/database.module.js';
 import { HealthController } from './health/health.controller.js';
 import { PlanController } from './plan/plan.controller.js';
+import { NotesController } from './notes/notes.controller.js';
+import { NotesService } from './notes/notes.service.js';
 import { PlanService } from './plan/plan.service.js';
 import { QueueService } from './queue/queue.service.js';
 import { SubmissionReviewController } from './review/review.controller.js';
@@ -44,6 +46,7 @@ import { SrsController } from './srs/srs.controller.js';
     SubmissionReviewController,
     BridgeController,
     StatsController,
+    NotesController,
   ],
   providers: [
     PlanService,
@@ -54,6 +57,7 @@ import { SrsController } from './srs/srs.controller.js';
     SubmissionsService,
     SubmissionReviewService,
     StatsService,
+    NotesService,
     SessionsService,
     WeakSkillsService,
     { provide: APP_FILTER, useClass: ProblemDetailsFilter },

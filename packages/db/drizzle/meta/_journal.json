@@ -43,6 +43,13 @@
       "when": 1795035662653,
       "tag": "0005_bright_famine",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795036803800,
+      "tag": "0006_clumsy_captain_stacy",
+      "breakpoints": true
     }
   ]
 }

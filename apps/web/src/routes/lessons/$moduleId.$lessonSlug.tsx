@@ -2,6 +2,7 @@ import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from '@ta
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Markdown } from '../../components/Markdown';
+import { NotesBox } from '../../components/NotesBox';
 import { api } from '../../lib/api';
 import { lessonOutline, readingMinutes } from '../../lib/lessonOutline';
 import { useStudySession } from '../../lib/useStudySession';
@@ -82,6 +83,8 @@ function LessonPage() {
       )}
 
       <Markdown sectionIds={outline.map((item) => item.id)}>{lesson.markdown}</Markdown>
+
+      <NotesBox key={id} itemId={id} />
 
       <div className="mt-10 flex flex-wrap items-center gap-4 border-t border-zinc-200 pt-6 dark:border-zinc-800">
         {lesson.status === 'done' ? (

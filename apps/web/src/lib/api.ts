@@ -1,4 +1,5 @@
 import {
+  NoteDto,
   HealthResponse,
   LessonDetail,
   LessonProgressResponse,
@@ -116,6 +117,11 @@ export const api = {
     }),
   dismissReviewTask: (id: string) =>
     request(`/review-tasks/${id}/dismiss`, z.undefined(), { method: 'POST', body: {} }),
+
+  note: (itemId: string) => request(`/notes/${itemId}`, NoteDto),
+  /** `keepalive` lets a save sent while the page is closing still arrive. */
+  saveNote: (itemId: string, body: string, keepalive = false) =>
+    request(`/notes/${itemId}`, NoteDto, { method: 'PUT', body: { body }, keepalive }),
 
   settings: () => request('/settings', SettingsDto),
   updateSettings: (patch: UpdateSettings) =>

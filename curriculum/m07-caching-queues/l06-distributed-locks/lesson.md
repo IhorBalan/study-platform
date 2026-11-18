@@ -43,9 +43,11 @@ export async function withLock<T>(
   ttlMs: number,
   work: (fence: number, lost: AbortSignal) => Promise<T>,
 ): Promise<T | null> {
-  const key = `${prefix}lock:${name}`;
+  // The braces are a hash tag: on a cluster both keys must hash to the same slot,
+  // or the script fails with CROSSSLOT.
+  const key = `${prefix}lock:{${name}}`;
   const token = randomUUID();
-  const fence = (await redis.eval(ACQUIRE, 2, key, `${prefix}fence:${name}`, token, ttlMs)) as number | null;
+  const fence = (await redis.eval(ACQUIRE, 2, key, `${prefix}fence:{${name}}`, token, ttlMs)) as number | null;
   if (fence === null) return null; // someone else holds it
   const lost = new AbortController();
   const renew = setInterval(() => {

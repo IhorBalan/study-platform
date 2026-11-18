@@ -16,5 +16,12 @@ export function taskFolder(labRepoPath: string, labFolder: string): string {
 export function editorLink(editor: Editor, folder: string): { href: string; label: string } | null {
   if (editor === 'none') return null;
   const path = folder.replaceAll('\\', '/').replace(/^\/+/, '');
-  return { href: `${editor}://file/${encodeURI(path)}`, label: `Open in ${names[editor]}` };
+  // Each part is encoded on its own: "#" or "?" in a folder name would otherwise end the path.
+  // The colon of a Windows drive letter stays, as editors expect "C:/...".
+  const encoded = path
+    .split('/')
+    .map(encodeURIComponent)
+    .join('/')
+    .replace(/^([A-Za-z])%3A\//, '$1:/');
+  return { href: `${editor}://file/${encoded}`, label: `Open in ${names[editor]}` };
 }

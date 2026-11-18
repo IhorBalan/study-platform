@@ -2,6 +2,7 @@ import type { QueryClient } from '@tanstack/react-query';
 import { createRootRouteWithContext, Link, Outlet } from '@tanstack/react-router';
 import { Button } from '../components/ui';
 import { HealthBadge } from '../components/HealthBadge';
+import { Shortcuts } from '../components/Shortcuts';
 
 const nav = [
   { to: '/', label: 'Plan' },
@@ -61,6 +62,10 @@ function RootLayout() {
       <main className="flex-1 py-8">
         <Outlet />
       </main>
+      <footer className="hidden pb-4 text-xs text-zinc-500 sm:block dark:text-zinc-400">
+        Press <kbd className="font-mono">?</kbd> for keyboard shortcuts
+      </footer>
+      <Shortcuts />
     </div>
   );
 }

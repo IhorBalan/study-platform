@@ -498,6 +498,10 @@ Code task pages show the task's full folder path with a copy button and an "Open
 
 The backend tester showed that `pnpm restore --yes` ran while the API was writing, and the writes made after the restore ended up mixed into the restored data (BE-10). `pnpm restore` now counts the other connections to the `study` database and refuses if there are any; `--force` overrides it. Before replacing anything it writes `backups/before-restore-<time>.dump` (the newest 3 are kept, separately from the 14 normal backups) and prints the command that undoes the restore. Backup names now carry seconds, and a name that is already taken waits for the next second, so two backups close together no longer replace each other (BE-9). A `BACKUP_DIR` that is not a folder gives one line instead of a stack trace (BE-11).
 
+### D-135 · Global keyboard shortcuts match letters by physical key — 2026-11-18
+
+`g` then `p`, `r`, `c`, `s` or `e` goes to Plan, Review, Cards, Stats or Settings; `/` goes to Search (or focuses the search field); `?` shows the list. Letters are matched on `event.code`, not `event.key`, so they work when the keyboard is in a Ukrainian or other non-Latin layout. Shortcuts are ignored inside fields, with Ctrl, Cmd or Alt held, and while the help dialog is open. `g` waits 1.5 seconds for its second key. The logic is a pure function (`lib/shortcuts.ts`) with unit tests; the help is a native `<dialog>`, which brings focus trapping and Escape for free. Settings is `e` because `s` is Stats.
+
 ---
 
 ## Product direction

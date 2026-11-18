@@ -1,6 +1,7 @@
 import type { ModuleSummary, NextUp } from '@study/shared';
 import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
+import { SetupPanel } from '../components/SetupPanel';
 import { api } from '../lib/api';
 
 const planQuery = queryOptions({ queryKey: ['plan'], queryFn: api.plan });
@@ -25,6 +26,12 @@ function PlanPage() {
         A recommended order, not a schedule. Go deeper or skip optional modules as you like.
       </p>
 
+      {data.modules.length > 0 && (
+        <SetupPanel
+          nextLesson={data.nextUp.lesson}
+          anyLessonDone={data.modules.some((m) => m.lessons.some((l) => l.status === 'done'))}
+        />
+      )}
       {data.modules.length > 0 && <NextUpPanel nextUp={data.nextUp} />}
 
       {data.modules.length === 0 ? (

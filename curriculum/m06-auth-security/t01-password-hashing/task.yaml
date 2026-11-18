@@ -1,0 +1,28 @@
+title: Hash passwords with scrypt
+type: repo
+skills: [password-storage]
+services: []
+runner: node
+hints:
+  - "crypto.scrypt needs 128 * N * r bytes. Node refuses anything over its maxmem option, which defaults to 32 MiB, so pass a larger maxmem for N = 2^17."
+  - "promisify(scrypt) from node:util gives you an async version. scryptSync would freeze every other request for the length of the hash."
+  - "crypto.timingSafeEqual throws when the two buffers differ in length. Check the stored key's length when you parse it, so verification can return false instead of throwing."
+  - Parse the stored string first and derive with the parameters you found there. Your defaults only apply to new hashes.
+  - The plain password exists in memory only during login. That is the one moment you can rehash it with new parameters.
+  - "Pass small parameters such as { N: 2 ** 10, r: 8, p: 1 } in your own tests, so the suite runs in well under a second."
+criteria:
+  - { id: format, title: "The stored string encodes N, r, p, a 16-byte salt and a 32-byte scrypt key" }
+  - { id: unique-salts, title: Hashing the same password twice gives different strings that both verify }
+  - { id: verify, title: The right password is accepted and anything else is rejected without throwing }
+  - { id: encoded-params, title: "Verification uses the stored parameters, and new hashes use N=2^17, r=8, p=1" }
+  - { id: timing-safe, title: Verification compares keys with crypto.timingSafeEqual }
+  - { id: rehash, title: needsRehash spots old parameters and login returns an upgraded hash }
+  - { id: input-limits, title: "hashPassword rejects non-strings, empty passwords and passwords over 1024 characters" }
+  - { id: non-blocking, title: Hashing with the default parameters does not block the event loop }
+  - { id: own-tests, title: Your tests pass and catch a verifyPassword that accepts any password }
+rubric:
+  - { id: parsing, title: "The stored string is parsed in one place that validates every part (format, parameter ranges, salt and key length) before any key is derived", skill: password-storage, max: 4 }
+  - { id: comparison, title: "Keys are compared only with timingSafeEqual, length differences are handled before the call, and no early return leaks how much of the key matched", skill: password-storage, max: 3 }
+  - { id: upgrade-path, title: "login rehashes only after a successful verification and leaves storing the new hash to the caller, with a comment or README line saying why", skill: password-storage, max: 3 }
+  - { id: readme-choice, title: "README gives the measured time and memory of one default hash and names argon2id (with parameters) as the production choice, with one reason it beats scrypt or bcrypt", skill: password-storage, max: 4 }
+limits: { timeoutSeconds: 60 }

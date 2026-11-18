@@ -1,0 +1,60 @@
+- id: partition-term
+  type: term
+  front: Partition
+  back: "One ordered, append-only log within a topic, with its own offsets. Example: `orders.events` with 6 partitions is 6 independent logs."
+  skills: [kafka-partitions]
+- id: interview-ordering-guarantee
+  type: concept
+  front: "Interview: what ordering does Kafka guarantee?"
+  back: "Order within one partition only. Records with the same key go to the same partition, so order holds per key, not across the topic."
+  skills: [kafka-partitions]
+- id: interview-partitions-why
+  type: concept
+  front: "Interview: what are partitions for?"
+  back: "Spreading a topic's data and load over brokers, and parallel consumption: in one group each partition is read by at most one consumer."
+  skills: [kafka-partitions]
+- id: key-choice
+  type: concept
+  front: Which key would you give order events, and why?
+  back: "The order ID. All events of one order stay in one partition and in order, while different orders spread across partitions."
+  skills: [kafka-partitions]
+- id: adding-partitions
+  type: concept
+  front: What goes wrong when you add partitions to a keyed topic?
+  back: "The key-to-partition mapping changes, so new records for a key may land in a different partition than its old ones, breaking per-key order around the change."
+  skills: [kafka-partitions]
+- id: hot-partition
+  type: concept
+  front: Why can keying by tenant ID slow a topic down?
+  back: "A large tenant sends everything to one partition, so one partition and one consumer carry most of the load."
+  skills: [kafka-partitions]
+- id: isr-term
+  type: term
+  front: In-sync replica set (ISR)
+  back: "The replicas of a partition that are caught up with the leader. A new leader is chosen from it. Example: leader on broker 1, ISR = {1, 2, 3}."
+  skills: [kafka-partitions]
+- id: acks-values
+  type: comparison
+  front: "`acks=1` vs `acks=all`"
+  back: "`1` waits for the leader only, so a leader crash can lose an acknowledged write. `all` waits for every in-sync replica."
+  skills: [kafka-partitions]
+- id: durable-config
+  type: cloze
+  front: "A common durable setup: replication factor 3, `min.insync.replicas={{2}}`, producer `acks=all`."
+  back: "2"
+  skills: [kafka-partitions]
+- id: kraft-term
+  type: term
+  front: KRaft
+  back: "Kafka's built-in Raft-based metadata quorum that replaced ZooKeeper. Since Kafka 4.0, ZooKeeper mode is gone entirely."
+  skills: [kafka-partitions]
+- id: idempotent-producer
+  type: concept
+  front: What does the idempotent producer prevent, and what does it not?
+  back: "It stops duplicates and reordering caused by the client's own retries. It does not stop your code from sending the same business event twice."
+  skills: [kafka-partitions]
+- id: linger-ms
+  type: concept
+  front: "What do you trade when you raise the producer's `linger.ms`?"
+  back: "Latency for throughput: the producer waits longer to fill bigger, better-compressed batches."
+  skills: [kafka-partitions]

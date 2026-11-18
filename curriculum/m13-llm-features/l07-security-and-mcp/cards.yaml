@@ -1,0 +1,60 @@
+- id: injection-root-cause
+  type: concept
+  front: Why is prompt injection hard to fix, unlike SQL injection?
+  back: "A model gets instructions and data in one token stream and decides itself what to obey. There is no parameter channel that keeps data from being read as instructions."
+  skills: [llm-security]
+- id: direct-vs-indirect
+  type: comparison
+  front: Direct vs indirect prompt injection
+  back: "Direct: the user types the instructions. Indirect: they hide in content the system reads for the user (a document, email, web page or tool result), so the attacker need not be the user."
+  skills: [llm-security]
+- id: injection-defence-interview
+  type: concept
+  front: "Interview: how do you defend an LLM feature against prompt injection?"
+  back: "Assume the model can be manipulated and limit the damage: authorisation in tool code from the session, least-privilege tools, human approval for consequential actions, capped side effects, untrusted content marked as data, output treated as untrusted."
+  skills: [llm-security]
+- id: markdown-exfiltration
+  type: concept
+  front: How can rendering model Markdown leak data?
+  back: "An injected instruction makes the model emit an image whose URL contains user data. The browser loads it and sends the data to the attacker. Allowlist domains or render plain text."
+  skills: [llm-security]
+- id: output-untrusted
+  type: concept
+  front: How should a backend treat model output before using it?
+  back: "Like an anonymous request body: validate with a schema, escape for HTML, use it only as a SQL parameter, never pass it to eval or a shell, and apply SSRF rules to URLs."
+  skills: [llm-security]
+- id: owasp-llm01
+  type: cloze
+  front: "In the OWASP Top 10 for LLM Applications 2026, LLM01 is {{Prompt Injection}} and LLM03 is Excessive Agency."
+  back: Prompt Injection
+  skills: [llm-security]
+- id: mcp-what
+  type: term
+  front: Model Context Protocol (MCP)
+  back: "An open JSON-RPC protocol through which AI hosts use tools, resources and prompts from servers. Example: Claude Code calling `search_notes` on your local notes server."
+  skills: [mcp-servers]
+- id: mcp-primitives
+  type: comparison
+  front: MCP tools vs resources
+  back: "Tools are functions the model decides to call, with an input schema. Resources are read-only data by URI that the host attaches to the context."
+  skills: [mcp-servers]
+- id: mcp-stdout
+  type: concept
+  front: Why must a stdio MCP server never use console.log?
+  back: "stdout carries the JSON-RPC messages. Any other output corrupts the stream and the host sees a broken server. Log to stderr."
+  skills: [mcp-servers]
+- id: mcp-register-tool
+  type: snippet
+  front: Register an MCP tool with a validated string argument (TypeScript SDK v1).
+  back: "```ts\nserver.registerTool('get_order_status',\n  { description: '...', inputSchema: { orderId: z.string() } },\n  async ({ orderId }) => ({ content: [{ type: 'text', text: '...' }] }));\n```"
+  skills: [mcp-servers]
+- id: mcp-annotations
+  type: concept
+  front: Can a host rely on an MCP tool's `readOnlyHint` annotation?
+  back: "Only from servers it trusts. The specification tells clients to treat annotations from untrusted servers as untrusted; the server must actually be read-only."
+  skills: [mcp-servers, llm-security]
+- id: mcp-path-traversal
+  type: concept
+  front: What is the classic bug in a `file://{name}`-style MCP resource?
+  back: "Building a path from the decoded name, so `..%2F` escapes the folder. Accept names only through a strict allowlist pattern."
+  skills: [mcp-servers, llm-security]

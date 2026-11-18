@@ -1,0 +1,31 @@
+title: fetchWithRetry
+type: repo
+skills: [retry-policies, failure-handling]
+services: []
+runner: node
+hints:
+  - "Build two signals at the start: one for the whole call (the deadline combined with the caller's signal) and one per attempt (that signal combined with AbortSignal.timeout(attemptTimeoutMs)). AbortSignal.any does the combining."
+  - "When a fetch rejects, ask the whole-call signal first. If it has aborted, the deadline passed or the caller gave up, and you stop with its reason. Otherwise a TimeoutError came from the attempt timeout and is worth a retry."
+  - "Network failures reject with a TypeError. A bug in your own code is not a TypeError from fetch, so do not retry every error blindly."
+  - "Your sleep between attempts has to listen to the whole-call signal, or a cancelled call still waits out its backoff."
+  - "Cancel the body of a response you are about to discard (res.body?.cancel()), so the connection is freed."
+  - "new Headers(init.headers).has('idempotency-key') works for plain objects, arrays and Headers instances alike."
+criteria:
+  - { id: passes-through, title: A successful response comes back unchanged after one request }
+  - { id: retries-transient, title: "408, 429, 5xx answers and network failures are retried until one succeeds" }
+  - { id: gives-up, title: "After the allowed retries the last response is returned, or the last error thrown" }
+  - { id: no-retry-client-errors, title: Other 4xx answers are returned after a single request }
+  - { id: unsafe-methods, title: "POST and PATCH are retried only with an Idempotency-Key, and every attempt repeats the request" }
+  - { id: attempt-timeout, title: An attempt that hangs is abandoned after attemptTimeoutMs and retried }
+  - { id: deadline, title: "The whole call ends at deadlineMs with a TimeoutError, backoff waits included" }
+  - { id: backoff-jitter, title: "Waits use full jitter on an exponential ceiling and the random option" }
+  - { id: retry-after, title: "Retry-After in seconds replaces the backoff, unless it passes the deadline" }
+  - { id: cancellation, title: "The caller's signal stops the call at once, also during a wait" }
+  - { id: own-tests, title: Your tests pass and catch a fetchWithRetry that retries client errors }
+rubric:
+  - { id: policy-in-one-place, title: "Which outcomes are retried (statuses, error types, methods) is decided in one small, named place, not spread through the loop", skill: retry-policies, max: 3 }
+  - { id: signals, title: "The deadline, the caller's signal and the per-attempt timeout are combined with AbortSignal.any (or equivalent) so that a deadline or cancellation is final and only the attempt timeout is retried", skill: failure-handling, max: 4 }
+  - { id: resource-hygiene, title: "Discarded response bodies are cancelled or consumed, and timers and listeners from the wait are cleared", skill: retry-policies, max: 3 }
+  - { id: tests, title: "Own tests cover the retry policy, a timeout and the backoff arithmetic, and use the random option or small delays instead of long sleeps", skill: retry-policies, max: 3 }
+  - { id: readme, title: "README says which outcome it treats as a judgement call (for example 500) and why, and names one thing a production client would add, such as a retry budget or a circuit breaker", skill: retry-policies, max: 3 }
+limits: { timeoutSeconds: 120 }

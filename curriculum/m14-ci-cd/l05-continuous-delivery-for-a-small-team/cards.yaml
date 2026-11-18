@@ -1,0 +1,64 @@
+- id: delivery-vs-deployment
+  type: comparison
+  front: Continuous delivery vs continuous deployment
+  back: Delivery keeps every `main` commit releasable with one action. Deployment makes that action automatic for every commit that passes.
+  skills: [continuous-delivery]
+- id: environment-purpose
+  type: concept
+  front: What question should a staging environment answer that CI and previews do not?
+  back: Whether the exact image you will ship works against production-like infrastructure and configuration.
+  skills: [continuous-delivery]
+- id: config-at-runtime
+  type: concept
+  front: The same image runs in staging and production. Where do the differences come from?
+  back: Environment variables and secrets read at start-up, validated so that a missing value stops the rollout.
+  skills: [continuous-delivery]
+- id: environment-secrets
+  type: concept
+  front: What does a GitHub environment with a required reviewer do to its secrets?
+  back: Only jobs that name the environment can read them, and only after a reviewer approves the job.
+  skills: [continuous-delivery, ci-workflow-security]
+- id: deploy-no-cancel
+  type: concept
+  front: "Why use `cancel-in-progress: false` on a deploy job's concurrency group?"
+  back: Deploys should queue. Cancelling one halfway can leave a migration or rollout half done.
+  skills: [continuous-delivery]
+- id: preview-deploy-term
+  type: term
+  front: Preview deploy
+  back: |-
+    A short-lived deployment of one pull request with its own URL and its own seeded database.
+    Example: Railway PR environments, deleted when the PR closes.
+  skills: [continuous-delivery]
+- id: preview-data
+  type: concept
+  front: What data should a preview environment use?
+  back: Seed data in its own database, or a branch of a non-production database. Never production data.
+  skills: [continuous-delivery]
+- id: fly-release-command
+  type: concept
+  front: "What does `release_command` in `fly.toml` do?"
+  back: Runs a one-off command, typically migrations, in a temporary machine with the new image before the rollout. A non-zero exit stops the deploy.
+  skills: [continuous-delivery, zero-downtime-deploys]
+- id: railway-draining
+  type: concept
+  front: Why set `RAILWAY_DEPLOYMENT_DRAINING_SECONDS` for a Node API on Railway?
+  back: By default the old deployment is killed 0 s after SIGTERM, so a graceful shutdown never gets to run.
+  skills: [continuous-delivery, zero-downtime-deploys]
+- id: oidc-deploy-credentials
+  type: concept
+  front: Why prefer OIDC over a stored cloud access key in a deploy job?
+  back: The job exchanges its short-lived OIDC token for credentials that expire with it, so no long-lived key can leak.
+  skills: [continuous-delivery, ci-workflow-security]
+- id: automate-first
+  type: concept
+  front: "For a small team, what should be automated first: previews, or a one-command deploy and rollback of a given image?"
+  back: The deploy and rollback. Previews help review; a repeatable rollback limits every incident.
+  skills: [continuous-delivery]
+- id: dora-metrics
+  type: term
+  front: DORA metrics
+  back: |-
+    Measures of delivery: lead time for changes, deployment frequency, change fail rate, recovery time.
+    Example: "deploys daily, recovers in 15 minutes".
+  skills: [continuous-delivery]

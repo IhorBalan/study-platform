@@ -1,0 +1,25 @@
+title: Integration tests for a Postgres repository
+type: repo
+skills: [db-integration-testing, test-reliability]
+services: [postgres]
+runner: nest
+hints:
+  - "Run the starter's test twice with npm test. The second run fails, and that is the problem to solve before you write more tests."
+  - "Two common ways to isolate: TRUNCATE the table in beforeEach, or BEGIN in beforeEach and ROLLBACK in afterEach on one client from pool.connect(). The repository takes a Pool or a PoolClient, so both work."
+  - "Inside one transaction now() returns the same instant for every statement. If you use transactions, notes created in one test share created_at, and the order comes from the id tie-break."
+  - "Bugs that hit the wrong rows only show when there is more than one row. Create a second note and check that it is untouched."
+  - "Get a missing id by creating a note and deleting it. Do not assume what ids the database hands out."
+  - "Close the pool in after(), or the test process stays alive after the last test."
+criteria:
+  - { id: tests-pass, title: Your tests pass against the correct repository on an empty database }
+  - { id: repeatable, title: Your tests pass again on the database the previous run left behind }
+  - { id: order-independent, title: "Your tests pass in shuffled order, run after run" }
+  - { id: catches-read-bugs, title: Your tests catch broken reads }
+  - { id: catches-write-bugs, title: Your tests catch broken writes }
+rubric:
+  - { id: isolation-strategy, title: "Isolation is set up once in hooks (transaction rollback or truncation), not repeated in test bodies, and a comment or the README says why that strategy was chosen", skill: db-integration-testing, max: 4 }
+  - { id: no-assumed-state, title: "No test assumes specific id values, row counts left by other tests, or wall-clock timestamps", skill: test-reliability, max: 3 }
+  - { id: real-database, title: "The tests run real SQL against Postgres; the repository and pg are not mocked", skill: db-integration-testing, max: 2 }
+  - { id: lifecycle, title: "Connections are released and the pool is closed in after(), so the process exits without a forced exit", skill: db-integration-testing, max: 2 }
+  - { id: readme, title: "README names the isolation strategy and one cost or limit of it, such as code that commits its own transactions, or TRUNCATE locks with parallel test files", max: 3 }
+limits: { timeoutSeconds: 120 }

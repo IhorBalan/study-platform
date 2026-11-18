@@ -1,0 +1,62 @@
+- id: unhandled-rejection-default
+  type: concept
+  front: 'What does Node do by default when a promise rejects and no handler is attached?'
+  back: 'It emits `unhandledRejection`, prints the error and exits the process with a non-zero code.'
+  skills: [async-control-flow]
+
+- id: return-await-in-try
+  type: concept
+  front: 'Why does `try { return doWork(); } catch (e) { ... }` not catch a rejection from `doWork()`?'
+  back: 'The function returns the promise before it settles, so the `try` block has already ended. `return await doWork()` keeps it inside.'
+  skills: [async-control-flow]
+
+- id: all-vs-allsettled
+  type: comparison
+  front: "`Promise.all` vs `Promise.allSettled`"
+  back: "`all` rejects on the first failure. `allSettled` always fulfils, with a status and a value or reason for each input."
+  skills: [async-control-flow]
+
+- id: all-does-not-cancel
+  type: concept
+  front: 'One of ten promises passed to `Promise.all` rejects. What happens to the other nine operations?'
+  back: 'They keep running to completion. `Promise.all` only stops waiting; it cancels nothing.'
+  skills: [async-control-flow]
+
+- id: why-limit-concurrency
+  type: concept
+  front: 'Why is `Promise.all(ids.map(fetchUser))` dangerous when `ids` is large?'
+  back: 'It starts every call at once, which can exhaust connection pools, hit upstream rate limits or use too much memory.'
+  skills: [async-control-flow]
+
+- id: fetch-timeout
+  type: snippet
+  front: 'Call `fetch(url)` so that it gives up after 2 seconds.'
+  back: |
+    ```ts
+    await fetch(url, { signal: AbortSignal.timeout(2000) });
+    ```
+  skills: [async-control-flow]
+
+- id: abortsignal-any
+  type: term
+  front: "`AbortSignal.any()`"
+  back: 'Combines several signals into one that aborts when the first of them aborts. Example - `AbortSignal.any([clientGone, AbortSignal.timeout(2000)])`.'
+  skills: [async-control-flow]
+
+- id: backpressure
+  type: term
+  front: 'Backpressure'
+  back: 'The mechanism by which a slow consumer makes a fast producer pause, so data does not pile up in memory. Example - a file read pauses while a slow socket drains.'
+  skills: [node-streams]
+
+- id: write-returns-false
+  type: cloze
+  front: "When `writable.write(chunk)` returns `false`, stop writing and wait for the `{{...}}` event."
+  back: "`'drain'`"
+  skills: [node-streams]
+
+- id: pipeline-vs-pipe
+  type: comparison
+  front: "`pipeline()` vs `.pipe()`"
+  back: "`pipeline` forwards errors and destroys every stream when one fails. `.pipe()` only moves data, so an error can leak file handles and sockets."
+  skills: [node-streams]

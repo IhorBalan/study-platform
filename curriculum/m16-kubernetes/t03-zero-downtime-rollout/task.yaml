@@ -1,0 +1,17 @@
+title: Make a rolling update zero-downtime
+type: text
+skills: [k8s-workloads, k8s-health-scaling]
+hints:
+  - The defaults are 25% surge and 25% unavailable. Work out how each percentage is rounded for 4 replicas.
+  - When a Pod is deleted, two things start at the same time. Which one does your process notice, and which one do the gateways notice?
+  - "Which process is PID 1 in the container, and does it pass SIGTERM to Node?"
+  - What is the default grace period, and how does it compare with the slowest request?
+  - "For the column: can version 2.7 insert a row once the column is NOT NULL? Can 2.8 run before the column exists?"
+rubric:
+  - { id: rollout-steps, title: "States that the defaults give maxSurge 1 (25% of 4, rounded up) and maxUnavailable 1 (rounded down), so the rollout runs with at most 5 Pods and at least 3 available, and that the controller proceeds as new Pods become ready per the readiness probe", skill: k8s-workloads, max: 4 }
+  - { id: termination-sequence, title: "Describes Pod termination correctly: marked terminating, removed from endpoints in parallel with preStop then SIGTERM, then SIGKILL after terminationGracePeriodSeconds (default 30 s)", skill: k8s-health-scaling, max: 4 }
+  - { id: causes, title: "Identifies at least three distinct causes: SIGTERM not reaching Node through npm and not being handled, so the process is SIGKILLed with requests in flight; the race between endpoint removal and shutdown; the 50 s export exceeding the 30 s default grace period; and optionally capacity dropping because maxUnavailable is 1", skill: k8s-health-scaling, max: 4 }
+  - { id: fixes, title: "Matches each cause to a concrete fix with values: exec-form node CMD, enableShutdownHooks or a SIGTERM handler that drains with server.close, a preStop sleep of several seconds, a grace period longer than preStop plus drain, and maxSurge 1 with maxUnavailable 0", skill: k8s-health-scaling, max: 4 }
+  - { id: long-requests, title: "Gives a reasoned answer for the 50 s export, such as a grace period long enough to cover it, or moving exports to a background job that writes a file the client downloads later, and states the trade-off of each", skill: k8s-health-scaling, max: 3 }
+  - { id: expand-contract, title: "Orders the migration as expand then contract: add tax_region as nullable (or with a default) before or with code that tolerates it, backfill, then make it NOT NULL in a later release once no old code runs, and states it takes at least two releases", skill: k8s-workloads, max: 4 }
+  - { id: proof, title: "Proposes a concrete verification, such as running a load generator through the real route during a rollout and counting non-2xx responses or resets, plus watching gateway 5xx metrics, before and after", max: 2 }

@@ -1,0 +1,17 @@
+title: Diagnose a slow query
+type: text
+skills: [query-plans, sql-indexes]
+hints:
+  - "Read the plan from the innermost nodes outwards. For each node compare actual rows with what the query finally returns."
+  - "With loops=3, the actual rows figure is per loop. Multiply to get the total."
+  - "A composite index is sorted by its first column. Can a lookup by its second column alone use it?"
+  - "Ask how many rows each node reads in staging, and how that number changes when the whole table is twenty times larger."
+  - "EXPLAIN ANALYZE does not only plan the statement. Think about what that means for a DELETE."
+rubric:
+  - { id: hot-spot, title: "Identifies the Parallel Seq Scan on order_items as the main cost, quoting its 500,000 rows per loop across 3 loops (1.5 million rows) to produce 72 joined rows, and its share of the execution time", skill: query-plans, max: 4 }
+  - { id: wasted-work, title: "Identifies the bitmap scan on orders_status_idx as wasteful, quoting about 142,000 rows from the index and about 47,000 per loop removed by the customer_id filter to keep 72", skill: query-plans, max: 3 }
+  - { id: causes, title: "Explains that the primary key (product_id, order_id) cannot serve a lookup by order_id because order_id is not its leading column, and that status has too few distinct values to be selective on its own", skill: sql-indexes, max: 4 }
+  - { id: growth, title: "Explains that both scans grow with total table size rather than with the customer's own orders, so latency rises for everyone as data grows", skill: query-plans, max: 2 }
+  - { id: fix, title: "Proposes an index on order_items (order_id) and an index on orders leading with customer_id (for example (customer_id, status, created_at)), justifies the column order, and builds them with CREATE INDEX CONCURRENTLY; optionally notes that orders_status_idx can then be dropped", skill: sql-indexes, max: 4 }
+  - { id: verification, title: "Describes the expected plan (an index scan on orders for one customer, a nested loop with index scans on order_items, rows and buffers in the hundreds, about a millisecond) and verifies on production with EXPLAIN (ANALYZE, BUFFERS) of the SELECT, or by watching pg_stat_statements before and after", skill: query-plans, max: 3 }
+  - { id: explain-analyze-caution, title: "Warns that EXPLAIN ANALYZE executes the statement, so a DELETE really deletes rows unless it runs inside a transaction that is rolled back, or plain EXPLAIN is used", skill: query-plans, max: 2 }

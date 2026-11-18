@@ -1,0 +1,69 @@
+- id: fast-not-flaky-interview
+  type: concept
+  front: "Interview: how do you keep a test suite fast and not flaky?"
+  back: |-
+    Inject time and randomness, isolate every test's data, await events instead of sleeping, no real network.
+    Speed: push edge cases down to unit tests, share expensive set-up, run files in parallel on isolated databases.
+  skills: [test-reliability]
+- id: flaky-term
+  type: term
+  front: Flaky test
+  back: |-
+    A test that passes and fails on the same code, because it depends on something it does not control.
+    Example: a test that compares against `new Date()` and fails around midnight.
+  skills: [test-reliability]
+- id: sleep-vs-poll
+  type: comparison
+  front: "`sleep(500)` vs `expect.poll(...)` when waiting for background work"
+  back: Sleeping is too short on a slow machine and wastes time on a fast one. Polling returns as soon as the condition holds and fails clearly after a deadline.
+  skills: [test-reliability]
+- id: find-order-dependence
+  type: concept
+  front: How do you find tests that depend on running order?
+  back: "Run the suite shuffled (`vitest run --sequence.shuffle` or `node --test --test-randomize`) and reuse the seed to reproduce a failing order."
+  skills: [test-reliability]
+- id: no-blanket-retries
+  type: concept
+  front: Why not turn on automatic retries for the whole suite?
+  back: The build goes green while the race stays, and some of those races are real bugs in production code.
+  skills: [test-reliability]
+- id: quarantine
+  type: concept
+  front: What should happen to a flaky test you cannot fix today?
+  back: Quarantine it (skip it with a ticket link), with an owner and a date, so the team does not learn to ignore red builds.
+  skills: [test-reliability]
+- id: coverage-tells
+  type: concept
+  front: What does code coverage tell you?
+  back: Which lines and branches never ran during the tests. Those are real gaps.
+  skills: [test-reliability]
+- id: coverage-does-not-tell
+  type: concept
+  front: What does code coverage not tell you?
+  back: Whether the code that ran was checked by any assertion, or whether code that should exist is missing.
+  skills: [test-reliability]
+- id: mutation-testing
+  type: term
+  front: Mutation testing
+  back: |-
+    Making small changes to the code and rerunning the tests; a change no test notices shows a missing assertion.
+    Example: StrykerJS turns `>` into `>=`.
+  skills: [test-reliability]
+- id: tz-in-ci
+  type: concept
+  front: Why set `TZ=UTC` in CI, and also try another time zone when hunting a flaky test?
+  back: Date code often works only in the developer's zone. A fixed zone makes CI reproducible; a distant one exposes the hidden assumption.
+  skills: [test-reliability]
+- id: shard-snippet
+  type: snippet
+  front: Run the second quarter of a Vitest suite on one CI machine.
+  back: |-
+    ```sh
+    npx vitest run --shard=2/4
+    ```
+  skills: [test-reliability]
+- id: unordered-results
+  type: concept
+  front: "A test compares query results to an array and fails now and then. The query has no `ORDER BY`. Why?"
+  back: Without `ORDER BY`, Postgres may return rows in any order, and the order can change between runs.
+  skills: [test-reliability]

@@ -1,0 +1,58 @@
+- id: openapi-what
+  type: term
+  front: OpenAPI document
+  back: "A machine-readable JSON or YAML description of an HTTP API: routes, parameters, bodies, responses. Example: `paths: { /projects/{id}: { get: ... } }`."
+  skills: [api-openapi]
+- id: schema-vs-code-first
+  type: comparison
+  front: "Schema-first vs code-first OpenAPI"
+  back: "Schema-first: write the contract, then build to it; design is reviewed early, but the server can drift. Code-first: generate it from the code; it cannot drift from routes, but design happens ad hoc."
+  skills: [api-openapi]
+- id: openapi-31-nullable
+  type: cloze
+  front: "In OpenAPI 3.1, a nullable string is written as {{...}}."
+  back: "`type: [string, 'null']` (3.0's `nullable: true` is gone, because 3.1 uses JSON Schema 2020-12)"
+  skills: [api-openapi]
+- id: operation-id-contract
+  type: concept
+  front: "Why treat `operationId` as part of the public contract?"
+  back: "Client generators name methods after it. Changing it renames the method in every generated client."
+  skills: [api-openapi]
+- id: nest-swagger-setup
+  type: snippet
+  front: "Generate an OpenAPI 3.1 document in NestJS and serve it at `/docs`."
+  back: |-
+    ```ts
+    const config = new DocumentBuilder().setTitle('API').setOpenAPIVersion('3.1.0').build();
+    SwaggerModule.setup('docs', app, SwaggerModule.createDocument(app, config));
+    ```
+  skills: [api-openapi]
+- id: nest-swagger-zod
+  type: concept
+  front: "How does `@nestjs/swagger` document a body declared with `@Body({ schema: CreateProjectSchema })` (zod 4)?"
+  back: "It reads the attached Standard Schema and converts it to JSON Schema, so one zod schema both validates and documents the body."
+  skills: [api-openapi]
+- id: typed-client-snippet
+  type: snippet
+  front: "Call `GET /projects/{id}` with a client typed from the OpenAPI document (openapi-fetch)."
+  back: |-
+    ```ts
+    const api = createClient<paths>({ baseUrl });
+    const { data, error } = await api.GET('/projects/{id}', { params: { path: { id: '42' } } });
+    ```
+  skills: [api-openapi]
+- id: contract-in-sync
+  type: concept
+  front: "How do you keep an API contract in sync with the code?"
+  back: "Generate the spec in CI, commit it and fail on differences, detect breaking changes with a diff tool, and regenerate clients from the committed file."
+  skills: [api-openapi]
+- id: breaking-change-diff
+  type: concept
+  front: "What does a tool like `oasdiff breaking` add to a pull request check?"
+  back: "It compares the old and new documents and fails on breaking changes: removed fields, new required parameters, narrowed types."
+  skills: [api-openapi]
+- id: document-errors
+  type: concept
+  front: "Why should the OpenAPI document list error responses, not just the `200`?"
+  back: "Generated clients then type errors (for example the problem document) instead of leaving them `unknown`."
+  skills: [api-openapi]

@@ -1,0 +1,63 @@
+- id: why-not-sha256
+  type: concept
+  front: "Interview: why hash passwords with argon2id or bcrypt and not SHA-256?"
+  back: "SHA-256 is built to be fast, so a GPU tests billions of guesses per second. Password hashes are deliberately slow, salted and (argon2id, scrypt) memory-hard, which makes every guess expensive."
+  skills: [password-storage]
+- id: salt-purpose
+  type: concept
+  front: What does a unique random salt per password prevent?
+  back: "Identical passwords getting identical hashes, and precomputed tables. Each hash has to be attacked on its own."
+  skills: [password-storage]
+- id: memory-hard
+  type: term
+  front: Memory-hard password hash
+  back: "A hash that needs a lot of RAM per guess, so GPUs and custom chips lose their advantage. Example: argon2id with 19 MiB per hash."
+  skills: [password-storage]
+- id: owasp-argon2id-min
+  type: cloze
+  front: "OWASP's minimum for argon2id: {{19 MiB of memory, 2 iterations, parallelism 1}}."
+  back: "19 MiB of memory, 2 iterations, parallelism 1"
+  skills: [password-storage]
+- id: bcrypt-72
+  type: concept
+  front: What happens to the part of a password beyond 72 bytes in bcrypt?
+  back: "It is ignored. Enforce a 72-byte maximum, or every password that shares the first 72 bytes verifies."
+  skills: [password-storage]
+- id: encoded-params
+  type: concept
+  front: Why store the algorithm and cost parameters inside the stored hash string?
+  back: "Verification must use the parameters the hash was made with. Then you can raise the cost for new hashes while old ones still verify."
+  skills: [password-storage]
+- id: rehash-on-login
+  type: concept
+  front: When can you upgrade a user's password hash to new parameters, and why then?
+  back: "After a successful login. It is the only moment you have the plain password."
+  skills: [password-storage]
+- id: scrypt-async
+  type: concept
+  front: "Why use `crypto.scrypt` and not `scryptSync` in a request handler?"
+  back: "The async version runs in libuv's thread pool. scryptSync blocks the event loop for every login, so no other request is served meanwhile."
+  skills: [password-storage]
+- id: timing-safe-equal
+  type: snippet
+  front: Compare a derived key with the stored one without leaking timing.
+  back: |-
+    ```ts
+    ok = a.length === b.length && crypto.timingSafeEqual(a, b);
+    ```
+  skills: [password-storage]
+- id: unknown-user-timing
+  type: concept
+  front: How can a login endpoint reveal which emails have accounts, even with one error message?
+  back: "Response time. Unknown emails return at once, known ones wait for the hash. Hash a dummy value for unknown users."
+  skills: [password-storage]
+- id: credential-stuffing
+  type: term
+  front: Credential stuffing
+  back: "Trying email and password pairs leaked from other sites. Hashing does not help; MFA, rate limits and breached-password checks do."
+  skills: [password-storage]
+- id: nist-rules
+  type: concept
+  front: What does NIST SP 800-63B say about composition rules and forced periodic password changes?
+  back: "Do not impose either. Require length, allow long passwords and check against breached ones; force a change only on evidence of compromise."
+  skills: [password-storage]

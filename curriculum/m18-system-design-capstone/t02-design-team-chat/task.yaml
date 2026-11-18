@@ -1,0 +1,20 @@
+title: "Design review: team chat"
+type: text
+skills: [sd-requirements-estimates, sd-data-design, sd-async-architecture, sd-availability, sd-design-docs]
+hints:
+  - "2 million messages over an eight-hour working day is the average; multiply by a burst factor, then by the members of each channel to get deliveries."
+  - "Pub/sub between instances (module 4, lesson 7) is fire and forget. Decide what happens to a client that was disconnected for ten seconds when the message was published."
+  - "A per-channel sequence number gives every member the same order and a cheap way to ask \"what happened after 1041?\""
+  - "The client can generate an id for each message before sending. What would a unique constraint on it do for retries?"
+  - "Unread count = latest sequence in the channel minus the last sequence this user read. What do you need to store for that?"
+  - "Typing indicators that are lost cost nothing. Do they need a database?"
+  - "After a deploy, 25,000 clients reconnect. What stops them all arriving in the same second?"
+rubric:
+  - { id: requirements, title: "States goals and explicit non-goals (for example search, threads, files, end-to-end encryption) and two clarifying questions with assumed answers", skill: sd-requirements-estimates, max: 3 }
+  - { id: numbers, title: "Estimates peak messages per second, connections per instance, deliveries per second after fan-out and storage per year with visible arithmetic, and draws a conclusion (for example that one Postgres handles the writes and fan-out is the real load)", skill: sd-requirements-estimates, max: 4 }
+  - { id: data-model, title: "Gives tables for channels, memberships and messages with keys, a per-channel ordering column, an index for paging history backwards, and a per-member last-read marker used for unread counts", skill: sd-data-design, max: 4 }
+  - { id: send-path, title: "Walks the send path in numbered steps: authorise membership, persist the message (and its sequence) in Postgres first, then publish to other instances (for example Valkey pub/sub by channel or user), then push to connected sockets, and acknowledge the sender", skill: sd-async-architecture, max: 4 }
+  - { id: ordering-dedupe, title: "Defines order with a server-assigned per-channel sequence (or equivalent), prevents duplicates with a client-generated message id and a unique constraint, and lets a reconnecting client fetch messages after its last seen sequence", skill: sd-data-design, max: 5 }
+  - { id: ephemeral-state, title: "Keeps typing and presence out of Postgres (pub/sub or Valkey keys with short TTLs and heartbeats) and explains why losing them is acceptable", skill: sd-async-architecture, max: 2 }
+  - { id: failure-handling, title: "Covers an instance dying (clients reconnect elsewhere and resync), reconnect storms after deploys (backoff with jitter, gradual rollout, connection draining), Valkey restarting (messages safe in Postgres, clients resync), slow Postgres (timeouts, sender sees pending state) and offline mentions sent to the notification service from a job", skill: sd-availability, max: 5 }
+  - { id: trade-offs, title: "Names at least two trade-offs with their cost (for example per-channel sequence as a hot row in huge channels, pub/sub over a log), lists what was left out with revisit signals, and adds no infrastructure the requirements do not force", skill: sd-design-docs, max: 3 }

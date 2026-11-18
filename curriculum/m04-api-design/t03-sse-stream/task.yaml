@@ -1,0 +1,25 @@
+title: Live messages over Server-Sent Events
+type: repo
+skills: [api-realtime]
+services: []
+runner: node
+hints:
+  - "An SSE event is a few 'field: value' lines followed by a blank line. Write one function that formats a message and use it for live and replayed events."
+  - "res.writeHead() alone may not reach the client until the first write. Write something right away, for example a 'retry:' line, so the client sees the headers at once."
+  - "Put the data through JSON.stringify. It escapes newlines, so the whole message fits on one data line."
+  - "Do the replay and the subscription in the same synchronous block. If you await between them, a message can be posted in the gap and be missed."
+  - "res.on('close') fires when the client goes away. That is where the heartbeat timer and the subscription end."
+criteria:
+  - { id: stream-headers, title: GET /events opens at once with the SSE content type and no caching }
+  - { id: live-events, title: "A posted message arrives as an event with its id, the type \"message\" and JSON data" }
+  - { id: fan-out, title: "Every open stream receives every message, in order" }
+  - { id: no-history-without-header, title: A new stream without Last-Event-ID starts with new messages only }
+  - { id: resume, title: "A stream opened with Last-Event-ID first replays the missed messages, then continues live" }
+  - { id: heartbeat, title: An idle stream receives a comment line at the configured interval }
+  - { id: cleanup, title: "When a client disconnects, its timers are cleared" }
+rubric:
+  - { id: framing, title: "One function formats an event, and the code never writes a raw newline inside a data field", skill: api-realtime, max: 3 }
+  - { id: replay-gap, title: "Replay and subscription happen without an await between them, so no message can fall into the gap, and the history is bounded", skill: api-realtime, max: 4 }
+  - { id: lifecycle, title: "Each connection's resources (timer, subscription) are released in one close handler", skill: api-realtime, max: 3 }
+  - { id: scaling-notes, title: "README explains what breaks with two instances (local history, local subscribers, ids) and names a shared mechanism to fix it, such as Valkey pub/sub or streams, or Postgres LISTEN/NOTIFY", skill: api-realtime, max: 3 }
+limits: { timeoutSeconds: 60 }

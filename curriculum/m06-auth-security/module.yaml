@@ -1,0 +1,20 @@
+title: "Authentication, authorisation and security"
+summary: >-
+  You can store passwords properly, choose between sessions and tokens and implement either
+  safely, enforce roles and object ownership in NestJS, prevent the common web vulnerabilities,
+  explain OAuth 2.1 with PKCE, OpenID Connect and passkeys, keep tenants' data apart, handle a
+  leaked secret, and decide what to build and what to buy.
+kind: core
+effort: L
+services: [postgres]
+skills:
+  - { id: password-storage, title: Storing and verifying passwords }
+  - { id: session-auth, title: "Sessions and cookies" }
+  - { id: token-auth, title: "JWTs, access and refresh tokens" }
+  - { id: access-control, title: "Authorisation: roles, attributes and object ownership" }
+  - { id: web-vulnerabilities, title: Preventing common web vulnerabilities }
+  - { id: oauth-oidc, title: OAuth 2.1 and OpenID Connect }
+  - { id: passkeys, title: Passkeys and WebAuthn }
+  - { id: tenant-isolation, title: Multi-tenant data isolation }
+  - { id: secrets-management, title: Managing application secrets }
+  - { id: auth-build-or-buy, title: Building or buying authentication }

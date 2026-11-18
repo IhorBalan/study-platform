@@ -1,0 +1,50 @@
+- id: auth-scope
+  type: concept
+  front: Name four parts of "auth" a growing product needs beyond the login form.
+  back: "For example: password reset, MFA and recovery, social login, organisations and invitations, enterprise SSO and SCIM, audit logs, device lists."
+  skills: [auth-build-or-buy]
+- id: passport-scope
+  type: concept
+  front: What does Passport do, and what does it leave to you?
+  back: "It authenticates a request through a strategy (local, OAuth, SAML, JWT). Users, password storage, sessions, MFA, resets and UI are yours."
+  skills: [auth-build-or-buy]
+- id: better-auth-data
+  type: concept
+  front: Where does Better Auth keep user and session data?
+  back: "In your own database, through adapters such as Drizzle or Prisma, with migrations generated for you."
+  skills: [auth-build-or-buy]
+- id: library-vs-managed
+  type: comparison
+  front: Auth library in your app vs managed provider
+  back: "A library keeps data and cost under your control but you own upgrades and policy. A provider runs the flows and UI for a per-user fee, with lock-in and an availability dependency."
+  skills: [auth-build-or-buy]
+- id: enterprise-sso
+  type: concept
+  front: Which B2B requirement most often justifies buying auth from a provider like WorkOS?
+  back: "Enterprise SSO (SAML or OIDC with the customer's identity provider) plus SCIM provisioning, which are slow and support-heavy to build."
+  skills: [auth-build-or-buy]
+- id: still-own-authz
+  type: concept
+  front: You use a managed auth provider. Who is responsible for BOLA in your API?
+  back: "You. The provider says who the user is; whether they may see invoice 812 is your query."
+  skills: [auth-build-or-buy]
+- id: still-own-verification
+  type: concept
+  front: What must your API check on every token from a managed provider?
+  back: "The signature with the provider's JWKS, plus iss, aud and exp, using a maintained library."
+  skills: [auth-build-or-buy]
+- id: provider-webhooks
+  type: concept
+  front: Why handle your auth provider's webhooks?
+  back: "So users disabled, deleted or moved at the provider are updated in your database and lose access in your app too."
+  skills: [auth-build-or-buy]
+- id: exit-plan
+  type: concept
+  front: What should you confirm about leaving an auth provider before you adopt it?
+  back: "That you can export users, including password hashes in a verifiable format, and migrate gradually with both systems accepting logins."
+  skills: [auth-build-or-buy]
+- id: key-users-by-sub
+  type: concept
+  front: How should your database link to users from an external identity provider?
+  back: "By the provider's stable sub (with the issuer), never by email."
+  skills: [auth-build-or-buy]

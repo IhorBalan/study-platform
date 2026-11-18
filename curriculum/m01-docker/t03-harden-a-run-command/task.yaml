@@ -1,0 +1,27 @@
+title: Harden a docker run command
+type: repo
+skills: [container-hardening, docker-networking, docker-storage]
+services: []
+runner: node
+hints:
+  - Options belong before the image name. Whatever follows the image becomes the container's command.
+  - '`docker run --help` lists every option with its value format.'
+  - A source without a slash in `-v source:/path` is a volume name, not a folder.
+  - A bind mount is writable unless you say otherwise.
+  - Removing a dangerous option is part of the task. Check the starter command line by line.
+criteria:
+  - { id: command-shape, title: 'One detached docker run named report-worker, with the image as the last word' }
+  - { id: memory-limit, title: Memory is capped at 256 MiB }
+  - { id: cpu-limit, title: CPU is capped at half a core }
+  - { id: pids-limit, title: The number of processes is capped at 100 }
+  - { id: cap-drop-all, title: All capabilities are dropped and none is added back }
+  - { id: no-new-privileges, title: The process cannot gain privileges after start }
+  - { id: read-only-root, title: The root filesystem is read-only with a tmpfs at /tmp }
+  - { id: non-root-user, title: The process runs as UID and GID 10001 }
+  - { id: network, title: The container joins the reports-net network }
+  - { id: config-read-only, title: ./config is bind-mounted read-only at /etc/worker }
+rubric:
+  - { id: threat-reasoning, title: 'NOTES.md states, for each of the five groups, a concrete failure or attack the setting prevents (not a restatement of the flag)', skill: container-hardening, max: 5 }
+  - { id: removed-options, title: 'NOTES.md explains what --privileged, the host network and the Docker socket each granted', skill: container-hardening, max: 3 }
+  - { id: eacces-diagnosis, title: 'Names --read-only as the cause of the EACCES error and proposes a narrow fix (a tmpfs or volume for that one path) rather than removing the flag', skill: docker-storage, max: 3 }
+  - { id: script-quality, title: 'run.sh is readable (one option per line or a similar layout), quotes the path it builds and works from any directory', max: 2 }

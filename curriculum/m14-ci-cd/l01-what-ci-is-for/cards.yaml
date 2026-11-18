@@ -1,0 +1,59 @@
+- id: ci-purpose
+  type: concept
+  front: What is continuous integration for, beyond running tests on a server?
+  back: Everyone merges small changes into one main branch often, and each merge is checked automatically, so `main` is always shippable.
+  skills: [ci-pipeline-design]
+- id: interview-ci-pipeline
+  type: concept
+  front: "Interview: walk through the CI pipeline you would set up for a Node API repo."
+  back: |-
+    PRs and pushes to `main`; read-only token; cancel superseded runs. Frozen install with a cached store, then lint, typecheck, unit, integration against a Postgres service, build.
+    Required checks block merging. On `main`, build the image once, tagged with the commit.
+  skills: [ci-pipeline-design]
+- id: fail-fast-order
+  type: concept
+  front: Why do lint and typecheck run before the integration tests?
+  back: They are the cheapest checks and catch the most common mistakes, so a typo fails in seconds instead of after minutes of database tests.
+  skills: [ci-pipeline-design]
+- id: feedback-budget
+  type: cloze
+  front: "A long-standing target for the main CI build is about {{...}} minutes."
+  back: Ten. Slower pipelines get ignored, and changes pile up on top of unchecked ones.
+  skills: [ci-pipeline-design]
+- id: cache-key-lockfile
+  type: concept
+  front: What must a dependency cache key include, and why?
+  back: A hash of the lockfile (plus OS and runtime where it matters), so the cache is replaced exactly when the dependencies change.
+  skills: [ci-pipeline-design]
+- id: frozen-lockfile
+  type: term
+  front: "`pnpm install --frozen-lockfile`"
+  back: |-
+    Installs exactly what the lockfile says and fails if `package.json` no longer matches it.
+    In CI it turns "someone forgot to commit the lockfile" into a red build.
+  skills: [ci-pipeline-design]
+- id: required-checks
+  type: concept
+  front: Why make CI checks required on `main` instead of just running them?
+  back: A check that can be bypassed will be on a deadline. Required checks make green the only way to merge.
+  skills: [ci-pipeline-design]
+- id: ci-on-main-push
+  type: concept
+  front: Every pull request passed CI. Why also run CI on pushes to `main`?
+  back: Two changes can each pass alone and break together. Only a run on the merged result checks what will be deployed.
+  skills: [ci-pipeline-design]
+- id: flaky-test-cost
+  type: concept
+  front: Why treat a flaky test as a pipeline bug?
+  back: It teaches the team to re-run red builds without reading them, so real failures get waved through too.
+  skills: [ci-pipeline-design]
+- id: trunk-based
+  type: comparison
+  front: Trunk-based development vs long-lived feature branches
+  back: Trunk-based merges small changes into `main` daily and hides unfinished work behind flags. Long-lived branches delay integration until a large, risky merge.
+  skills: [ci-pipeline-design]
+- id: one-job-vs-many
+  type: concept
+  front: When is one CI job with sequential steps faster than several parallel jobs?
+  back: When the suite is short. Every job pays for its own checkout and install, which can cost more than the parallelism saves.
+  skills: [ci-pipeline-design]

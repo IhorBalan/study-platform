@@ -1,0 +1,64 @@
+- id: libuv
+  type: term
+  front: 'libuv'
+  back: 'The C library inside Node that provides the event loop, non-blocking network I/O and the thread pool. Example - it wakes your `''data''` callback when a socket has bytes.'
+  skills: [node-event-loop]
+
+- id: phase-order
+  type: cloze
+  front: "The main event loop phases, in order: timers → pending callbacks → {{...}} → check → close callbacks."
+  back: "poll (where I/O callbacks run and where an idle loop waits)"
+  skills: [node-event-loop]
+
+- id: check-phase
+  type: concept
+  front: 'In which event loop phase do `setImmediate` callbacks run?'
+  back: 'The check phase, directly after poll.'
+  skills: [node-event-loop]
+
+- id: immediate-vs-timeout-in-io
+  type: concept
+  front: 'Inside an I/O callback you call both `setTimeout(a, 0)` and `setImmediate(b)`. Which runs first, and why?'
+  back: "`b`. I/O callbacks run in the poll phase, and check comes before the loop gets back to timers."
+  skills: [node-event-loop]
+
+- id: nexttick-vs-promise
+  type: comparison
+  front: "`process.nextTick` callbacks vs promise callbacks: which queue drains first?"
+  back: 'The `nextTick` queue. Both drain completely after each callback, before the loop continues.'
+  skills: [node-event-loop]
+
+- id: microtask-starvation
+  type: concept
+  front: 'Why does `await Promise.resolve()` inside a long loop not let pending requests be served?'
+  back: 'It only queues a microtask, and microtasks run before the loop moves on. I/O callbacks need the loop to reach the poll phase.'
+  skills: [node-event-loop, node-cpu-work]
+
+- id: threadpool-users
+  type: concept
+  front: 'Which kinds of asynchronous Node APIs run on the libuv thread pool rather than on non-blocking sockets?'
+  back: 'File system calls, `dns.lookup`, and async `crypto` and `zlib` work. Network I/O does not use the pool.'
+  skills: [node-event-loop]
+
+- id: threadpool-size
+  type: cloze
+  front: "The libuv thread pool has {{...}} threads by default; `UV_THREADPOOL_SIZE` changes it."
+  back: "4"
+  skills: [node-event-loop]
+
+- id: worker-vs-cluster
+  type: comparison
+  front: 'Worker threads vs cluster'
+  back: 'A worker thread takes one CPU-heavy job off the main thread inside a process. Cluster runs several copies of the whole server on one port; each copy can still block itself.'
+  skills: [node-cpu-work]
+
+- id: measure-loop-delay
+  type: snippet
+  front: 'Start measuring event loop delay with a built-in API.'
+  back: |
+    ```ts
+    import { monitorEventLoopDelay } from 'node:perf_hooks';
+    const h = monitorEventLoopDelay();
+    h.enable(); // later: h.percentile(99) / 1e6 → ms
+    ```
+  skills: [node-cpu-work]

@@ -1,0 +1,5 @@
+{
+  "queue": "reports",
+  "concurrency": 2,
+  "outputDir": "/tmp/reports"
+}

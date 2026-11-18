@@ -1,0 +1,55 @@
+- id: interview-kafka-sqs-bullmq
+  type: concept
+  front: "Interview: Kafka vs SQS vs BullMQ, when would you choose each?"
+  back: "BullMQ for background jobs in a Node app. SQS for zero-ops queues on AWS (SNS for fan-out). Kafka for event streams many consumers read and replay."
+  skills: [kafka-vs-queues]
+- id: job-or-fact
+  type: concept
+  front: What single question splits most "queue or Kafka?" decisions?
+  back: "Is it a job one worker must do (queue) or a fact several systems want and may replay (log)?"
+  skills: [kafka-vs-queues]
+- id: postgres-queue
+  type: concept
+  front: When is a Postgres table the best queue?
+  back: "When the job must commit atomically with your data and volume is modest. Workers claim rows with `FOR UPDATE SKIP LOCKED`."
+  skills: [kafka-vs-queues]
+- id: sns-sqs-fanout
+  type: concept
+  front: How do several services each receive every message on AWS without Kafka?
+  back: "Publish to an SNS topic with one SQS queue subscribed per service."
+  skills: [kafka-vs-queues]
+- id: sqs-fifo-ordering
+  type: cloze
+  front: "SQS FIFO queues keep order per {{message group ID}}."
+  back: message group ID
+  skills: [kafka-vs-queues]
+- id: sqs-no-replay
+  type: concept
+  front: Which Kafka capability does SQS lack entirely?
+  back: "Replay. A deleted SQS message is gone, and retention is at most 14 days anyway."
+  skills: [kafka-vs-queues]
+- id: share-groups
+  type: term
+  front: Share group (Queues for Kafka)
+  back: "Consumers that read the same partitions together and acknowledge each record, with a delivery count. Production-ready since Kafka 4.2; no ordering."
+  skills: [kafka-vs-queues]
+- id: interview-no-kafka
+  type: concept
+  front: "Interview: name three signs a startup should not adopt Kafka yet."
+  back: "One consumer per message type, low volume, no need for replay. Also: nobody to own the cluster, or needing per-job delays and priorities."
+  skills: [kafka-vs-queues]
+- id: managed-kafka
+  type: concept
+  front: Name three managed ways to run Kafka-compatible streaming.
+  back: "Confluent Cloud, Amazon MSK, Aiven for Apache Kafka. Redpanda is a Kafka-API-compatible alternative."
+  skills: [kafka-vs-queues]
+- id: kafka-plus-bullmq
+  type: concept
+  front: How do Kafka and BullMQ often work together in one system?
+  back: "Kafka carries the event (`OrderPaid`) to all interested services; one of them turns it into a BullMQ job (send the receipt) with retries."
+  skills: [kafka-vs-queues]
+- id: outbox-migration-path
+  type: concept
+  front: Why does writing events through an outbox make adopting Kafka later easier?
+  back: "Producers only insert outbox rows. Switching the relay from a queue to Kafka changes one component, not every write path."
+  skills: [kafka-vs-queues]

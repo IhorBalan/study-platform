@@ -1,0 +1,17 @@
+{
+  "name": "@study/curriculum",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
+  "bin": { "curriculum-check": "./dist/check-cli.js" },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch --preserveWatchOutput",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "check": "node dist/check-cli.js ../../curriculum"
+  },
+  "dependencies": { "@study/shared": "workspace:*", "yaml": "^2.8.0", "zod": "catalog:" },
+  "devDependencies": { "typescript": "catalog:", "@types/node": "catalog:", "vitest": "catalog:" }
+}

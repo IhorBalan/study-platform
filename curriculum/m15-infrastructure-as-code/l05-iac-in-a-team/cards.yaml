@@ -1,0 +1,60 @@
+- id: plan-on-pr-apply-on-merge
+  type: concept
+  front: Why plan on the pull request but apply only after merge to main?
+  back: "Reviewers approve the exact change before it happens, and applies run from one branch in one place, so there is one history and no stale branch is applied."
+  skills: [iac-team-practice]
+- id: no-laptop-applies
+  type: concept
+  front: What goes wrong when developers apply from laptops as well as from CI?
+  back: "Old branches and different versions get applied, changes bypass review, and two applies can race on the same state."
+  skills: [iac-team-practice]
+- id: concurrency-group
+  type: concept
+  front: "Why does an apply job use a concurrency group with `cancel-in-progress: false`?"
+  back: Applies to one environment run one at a time, and a running apply is never cancelled half-way.
+  skills: [iac-team-practice]
+- id: plan-vs-apply-role
+  type: comparison
+  front: Plan role vs apply role in CI
+  back: "The plan role is read-only and any pull request may assume it. The apply role can change resources and trusts only main in an approved environment."
+  skills: [iac-team-practice]
+- id: oidc-sub-claim
+  type: concept
+  front: How does an AWS role make sure only the prod deploy job of one repository can assume it?
+  back: "Its trust policy requires the OIDC token's `sub` claim to equal, for example, `repo:acme/orders:environment:prod`."
+  skills: [iac-team-practice]
+- id: plan-json-policy
+  type: concept
+  front: What do policy checks on `tofu show -json` output give you that a code scanner does not?
+  back: "They see the actual planned actions, so a rule such as \"fail if anything is deleted or replaced\" can be enforced."
+  skills: [iac-team-practice]
+- id: detailed-exitcode
+  type: cloze
+  front: "With `tofu plan -detailed-exitcode`, exit code {{2}} means the plan succeeded and has changes."
+  back: "2"
+  skills: [iac-team-practice]
+- id: secrets-order
+  type: concept
+  front: What is the best way to keep a database master password out of OpenTofu state?
+  back: "Do not pass it at all: let AWS generate and manage it, for example `manage_master_user_password = true` on RDS."
+  skills: [iac-team-practice]
+- id: write-only-arguments
+  type: term
+  front: Write-only argument
+  back: "An argument sent to the API but never stored in state or plan files (OpenTofu 1.11+). Example: `value_wo` on `aws_ssm_parameter`."
+  skills: [iac-team-practice]
+- id: prevent-destroy
+  type: concept
+  front: "What does `lifecycle { prevent_destroy = true }` do, and when does it not protect you?"
+  back: Any plan that would delete or replace the resource fails. It does not help once the resource block itself is removed from the code.
+  skills: [iac-team-practice]
+- id: ignore-changes-risk
+  type: concept
+  front: What is the risk of `ignore_changes`?
+  back: Changes to those arguments become invisible, so real drift goes unnoticed.
+  skills: [iac-team-practice]
+- id: incident-console-change
+  type: concept
+  front: You changed a setting in the console during an incident. What must happen next?
+  back: "Put the same change into code through a pull request soon, or the next apply reverts it."
+  skills: [iac-team-practice]

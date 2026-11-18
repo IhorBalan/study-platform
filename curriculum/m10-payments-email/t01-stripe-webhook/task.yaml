@@ -1,0 +1,36 @@
+title: A Stripe webhook handler you can trust
+type: repo
+skills: [webhook-handling, stripe-checkout, subscription-billing]
+services: [postgres]
+runner: nest
+hints:
+  - "Turn on rawBody where the app is created (createApp in src/app.ts), then read req.rawBody with @Req() req: RawBodyRequest<Request>. Verifying JSON.stringify(req.body) fails as soon as the bytes differ."
+  - "stripe.webhooks.constructEvent(rawBody, header, secret) checks the HMAC and the 5-minute tolerance and throws on any problem. Turn that error into a 400."
+  - "Insert the event id with ON CONFLICT DO NOTHING inside the same transaction as the effects. rowCount 0 means another delivery got there first."
+  - "Fetch the session or subscription from Stripe before you open the transaction, so no transaction waits on the network."
+  - "update orders set status = 'paid' where id = $1 and status = 'pending' succeeds once. Fulfil only when it changed a row."
+  - "Do not compare event.created to decide which event is newer. Stripe's docs say not to, and you do not need it once you store the subscription you just fetched."
+  - "src/test/helpers.ts has a FakeStripe and an event builder. Run npm test with DATABASE_URL set."
+criteria:
+  - { id: compiles, title: The project compiles with tsc }
+  - { id: rejects-bad-signatures, title: "A missing, wrong or tampered signature gets 400 and changes nothing" }
+  - { id: rejects-old-signatures, title: A correctly signed request older than 5 minutes gets 400 }
+  - { id: raw-body, title: The signature is checked over the exact bytes that were sent }
+  - { id: fulfils-checkout, title: A paid checkout session marks the order paid and fulfils it }
+  - { id: async-payments, title: An unpaid session is not fulfilled until async_payment_succeeded }
+  - { id: once-per-order, title: Two different events for one paid session fulfil the order once }
+  - { id: duplicate-events, title: The same event delivered three times is processed once }
+  - { id: concurrent-duplicates, title: Eight simultaneous copies of one event are processed once }
+  - { id: subscription-sync, title: Subscription events store the current subscription from Stripe }
+  - { id: out-of-order, title: A late event does not roll a subscription back to an older state }
+  - { id: unknown-events, title: An event type the handler does not use is acknowledged and changes nothing }
+  - { id: failure-retry, title: "When processing fails the response is 5xx, nothing is stored, and the retry succeeds" }
+  - { id: own-tests, title: Your tests pass and catch a handler that never recognises a duplicate event }
+rubric:
+  - { id: verification, title: "Signature verification uses the Stripe SDK (or a constant-time HMAC check) over req.rawBody with the default or a stricter tolerance, the error becomes a 400, and no code path acts on an unverified body", skill: webhook-handling, max: 4 }
+  - { id: inbox, title: "The event id is inserted in the same transaction as the effects, a conflict is treated as a duplicate, and no database transaction is open while Stripe is called", skill: webhook-handling, max: 4 }
+  - { id: transitions, title: "Fulfilment hangs on a single conditional pending -> paid update, so neither duplicate events nor two event types for one session can fulfil twice", skill: stripe-checkout, max: 3 }
+  - { id: current-state, title: "Subscription rows are written from the subscription fetched from Stripe, with price and period taken from the subscription item, and nothing compares event timestamps", skill: subscription-billing, max: 3 }
+  - { id: readme-queue, title: "README explains the failure modes (bad signature, API or database error, crash after commit) and when and how the handler would move work into a queue keyed by the event id", skill: webhook-handling, max: 3 }
+  - { id: tests, title: "Own tests cover duplicates, concurrent copies, an unpaid session, out-of-order subscription events and a failing Stripe call, using the fake rather than timing luck", skill: webhook-handling, max: 3 }
+limits: { timeoutSeconds: 120 }

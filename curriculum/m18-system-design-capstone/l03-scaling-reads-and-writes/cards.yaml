@@ -1,0 +1,60 @@
+- id: scaling-order
+  type: concept
+  front: In what order do you reach for database scaling fixes?
+  back: "Measure, fix the query, scale up, cache, pool connections, read replicas, partition, and shard last."
+  skills: [sd-scaling]
+- id: scale-up-first
+  type: concept
+  front: Why is a bigger database instance often the right first scaling step?
+  back: "It is a button, not a project, keeps full consistency, and usually buys months. Replicas and shards add permanent complexity."
+  skills: [sd-scaling]
+- id: cache-layers
+  type: concept
+  front: Name the caching layers from the user to the data.
+  back: "Browser, CDN, in-process memory, shared cache (Valkey), and the database's own buffer cache."
+  skills: [sd-scaling]
+- id: replica-lag-bug
+  type: concept
+  front: A user saves a change and the next page shows the old value. Reads go to a replica. Why?
+  back: "Asynchronous replication lag: the replica had not replayed the write yet. Read-your-writes is broken."
+  skills: [sd-scaling]
+- id: sticky-primary
+  type: concept
+  front: Name one way to keep read-your-writes with read replicas.
+  back: "Send a user's reads to the primary for a few seconds after their last write, and route reads that must be current to the primary."
+  skills: [sd-scaling]
+- id: replicas-not-writes
+  type: concept
+  front: Why do read replicas not help with write load?
+  back: "Every replica replays every write. They only take reads off the primary."
+  skills: [sd-scaling]
+- id: connection-math
+  type: cloze
+  front: "6 API instances with a pool of 20 and 4 workers with a pool of 10 open about {{160}} Postgres connections, against a default limit of 100."
+  back: "160 (6 × 20 + 4 × 10)."
+  skills: [sd-scaling]
+- id: pgbouncer-transaction-mode
+  type: term
+  front: PgBouncer transaction pooling
+  back: "A server connection is lent to a client for one transaction, then returned. Many app connections share a few Postgres connections."
+  skills: [sd-scaling]
+- id: pgbouncer-breaks
+  type: concept
+  front: What stops working through a transaction-mode pooler?
+  back: "Session state: SET, session advisory locks, LISTEN, temp tables, WITH HOLD cursors; prepared statements need max_prepared_statements."
+  skills: [sd-scaling]
+- id: partitioning-wins
+  type: concept
+  front: What does time-based partitioning give a large events table?
+  back: "Queries filtered by time scan only matching partitions, and old data is dropped instantly with `drop table` instead of a huge delete."
+  skills: [sd-scaling]
+- id: shard-key-saas
+  type: concept
+  front: What is the natural shard key for B2B SaaS, and how do you keep that option cheap?
+  back: "The tenant id. Make it lead every key and index from day one, so moving tenants later needs no redesign."
+  skills: [sd-scaling]
+- id: interview-connection-timeouts
+  type: concept
+  front: "Interview: \"database connection timeout\" alerts are firing. What do you check first?"
+  back: "Pool waits vs server limit: total connections against max_connections, recent scale-out, long transactions or leaked clients holding connections, then slow queries. Fix with a pooler, smaller pools or timeouts."
+  skills: [sd-scaling]

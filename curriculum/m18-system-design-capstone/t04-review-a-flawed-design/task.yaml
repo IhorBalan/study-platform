@@ -1,0 +1,21 @@
+title: "Review a flawed design document"
+type: text
+skills: [sd-design-docs, sd-async-architecture, sd-data-design, sd-availability, sd-service-boundaries]
+hints:
+  - "Read the goals first, then check every section against them. \"Never lost, never sent twice\" and \"under one second\" are the tests most sections fail."
+  - "Follow one order through \"Sending an order\" and ask, after each step: what if the process crashes right here? What if the tablet retries now?"
+  - "For every copy of data (a cache entry, a replica, an in-memory array, a Valkey key), ask: is it the only copy? Whose data is it?"
+  - "Look at every place that retries. How often, for how long, and what stops it?"
+  - "Count the services against the numbers and the team. What does sharing one database between four services buy?"
+  - "Label severity. A review where everything is blocking is as hard to act on as one where nothing is."
+rubric:
+  - { id: data-loss, title: "Identifies that drafts living only in a single default-settings Valkey container (a cache used as the source of truth) and messages deleted from SQS into an unbounded in-memory array can both lose work on a restart or deploy, and proposes fixes (drafts in Postgres with autosave; delete SQS messages only after success, bounded concurrency)", skill: sd-data-design, max: 4 }
+  - { id: dual-write, title: "Identifies the dual writes in the send path (email sent before the commit; commit then publish to SQS as separate steps) with a crash scenario for each, and proposes a transactional outbox or equivalent", skill: sd-async-architecture, max: 4 }
+  - { id: idempotency, title: "Identifies that automatic retries of POST /send without an idempotency key or guarded state transition can send an order twice, and proposes a fix (idempotency key, conditional update from draft to sending, idempotent supplier call)", skill: sd-async-architecture, max: 4 }
+  - { id: sync-request-path, title: "Identifies PDF rendering and SMTP email inside the request as breaking the one-second goal and coupling sends to SMTP and pdf-service availability, and moves them to background jobs with a visible status (for example 202 and a sending state)", skill: sd-async-architecture, max: 3 }
+  - { id: retries-backpressure, title: "Identifies retrying every second forever with no backoff, jitter, attempt limit or dead letter, and the missing timeouts on supplier and pdf calls, and proposes bounded retries with backoff, a failed state, and per-supplier limits", skill: sd-availability, max: 3 }
+  - { id: tenant-isolation, title: "Identifies that the catalogue cache key lacks the restaurant, so one restaurant's negotiated prices are shown to others, and that GET /orders/:id by id alone lacks a tenant check; proposes a tenant-scoped cache key (or caching only shared data) and tenant filtering on every query", skill: sd-data-design, max: 4 }
+  - { id: replica-lag, title: "Identifies that reading the status page from the replica right after Send can show a stale status or a 404, and proposes reading from the primary for this page or after a recent write", skill: sd-data-design, max: 2 }
+  - { id: spof-recovery, title: "Identifies the auto-reorder cron on one VM as an unmonitored single point of failure and the untested daily snapshot as conflicting with \"never lost\" (up to 24 hours of orders), and proposes a managed scheduler or BullMQ job scheduler with alerting, point-in-time recovery and a restore drill", skill: sd-availability, max: 3 }
+  - { id: architecture-fit, title: "Points out that four services sharing one database at 2 orders per second is all cost and no independence for four engineers, and that no alternatives or metrics are given; proposes a modular monolith with a worker and named metrics such as orders stuck in sending", skill: sd-service-boundaries, max: 3 }
+  - { id: review-quality, title: "Gives a clear verdict, labels severity on every finding, ranks the top three sensibly (data loss, duplicates and the tenant leak above style), asks at least two useful questions and notes something the document does well", skill: sd-design-docs, max: 4 }

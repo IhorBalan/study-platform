@@ -1,0 +1,25 @@
+# Core tier: the only container the platform itself needs.
+# Practice services for the lab live in separate files and are started with `pnpm lab up`.
+name: study-platform
+
+services:
+  platform-db:
+    image: postgres:18-alpine@sha256:b6972e1115a4ff8eba5d7f7d19184926d1e16d7d1136ae1e1a7ebf286da0f015
+    environment:
+      POSTGRES_USER: study
+      POSTGRES_PASSWORD: study
+      POSTGRES_DB: study
+    ports:
+      - '127.0.0.1:${PLATFORM_DB_PORT:-54320}:5432'
+    volumes:
+      # Postgres 18 images keep data under /var/lib/postgresql/<major>/docker.
+      - platform-db-data:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U study -d study']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    mem_limit: 512m
+
+volumes:
+  platform-db-data:

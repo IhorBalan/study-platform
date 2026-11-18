@@ -1,0 +1,50 @@
+- id: immutable-tags
+  type: concept
+  front: Why deploy images tagged with the git SHA instead of `latest`?
+  back: "You always know which code runs, rollbacks target a known version, and a node never silently pulls a different image under the same tag."
+  skills: [k8s-delivery]
+- id: migrations-as-job
+  type: concept
+  front: Where should database migrations run in a Kubernetes deploy?
+  back: "Once per release, as a Job or pipeline step before the rollout. Not in the app's start-up, where every replica would race to run them."
+  skills: [k8s-delivery]
+- id: kustomize
+  type: term
+  front: Kustomize
+  back: "A tool built into kubectl that patches plain YAML: a base plus one overlay per environment. Example: `kubectl apply -k k8s/overlays/production`."
+  skills: [k8s-delivery]
+- id: helm
+  type: term
+  front: Helm
+  back: "A package manager for Kubernetes. A chart is templated YAML plus default values, installed and upgraded as a release. Example: `helm upgrade --install api ./chart`."
+  skills: [k8s-delivery]
+- id: helm-vs-kustomize
+  type: comparison
+  front: Helm vs Kustomize
+  back: "Kustomize patches readable YAML and suits your own apps. Helm templates and packages, and suits installing third-party software or shipping to customers' clusters."
+  skills: [k8s-delivery]
+- id: configmap-generator
+  type: concept
+  front: Why does Kustomize's `configMapGenerator` trigger a rollout when config changes?
+  back: "It appends a content hash to the ConfigMap's name and updates references, so the Pod template changes."
+  skills: [k8s-delivery, k8s-config]
+- id: push-vs-gitops
+  type: comparison
+  front: Push deploys vs GitOps
+  back: "Push: CI runs kubectl or helm against the cluster with its credentials. GitOps: CI commits the new version to git and Argo CD or Flux in the cluster applies it."
+  skills: [k8s-delivery]
+- id: wait-for-rollout
+  type: snippet
+  front: Make a CI job fail if the `api` Deployment rollout does not finish in 5 minutes.
+  back: "`kubectl rollout status deploy/api -n shop --timeout=5m` (non-zero exit on failure or timeout)."
+  skills: [k8s-delivery]
+- id: run-as-non-root
+  type: concept
+  front: "What must the image do for `runAsNonRoot: true` to work?"
+  back: "Run as a non-root user, for example `USER node` in the Dockerfile. Otherwise the kubelet refuses to start the container."
+  skills: [k8s-delivery]
+- id: kind
+  type: term
+  front: kind
+  back: "Kubernetes in Docker: a local cluster whose nodes are containers. Example: `kind create cluster`, then `kind load docker-image api:dev`."
+  skills: [k8s-delivery]

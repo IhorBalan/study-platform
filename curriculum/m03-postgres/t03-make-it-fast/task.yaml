@@ -1,0 +1,24 @@
+title: Make slow queries fast
+type: repo
+skills: [sql-indexes, query-plans]
+services: [postgres]
+runner: nest
+hints:
+  - "Run each query with explain (analyze, buffers) before you add anything. Note the top node types and the execution time."
+  - "An index on customer_id alone finds the right rows but returns them in index order, so the plan still sorts. Put the sort column in the index after the equality column."
+  - "A partial index has a WHERE clause. The query's WHERE must imply it for the planner to use the index."
+  - "An index on email cannot answer a condition on lower(email). Index the expression the query uses."
+  - "@> on an array is a GIN operator. A B-tree on an array column only supports equality and ordering of whole arrays."
+  - "Run ANALYZE after creating an expression index so the planner has statistics for the expression."
+criteria:
+  - { id: applies, title: The migration runs and creates indexes }
+  - { id: customer-orders, title: "A customer's latest orders come from an index, without a Sort node" }
+  - { id: pending-orders, title: Pending orders come from a partial index }
+  - { id: email-lookup, title: The case-insensitive email lookup uses an index }
+  - { id: tag-search, title: The tag search uses a GIN index }
+rubric:
+  - { id: index-shape, title: "Each index matches its query: equality column before the sort column, a partial predicate that matches the query, the same expression as the WHERE clause, and GIN for containment", skill: sql-indexes, max: 4 }
+  - { id: no-waste, title: "No redundant or unused indexes: nothing duplicates another index's leading columns, and nothing was added that none of the four queries uses", skill: sql-indexes, max: 3 }
+  - { id: live-safe, title: "The migration is safe on a live table: CREATE INDEX CONCURRENTLY, one index per statement, and IF NOT EXISTS or a note on handling an INVALID index after a failed build", skill: sql-indexes, max: 3 }
+  - { id: before-after, title: "README reports the plan node types and execution times before and after for all four queries, taken from EXPLAIN ANALYZE", skill: query-plans, max: 4 }
+limits: { timeoutSeconds: 120 }

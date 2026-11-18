@@ -1,0 +1,62 @@
+- id: idempotency-key-how
+  type: concept
+  front: "How do idempotency keys work?"
+  back: "The client sends a unique key with a `POST` and reuses it on retries. The server stores the outcome under the key and replays it for repeats instead of doing the work again."
+  skills: [api-idempotency]
+- id: safe-payments-retry
+  type: concept
+  front: "How would you make `POST /payments` safe to retry?"
+  back: "Require an `Idempotency-Key`, reserve it atomically with a hash of the body, charge, store the response with the payment in one transaction, and replay it for retries."
+  skills: [api-idempotency]
+- id: timeout-ambiguity
+  type: concept
+  front: "Why can't a client that timed out on a `POST` just check whether it worked and retry?"
+  back: "A timeout looks the same whether the request never arrived, failed, or succeeded with a lost response. Only a key lets the server recognise the retry."
+  skills: [api-idempotency]
+- id: key-per-operation
+  type: concept
+  front: "When does the client generate the idempotency key?"
+  back: "Once per logical operation, before the first attempt. Every retry of that operation reuses it."
+  skills: [api-idempotency]
+- id: idem-concurrent-status
+  type: cloze
+  front: "A retry arrives while the first request with the same key is still running. The draft standard says to answer {{...}}."
+  back: "`409 Conflict`"
+  skills: [api-idempotency]
+- id: idem-different-body
+  type: concept
+  front: "Why must the server compare the request body when a key is reused?"
+  back: "A client bug could reuse a key for a different request and wrongly receive the old success. A different body gets `422`."
+  skills: [api-idempotency]
+- id: idem-race
+  type: concept
+  front: "What goes wrong with `get(key)`, then `await charge()`, then `set(key)`?"
+  back: "Two concurrent requests both see no key and both charge. Checking and reserving must be one atomic step."
+  skills: [api-idempotency]
+- id: idem-postgres-reserve
+  type: snippet
+  front: "Reserve an idempotency key atomically in PostgreSQL."
+  back: |-
+    ```sql
+    INSERT INTO idempotency_keys (client_id, key, request_hash) VALUES ($1, $2, $3)
+    ON CONFLICT DO NOTHING RETURNING key;  -- no row back: already taken
+    ```
+  skills: [api-idempotency]
+- id: idem-valkey-reserve
+  type: snippet
+  front: "Reserve an idempotency key for 24 hours in Valkey."
+  back: |-
+    ```sh
+    SET idem:client_42:<key> '<record>' NX EX 86400   # OK = reserved, nil = taken
+    ```
+  skills: [api-idempotency]
+- id: idem-scope
+  type: concept
+  front: "Why scope idempotency keys per client?"
+  back: "Otherwise two clients that pick the same key collide, and one could receive the other's stored response."
+  skills: [api-idempotency]
+- id: idem-stuck-in-flight
+  type: concept
+  front: "The process crashes after reserving a key. What happens to retries, and what is the fix?"
+  back: "They get `409` forever. Store the reservation time and let a retry take over a key in flight longer than the request timeout."
+  skills: [api-idempotency]

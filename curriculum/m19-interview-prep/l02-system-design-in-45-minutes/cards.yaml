@@ -1,0 +1,55 @@
+- id: six-steps
+  type: concept
+  front: Name the six steps of a 45-minute startup system design, in order.
+  back: Requirements, numbers, API, data model, the simple design, then failure and scaling. Keep five minutes to wrap up with trade-offs.
+  skills: [interview-system-design]
+- id: non-functional-first
+  type: concept
+  front: Why do non-functional requirements matter more to the architecture than the feature list?
+  back: Latency, availability, consistency and retention decide where data lives and what can fail. Features mostly decide endpoints and tables.
+  skills: [interview-system-design]
+- id: out-of-scope
+  type: concept
+  front: Why write an explicit "out of scope" line during requirements?
+  back: Cutting scope is a design decision. Saying it out loud shows judgement and stops the interviewer assuming you forgot.
+  skills: [interview-system-design]
+- id: seconds-per-day
+  type: cloze
+  front: "For quick estimates, a day has about {{...}} seconds, and peak traffic is often 5 to 10 times the average."
+  back: "86,400; round to 100,000"
+  skills: [interview-system-design]
+- id: numbers-decide
+  type: concept
+  front: "Your estimate says 4 writes and 400 reads per second at peak. What do you conclude out loud?"
+  back: One Postgres and a couple of stateless app instances handle it easily. The hard parts are elsewhere (latency, abuse, correctness), not scale.
+  skills: [interview-system-design]
+- id: when-to-add-a-box
+  type: concept
+  front: When should you add a cache, a queue or a worker to a design?
+  back: Only when a stated requirement or a number forces it. Name which one, and what the new box costs.
+  skills: [interview-system-design]
+- id: short-code-uniqueness
+  type: concept
+  front: How do you guarantee short codes are unique in a URL shortener?
+  back: A unique constraint on `code`. Generate a random base62 code, insert, and retry with a new one on a unique violation.
+  skills: [interview-system-design]
+- id: counter-codes-leak
+  type: concept
+  front: What is the downside of encoding an auto-increment counter as the short code?
+  back: Codes are guessable and sequential, which reveals how many links exist and lets anyone enumerate them.
+  skills: [interview-system-design]
+- id: redirect-301-302
+  type: comparison
+  front: 301 vs 302 for a short-link redirect
+  back: Browsers cache a 301, so repeat clicks skip your server and click counts undercount. A 302 costs a request each time but keeps counts honest.
+  skills: [interview-system-design]
+- id: hot-row-counter
+  type: concept
+  front: Why can `UPDATE links SET clicks = clicks + 1` on every redirect become a problem?
+  back: A viral link's row becomes a lock hot spot. Batch counts in memory or Valkey and flush, or log click events and aggregate later.
+  skills: [interview-system-design]
+- id: standard-follow-ups
+  type: concept
+  front: Name the four follow-ups to expect after a startup design.
+  back: What breaks first at 10x? Where would a cache go and how is it invalidated? What if a worker crashes halfway? How do you deploy a schema change?
+  skills: [interview-system-design]

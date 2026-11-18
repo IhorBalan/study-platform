@@ -1,0 +1,22 @@
+title: Review a seeded pull request
+type: text
+skills: [interview-code-review]
+hints:
+  - "Read the PR description and the file list first. Then go pass by pass: correctness, security, data, concurrency, tests. Leave style for last."
+  - Follow every value that comes from the request (params, query, body) and see where it ends up. SQL strings and role columns are good places to look.
+  - Check every call that returns a promise. Is each one awaited?
+  - "For accept, imagine two requests with the same token arriving in the same millisecond, and two different invitations competing for the last seat."
+  - The controller is protected by AuthGuard. Being logged in is not the same as being allowed to act on this team.
+  - "What would the client see when an invitation has expired? Which status does Nest send for a @Post handler by default?"
+rubric:
+  - { id: sql-injection, title: "Finds the SQL injection in listForTeam (search interpolated into the LIKE clause), shows how it is exploited or what it exposes, and fixes it with a parameter (for example LIKE $2 with the wildcards in the value) and escaping of % and _", skill: interview-code-review, max: 3 }
+  - { id: secret-in-code, title: "Flags the hard-coded live MAIL_API_KEY as blocking, says it must be rotated now because it is already in git history, and moves it to configuration or a secret store injected at start-up", skill: interview-code-review, max: 2 }
+  - { id: authorisation, title: "Finds that nothing checks the caller is an admin of teamId for create and list (broken object-level authorisation), and that the invite role comes unchecked from the body so anyone can invite an owner", skill: interview-code-review, max: 3 }
+  - { id: validation, title: "Flags the untyped body (any) with no validation of email format or role against an allowed list, and proposes a DTO or zod schema with a validation pipe", skill: interview-code-review, max: 2 }
+  - { id: token-handling, title: "Notes the token comes from Math.random (predictable, short) and should come from crypto.randomBytes or randomUUID, and that it is written to logs and returned by SELECT * in list and RETURNING *", skill: interview-code-review, max: 2 }
+  - { id: missing-await, title: "Finds that mailer.send is not awaited, explains the consequence (unhandled rejection, invitation saved but no email, no error to the caller) and proposes awaiting it or queuing the email as a job", skill: interview-code-review, max: 2 }
+  - { id: n-plus-one, title: "Finds the N+1 query in listForTeam (one users query per invitation) and fixes it with a JOIN or one query with WHERE id = ANY($1)", skill: interview-code-review, max: 2 }
+  - { id: transaction-and-race, title: "Finds that accept runs its writes without a transaction (membership inserted but invitation not marked if the second query fails) and the check-then-act race (two accepts of one token, or two invitations taking the last seat), and fixes both with a transaction plus row locks or a conditional UPDATE ... WHERE accepted_at IS NULL RETURNING and a unique constraint on memberships", skill: interview-code-review, max: 4 }
+  - { id: status-codes, title: "Flags that failed accepts return 201 with ok false, and maps each reason to a proper status (404 not found, 409 already accepted or no seats, 410 or 400 expired) with a problem document", skill: interview-code-review, max: 2 }
+  - { id: schema-and-tests, title: "Notes the missing unique index on invitations.token and index on team_id, and treats the absence of tests as blocking, naming at least three tests the PR needs (for example authorisation, double accept, expired invitation)", skill: interview-code-review, max: 3 }
+  - { id: prioritisation-and-tone, title: "Comments are ordered by severity and labelled blocking or non-blocking, each states a consequence and a fix, they talk about the code rather than the author, and the summary gives a clear verdict (request changes) with the blocking list and one genuine positive", skill: interview-code-review, max: 4 }

@@ -1,0 +1,60 @@
+- id: log-vs-queue-core
+  type: comparison
+  front: Job queue vs log
+  back: "A queue tracks each message and deletes it once a worker acknowledges it. A log keeps records in order until retention removes them, and each reader keeps its own offset."
+  skills: [kafka-log-model]
+- id: offset-term
+  type: term
+  front: Offset
+  back: "A record's position in a partition, assigned on append and never reused. Example: the fourth record in partition 0 has offset 3."
+  skills: [kafka-log-model]
+- id: read-does-not-delete
+  type: concept
+  front: What happens to a Kafka record after every consumer has read it?
+  back: Nothing. It stays until the topic's retention (time, size or compaction) removes it.
+  skills: [kafka-log-model]
+- id: default-retention
+  type: cloze
+  front: "Kafka's broker default for time-based retention is {{7 days}} (`retention.ms`)."
+  back: 7 days
+  skills: [kafka-log-model]
+- id: second-reader
+  type: concept
+  front: A new service needs every order event. What changes on the producer side with Kafka, and with a plain queue?
+  back: "Kafka: nothing, the service reads with a new consumer group. Queue: the producer or a fan-out (such as SNS) must add a second queue."
+  skills: [kafka-log-model]
+- id: replay-use
+  type: concept
+  front: A bug made your search indexer write bad documents for two days. How does a log help?
+  back: Fix the code, reset the indexer group's offsets to two days ago, and let it rebuild from the retained records.
+  skills: [kafka-log-model]
+- id: fell-off-retention
+  type: concept
+  front: What happens to a consumer whose committed offset points at records retention already deleted?
+  back: "Those records are lost to it. `auto.offset.reset` decides whether it restarts at the oldest or the newest remaining record."
+  skills: [kafka-log-model]
+- id: event-sourcing-term
+  type: term
+  front: Event sourcing
+  back: "Storing every change as an event and deriving current state by replaying them. Example: an order's status is a fold over Placed, Paid, Shipped."
+  skills: [kafka-log-model]
+- id: cdc-term
+  type: term
+  front: Change data capture (CDC)
+  back: "Reading a database's own change log (Postgres WAL) and publishing each row change as an event. Example: Debezium streaming `orders` changes to Kafka."
+  skills: [kafka-log-model]
+- id: queue-strengths
+  type: concept
+  front: What do job queues like BullMQ do well that a Kafka topic does not give you out of the box?
+  back: "Per-job retries with backoff, delayed jobs and priorities."
+  skills: [kafka-log-model]
+- id: same-vs-different-group
+  type: comparison
+  front: Two consumers in the same group vs in different groups
+  back: "Same group: they split the partitions, so each record goes to one of them. Different groups: each receives every record."
+  skills: [kafka-log-model]
+- id: interview-log-vs-queue
+  type: concept
+  front: "Interview: Kafka is often called a message queue. What is the more accurate description, and why does it matter?"
+  back: "A distributed, partitioned, append-only log. Reading does not consume, so many groups can read and replay the same records independently."
+  skills: [kafka-log-model]

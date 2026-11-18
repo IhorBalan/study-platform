@@ -1,0 +1,29 @@
+title: Retrieval with pgvector
+type: repo
+skills: [llm-rag, llm-security]
+services: [postgres]
+runner: nest
+hints:
+  - "`CREATE EXTENSION IF NOT EXISTS vector` and `CREATE ... IF NOT EXISTS` make migrate() safe to run twice."
+  - "The HNSW operator class must match the distance operator: `vector_cosine_ops` for `<=>`."
+  - "Pass a vector to `pg` as text, like '[0.1,0.2,...]'; Postgres casts it to the column type."
+  - "Order by the distance expression itself (`ORDER BY embedding <=> $2`), not by the score alias, so the index can be used."
+  - "embedMany() embeds a whole list and splits it by the model's per-call limit for you."
+  - "Delete the document's old chunks and insert the new ones in one transaction."
+  - "Parse `[n]` markers from the answer with a regular expression and keep only numbers between 1 and the number of sources you sent."
+criteria:
+  - { id: compiles, title: The project compiles with tsc }
+  - { id: schema, title: "migrate() is idempotent and creates doc_chunks with a vector(64) column and an HNSW cosine index" }
+  - { id: chunking, title: "Chunks keep every word in order, respect maxChars and keep short paragraphs whole" }
+  - { id: ingest, title: "Chunks are embedded in batches and stored with their own vectors, and re-ingesting replaces them" }
+  - { id: search, title: "Search returns the closest chunks first with a score, honours k and drops weak matches" }
+  - { id: tenant-isolation, title: "A tenant never retrieves another tenant's chunks" }
+  - { id: grounded-answer, title: "The model sees the retrieved sources and the question, and only valid citations are returned" }
+  - { id: no-context, title: Without relevant chunks the answer is NO_ANSWER and the chat model is not called }
+  - { id: own-tests, title: Your tests pass and catch a chunkText that ignores maxChars }
+rubric:
+  - { id: sql-shape, title: "The search query filters by tenant and orders by the distance expression so the HNSW index can serve it, and all values are passed as parameters", skill: llm-rag, max: 4 }
+  - { id: ingest-atomic, title: "Re-ingesting deletes and inserts in one transaction, with the embeddings computed before the transaction opens", skill: llm-rag, max: 3 }
+  - { id: prompt-sources, title: "Sources are numbered and clearly delimited as data in the user message, the instructions ask for citations, and citations are checked against what was sent", skill: llm-security, max: 3 }
+  - { id: readme-limits, title: "README names a query type vector search handles badly with a concrete fix, and describes a measured way to choose the score threshold", skill: llm-rag, max: 3 }
+limits: { timeoutSeconds: 120 }

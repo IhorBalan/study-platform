@@ -1,0 +1,17 @@
+title: "Postmortem: charged twice after a deploy"
+type: text
+skills: [idempotent-operations, retry-policies, sagas, failure-handling]
+hints:
+  - "Draw the checkout as a timeline with three columns: the mobile app, your API process, the payment provider. Mark the moment SIGKILL arrives and what each column knows at that moment."
+  - "For every retry in the story, ask who retried, whether they knew the first attempt's outcome, and whether anything told the provider it was the same payment."
+  - "The worker's job was redelivered because it ran longer than the visibility timeout. What did the worker do that a second run could repeat?"
+  - "Separate the fix that stops new double charges from the work that repairs the customers who were already charged twice."
+  - "Ask which steps of checkout can be undone and which cannot, and in which order they should run."
+rubric:
+  - { id: causal-chain, title: "Explains both paths to a double charge: the API process killed after the provider charged but before the order was saved, followed by an app retry that looked like a new payment; and the next morning's receipt jobs, redelivered after 30 seconds while the slow email step was still running, whose second run charged the deposit again", skill: failure-handling, max: 4 }
+  - { id: why-retries-hurt, title: "States that the retries themselves were reasonable, and that the defect is that neither the API nor the worker passed a stable idempotency key to the provider or recorded the attempt before charging", skill: retry-policies, max: 3 }
+  - { id: idempotent-design, title: "Designs the fix as phases: a client-generated key persisted with a lease before charging, a downstream provider key derived from it, and the order and stored response written in one transaction, with what a retry does at each crash point", skill: idempotent-operations, max: 4 }
+  - { id: worker-fix, title: "Fixes the worker: the job carries a stable id, the deposit charge uses a key derived from the order (not the job attempt), and completion is recorded in the same transaction as its effect (inbox or a status check)", skill: idempotent-operations, max: 3 }
+  - { id: step-order, title: "Treats checkout as a saga: orders the steps so the irreversible ones (email, receipt) come last, and names a compensation (refund) for a charge whose order cannot be completed", skill: sagas, max: 3 }
+  - { id: remediation, title: "Plans the clean-up: finds affected customers by reconciling provider charges against orders, refunds duplicates, and adds a recurring reconciliation job or alert so this is caught in hours, not from support tickets", skill: sagas, max: 3 }
+  - { id: deploy-hygiene, title: "Mentions graceful shutdown or a longer termination grace period as a mitigation, and explains why it cannot be the fix on its own", skill: failure-handling, max: 2 }

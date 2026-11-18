@@ -1,0 +1,60 @@
+- id: tag-vs-digest
+  type: comparison
+  front: Image tag vs image digest
+  back: A tag is a movable name (`:main`). A digest (`@sha256:…`) is the hash of the image manifest and always names the same bytes.
+  skills: [ci-container-images]
+- id: no-latest-deploys
+  type: concept
+  front: Why should a deploy never reference `:latest`?
+  back: "`latest` moves with every push, so you cannot tell which code runs, two hosts may pull different builds, and there is nothing fixed to roll back to."
+  skills: [ci-container-images]
+- id: sha-tag
+  type: concept
+  front: Why tag every CI image with the commit SHA?
+  back: It links the image to the exact code inside it, and gives each build a name you can deploy or roll back to.
+  skills: [ci-container-images]
+- id: build-once-promote
+  type: concept
+  front: Why promote one image digest from staging to production instead of rebuilding for production?
+  back: A rebuild can pull a newer base image or package, so production would run bytes that were never tested.
+  skills: [ci-container-images]
+- id: interview-good-dockerfile
+  type: concept
+  front: "Interview: what makes a good Dockerfile for a Node app?"
+  back: |-
+    Multi-stage: build with dev deps, ship only `dist` and prod deps on a slim base.
+    Copy the lockfile and install before copying source, for the layer cache.
+    Run as a non-root user; exec-form `CMD` so Node gets `SIGTERM`.
+  skills: [ci-container-images]
+- id: buildx-cache-ci
+  type: concept
+  front: Why is a Docker build slow on a hosted runner even when the Dockerfile is well ordered?
+  back: The runner starts with an empty layer cache. Export and import it with `cache-to` and `cache-from` (`type=gha` or `type=registry`).
+  skills: [ci-container-images]
+- id: cache-mode-max
+  type: concept
+  front: What does `mode=max` add to a BuildKit cache export?
+  back: The layers of every stage, not just the final image, so the dependency install in the build stage is cached too.
+  skills: [ci-container-images]
+- id: pr-build-no-push
+  type: concept
+  front: Why build the image on pull requests but not push it?
+  back: It catches a broken Dockerfile before merge without filling the registry with throwaway images or giving PR jobs write access.
+  skills: [ci-container-images, ci-workflow-security]
+- id: ghcr-token
+  type: cloze
+  front: "To push to ghcr.io with the workflow's own token, the job needs `permissions: {{...}}`."
+  back: "`packages: write` (plus `contents: read` for the checkout)"
+  skills: [ci-container-images]
+- id: provenance-term
+  type: term
+  front: Build provenance
+  back: |-
+    A signed record of how an artefact was built: repository, commit and workflow.
+    Example: `build-push-action` attaches one by default; `provenance: mode=max` records more.
+  skills: [ci-container-images]
+- id: scan-policy
+  type: concept
+  front: How do you keep image scanning in CI from turning into noise?
+  back: Fail only on serious findings that have a fix, and rescan deployed images on a schedule, since new CVEs appear for old images.
+  skills: [ci-container-images]

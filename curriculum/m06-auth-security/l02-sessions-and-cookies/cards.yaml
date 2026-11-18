@@ -1,0 +1,58 @@
+- id: session-id-entropy
+  type: concept
+  front: What makes a session id safe to hand to a browser?
+  back: "It comes from a cryptographically secure generator, has at least 128 bits, and encodes nothing. Example: `randomBytes(32).toString('base64url')`."
+  skills: [session-auth]
+- id: hash-session-ids
+  type: concept
+  front: Why store a hash of the session id instead of the id, and why is SHA-256 enough here?
+  back: "A leaked table of raw ids logs the attacker in as everyone. The id is long and random, so there is nothing to brute-force and a slow hash only adds latency."
+  skills: [session-auth]
+- id: httponly
+  type: concept
+  front: "What does the `HttpOnly` cookie attribute protect against?"
+  back: "Script reading the cookie, so an XSS bug cannot steal the session id. It can still make requests that carry it."
+  skills: [session-auth]
+- id: samesite-lax-vs-strict
+  type: comparison
+  front: "`SameSite=Lax` vs `SameSite=Strict`"
+  back: "Lax still sends the cookie on top-level navigation by link from another site. Strict never sends it cross-site, so users arriving from a link look logged out."
+  skills: [session-auth]
+- id: samesite-is-site
+  type: concept
+  front: "Why is `SameSite=Lax` alone not a complete CSRF defence?"
+  back: "It works on sites, so sibling subdomains count as same-site, and it allows top-level GETs. Also avoid state-changing GETs and check Origin or a CSRF token."
+  skills: [session-auth]
+- id: host-prefix
+  type: term
+  front: "`__Host-` cookie prefix"
+  back: "The browser only accepts the cookie with `Secure`, `Path=/` and no `Domain`. Example: `__Host-sid`, which no subdomain can overwrite."
+  skills: [session-auth]
+- id: session-fixation
+  type: concept
+  front: How do you prevent session fixation?
+  back: "Issue a new session id at login and on every privilege change, delete the old one, and never accept ids from URLs."
+  skills: [session-auth]
+- id: idle-vs-absolute
+  type: comparison
+  front: Idle timeout vs absolute timeout for sessions
+  back: "Idle ends a session after a period without requests and slides forward with use. Absolute ends it after a fixed lifetime whatever happens."
+  skills: [session-auth]
+- id: real-logout
+  type: concept
+  front: What must logout do on the server, beyond clearing the cookie?
+  back: "Delete the session record. Otherwise a copied cookie keeps working until it expires."
+  skills: [session-auth]
+- id: logout-everywhere
+  type: snippet
+  front: Log a user out of every device with server-side sessions.
+  back: |-
+    ```sql
+    DELETE FROM sessions WHERE user_id = $1;
+    ```
+  skills: [session-auth]
+- id: nest-cookie-maxage
+  type: cloze
+  front: "In NestJS's built-in `httpAdapter.setCookie()`, `maxAge` is in {{seconds}}, unlike Express's `res.cookie()`."
+  back: seconds
+  skills: [session-auth]

@@ -1,0 +1,60 @@
+- id: interview-lost-updates
+  type: concept
+  front: "Interview: two requests update the same row at the same time. How do you avoid lost updates?"
+  back: "Atomic conditional `update` for arithmetic; `select ... for update` in a short transaction (pessimistic); or a version column checked in the `where` (optimistic), refusing or retrying on zero rows."
+  skills: [concurrency-control]
+- id: optimistic-vs-pessimistic
+  type: comparison
+  front: Optimistic vs pessimistic concurrency control
+  back: "Pessimistic prevents conflicts by locking and waiting. Optimistic lets writers proceed and rejects the write whose version is stale. Optimistic suits rare conflicts and work across requests."
+  skills: [concurrency-control]
+- id: think-time
+  type: concept
+  front: A user opens an edit form and saves seven minutes later. Why can a row lock not protect the save?
+  back: "A lock lives inside one transaction on one connection and cannot be held across two HTTP requests and a human's think time. Use a version check instead."
+  skills: [concurrency-control]
+- id: etag-if-match
+  type: cloze
+  front: "The server sends the row version as `{{ETag}}`, and the client sends it back on a write in `{{If-Match}}`."
+  back: "ETag; If-Match"
+  skills: [concurrency-control]
+- id: status-412-428
+  type: comparison
+  front: "`412 Precondition Failed` vs `428 Precondition Required`"
+  back: "412: the `If-Match` value is stale, someone else wrote first. 428: the client sent no `If-Match` where one is required."
+  skills: [concurrency-control]
+- id: zero-rows
+  type: concept
+  front: "A conditional `update ... where id = $1 and version = $2` returns zero rows. What can that mean?"
+  back: "The row does not exist, or its version changed. Check which, and answer 404 or 412; never treat it as success."
+  skills: [concurrency-control]
+- id: hot-row-optimistic
+  type: concept
+  front: Why is optimistic concurrency a poor fit for a counter that every request updates?
+  back: "Most attempts conflict and retry, wasting work. An atomic `set n = n + 1` or a row lock serialises them cheaply."
+  skills: [concurrency-control]
+- id: advisory-xact-lock
+  type: snippet
+  front: Serialise all transactions for one email address when no row exists yet to lock.
+  back: "`select pg_advisory_xact_lock(hashtextextended('signup:' || $1, 0))` at the start of the transaction; it is released at commit."
+  skills: [concurrency-control]
+- id: session-advisory-pool
+  type: concept
+  front: Why are session-level advisory locks risky with a connection pool?
+  back: "The lock belongs to the connection, not the request: it outlives the request, and an unlock sent through the pool may run on another connection."
+  skills: [concurrency-control]
+- id: nowait-lock-timeout
+  type: comparison
+  front: "`for update nowait` vs `lock_timeout`"
+  back: "`nowait` fails immediately if the row is locked. `lock_timeout` waits up to a limit, for any lock in the session or transaction."
+  skills: [concurrency-control]
+- id: fencing-token
+  type: term
+  front: Fencing token
+  back: "An increasing number issued with each lock grant; the resource rejects writes with a lower number than it has seen. It stops a paused ex-holder from writing after its lock expired."
+  skills: [concurrency-control]
+- id: batch-lock-order
+  type: snippet
+  front: Lock a batch of rows in a fixed order before updating them, to avoid deadlocks.
+  back: "`select id from items where id = any($1) order by id for update`, then run the updates in the same transaction."
+  skills: [concurrency-control]

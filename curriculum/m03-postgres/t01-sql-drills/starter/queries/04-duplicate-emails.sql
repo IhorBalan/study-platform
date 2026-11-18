@@ -1,0 +1,5 @@
+-- Drill 4: duplicate customer emails.
+-- Columns: email (lower-cased and trimmed), customer_ids (an integer array, ascending)
+-- Only addresses used by more than one customer, ignoring case and surrounding spaces.
+-- Order by email.
+-- TODO: write the query.

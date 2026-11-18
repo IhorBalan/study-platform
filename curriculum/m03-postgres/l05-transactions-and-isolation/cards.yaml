@@ -1,0 +1,60 @@
+- id: mvcc
+  type: concept
+  front: "How does MVCC let readers and writers work at the same time? (interview)"
+  back: "An update writes a new row version instead of overwriting. Each statement reads the versions visible in its snapshot, so nobody waits for readers."
+  skills: [transactions-isolation]
+- id: vacuum-disk-space
+  type: concept
+  front: "Does VACUUM return disk space to the operating system? (interview)"
+  back: "Generally no. It makes dead tuples' space reusable within the table. VACUUM FULL (or pg_repack) rewrites the table to shrink it."
+  skills: [transactions-isolation]
+- id: vacuum-blockers
+  type: concept
+  front: What stops autovacuum from removing dead tuples?
+  back: "An old open snapshot, typically a session left idle in transaction. Dead rows it might still see must be kept."
+  skills: [transactions-isolation]
+- id: read-uncommitted
+  type: concept
+  front: "Does PostgreSQL have Read Uncommitted? (interview)"
+  back: "You can request it, but it behaves as Read Committed. MVCC never shows uncommitted rows."
+  skills: [transactions-isolation]
+- id: isolation-anomalies
+  type: comparison
+  front: "Read Committed vs Repeatable Read vs Serializable in Postgres: which anomalies remain? (interview)"
+  back: "RC: non-repeatable reads and phantoms. RR: write skew only. Serializable: none."
+  skills: [transactions-isolation]
+- id: read-committed-snapshot
+  type: concept
+  front: Why can two SELECTs in one Read Committed transaction return different data?
+  back: "Read Committed takes a new snapshot for every statement, so it sees commits made in between."
+  skills: [transactions-isolation]
+- id: lost-update
+  type: concept
+  front: "What is a lost update, and the simplest fix in Postgres?"
+  back: "Two transactions read the same value and both write back a result, so one change is lost. Fix: `set stock = stock - 1 where stock >= 1` in one statement."
+  skills: [transactions-isolation]
+- id: write-skew
+  type: term
+  front: Write skew
+  back: "Two transactions read overlapping data and update different rows, breaking a rule together. Example: both on-call doctors sign off. Only Serializable prevents it automatically."
+  skills: [transactions-isolation]
+- id: skip-locked
+  type: snippet
+  front: Claim the next unclaimed job so that concurrent workers never take the same one.
+  back: "```sql\nselect id from jobs where status = 'queued'\norder by id limit 1 for update skip locked;\n```"
+  skills: [transactions-isolation]
+- id: deadlock-prevention
+  type: concept
+  front: How do you prevent deadlocks between transfers in opposite directions?
+  back: "Lock rows in a consistent order, for example always the lower account id first."
+  skills: [transactions-isolation]
+- id: retry-codes
+  type: concept
+  front: "Which SQLSTATE codes should trigger a retry of the whole transaction?"
+  back: "40001 (serialization failure) and 40P01 (deadlock detected). Not constraint violations such as 23505."
+  skills: [transactions-isolation]
+- id: retry-whole-transaction
+  type: concept
+  front: Why retry the whole transaction after 40001 rather than the failed statement?
+  back: "The earlier reads may be stale, so decisions based on them may now be wrong. The transaction was rolled back anyway."
+  skills: [transactions-isolation]

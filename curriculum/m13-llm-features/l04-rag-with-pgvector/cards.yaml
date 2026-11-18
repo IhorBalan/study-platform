@@ -1,0 +1,60 @@
+- id: rag-definition
+  type: term
+  front: Retrieval-augmented generation (RAG)
+  back: "Search your own data first, then send only the relevant passages to the model and ask it to answer from them. Example: top-5 help-centre chunks plus the question."
+  skills: [llm-rag]
+- id: embedding-definition
+  type: term
+  front: Embedding
+  back: "A vector produced by an embedding model, where similar meanings point in similar directions. Example: 'refund' and 'money back' end up close together."
+  skills: [llm-rag]
+- id: cosine-operator
+  type: cloze
+  front: "In pgvector, `{{<=>}}` returns cosine distance, so similarity is `1 - (embedding <=> query)`."
+  back: "<=>"
+  skills: [llm-rag]
+- id: opclass-match
+  type: concept
+  front: What happens if the HNSW index uses vector_l2_ops but queries order by `<=>`?
+  back: "The index cannot serve the query, so Postgres compares the query with every row. The operator class must match the distance operator."
+  skills: [llm-rag]
+- id: hnsw-index
+  type: snippet
+  front: Create an HNSW index for cosine distance on doc_chunks.embedding.
+  back: "```sql\nCREATE INDEX ON doc_chunks USING hnsw (embedding vector_cosine_ops);\n```"
+  skills: [llm-rag]
+- id: model-change
+  type: concept
+  front: Why can't you switch embedding models without re-embedding everything?
+  back: "Vectors from different models live in different spaces and often have different dimensions. Comparing them gives meaningless scores."
+  skills: [llm-rag]
+- id: chunking-why
+  type: concept
+  front: Why embed chunks instead of whole documents?
+  back: "One vector for a long document blurs its topics together, and you can only send a few passages to the model anyway. Chunks also give precise citations."
+  skills: [llm-rag]
+- id: min-score
+  type: concept
+  front: Why apply a minimum similarity score before calling the model?
+  back: "Top-k always returns k rows, even for unrelated questions. Without a threshold the model answers confidently from irrelevant text; with one you can say 'I don't know' for free."
+  skills: [llm-rag]
+- id: filtered-hnsw
+  type: concept
+  front: Why can `WHERE tenant_id = $1 ORDER BY embedding <=> $2 LIMIT 5` return fewer than 5 rows with HNSW?
+  back: "The index finds nearest neighbours first and the filter removes rows afterwards. pgvector 0.8's `hnsw.iterative_scan` keeps scanning until enough rows pass."
+  skills: [llm-rag]
+- id: hybrid-search
+  type: concept
+  front: Why combine vector search with full-text search?
+  back: "Embeddings miss exact tokens such as error codes, SKUs and names; full-text search matches them. Reciprocal rank fusion merges the two rankings."
+  skills: [llm-rag]
+- id: rag-design-interview
+  type: concept
+  front: "Interview: walk through a RAG design for a multi-tenant SaaS help assistant."
+  back: "Chunk and embed documents with tenant id and source; HNSW plus full-text search filtered by tenant; a minimum score; numbered sources in the prompt; citations validated in code; evaluation on a golden set."
+  skills: [llm-rag]
+- id: rag-wrong-tool
+  type: concept
+  front: Name two cases where RAG is the wrong tool.
+  back: "Structured questions that a SQL query answers exactly, and small corpora that fit in the prompt (with caching). Also whole-corpus summaries and live data."
+  skills: [llm-rag]

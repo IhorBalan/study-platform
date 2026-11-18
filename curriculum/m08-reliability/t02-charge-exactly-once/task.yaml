@@ -1,0 +1,30 @@
+title: Charge exactly once
+type: repo
+skills: [idempotent-operations, failure-handling]
+services: [postgres]
+runner: nest
+hints:
+  - "Draw the three phases first: claim the key (one statement), call the gateway (no transaction open), record the payment and the stored result (one transaction). Then ask, for each line, what happens if the process dies right after it."
+  - "INSERT ... ON CONFLICT DO NOTHING RETURNING tells you in one statement whether you own a new key. A conditional UPDATE ... WHERE status = 'started' AND locked_until < now() RETURNING does the same for a takeover."
+  - "Let Postgres keep the time: locked_until = now() + make_interval(secs => $1 / 1000.0). Then every instance agrees on when a lease ends."
+  - "The gateway deduplicates by idempotencyKey. Derive that key from the customer and your key, so a takeover sends the same one and the gateway returns the first charge."
+  - "If the gateway call fails, you do not know whether the card was charged. Leaving the key started, with its lease, is a safe answer."
+  - "Run `npm test` with DATABASE_URL set. Your tests run with --test-concurrency=1 because they share one database."
+criteria:
+  - { id: compiles, title: The project compiles with tsc }
+  - { id: charges, title: A new key charges once and returns the stored payment }
+  - { id: replays, title: A retry with the same key and amount replays the result without calling the gateway }
+  - { id: conflict, title: The same key with a different amount is rejected with IdempotencyConflictError }
+  - { id: scoped-keys, title: Two customers may use the same key }
+  - { id: concurrent-duplicates, title: Simultaneous requests with one key on two instances charge once }
+  - { id: lost-response, title: "After a lost gateway response, a retry completes without a second charge" }
+  - { id: lease-takeover, title: "A key held by a crashed request is refused while leased and taken over afterwards" }
+  - { id: finishes-atomically, title: "If recording the payment fails, the key is not marked done and a retry records it" }
+  - { id: own-tests, title: Your tests pass and catch a pay() that ignores the idempotency key }
+rubric:
+  - { id: phases, title: "The code has three visible phases (claim, external call, finish), no transaction or row lock is held during the gateway call, and the finish writes the payment and the stored result in one transaction", skill: idempotent-operations, max: 4 }
+  - { id: atomic-claim, title: "Claiming a new key and taking over an expired one are each a single statement whose result says who owns the key, with no read-then-write gap", skill: idempotent-operations, max: 4 }
+  - { id: downstream-key, title: "The gateway key is derived deterministically from customer and key, and a comment or the README says why a random one would double-charge", skill: idempotent-operations, max: 3 }
+  - { id: failure-outcomes, title: "README walks through a crash after each phase and states what a retry does in each case, including what happens to a key whose gateway call failed", skill: failure-handling, max: 4 }
+  - { id: tests, title: "Own tests cover replay, conflict, concurrent duplicates and a retry after a failed gateway call, using a fake gateway rather than timing luck", skill: idempotent-operations, max: 3 }
+limits: { timeoutSeconds: 120 }

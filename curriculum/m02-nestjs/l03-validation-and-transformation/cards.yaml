@@ -1,0 +1,55 @@
+- id: body-type-is-a-claim
+  type: concept
+  front: "A handler declares `@Body() input: CreateNote` and no pipe is bound. What is guaranteed about `input` at run time?"
+  back: Nothing. The annotation is erased; `input` is whatever JSON the client sent.
+  skills: [nest-validation]
+- id: whitelist-vs-forbid
+  type: comparison
+  front: "`whitelist: true` vs `forbidNonWhitelisted: true` (ValidationPipe)"
+  back: "`whitelist` silently removes properties without a decorator. Adding `forbidNonWhitelisted` rejects the request with 400 instead."
+  skills: [nest-validation]
+- id: transform-option
+  type: concept
+  front: "What does `transform: true` change in `ValidationPipe`?"
+  back: The handler receives an instance of the DTO class, and primitive route or query arguments are converted to their declared type.
+  skills: [nest-validation]
+- id: dto-import-type
+  type: concept
+  front: "Why does `ValidationPipe` ignore a DTO's rules when the DTO is an interface or was imported with `import type`?"
+  back: The pipe finds the class through decorator metadata. Interfaces and type-only imports are erased, so the metadata no longer points at the class and its decorators.
+  skills: [nest-validation]
+- id: schema-option-needs-pipe
+  type: concept
+  front: "`@Body({ schema: CreateNoteSchema })` is in place but invalid bodies still reach the handler. What is missing?"
+  back: "A pipe that runs the schema. Register `StandardSchemaValidationPipe`, for example under `APP_PIPE`."
+  skills: [nest-validation]
+- id: strict-object
+  type: comparison
+  front: "`z.object({...})` vs `z.strictObject({...})` for a request body"
+  back: "`z.object` drops unknown keys and passes. `z.strictObject` fails validation when an unknown key is present."
+  skills: [nest-validation]
+- id: app-pipe-snippet
+  type: snippet
+  front: Register a global `ValidationPipe` so that tests which build the app from `AppModule` get it too.
+  back: |-
+    ```ts
+    providers: [{ provide: APP_PIPE, useValue: new ValidationPipe({ whitelist: true }) }]
+    ```
+  skills: [nest-validation]
+- id: pipe-term
+  type: term
+  front: Pipe (NestJS)
+  back: |-
+    A class whose `transform(value, metadata)` returns a checked or converted handler argument, or throws.
+    Example: `@Param('id', ParseIntPipe) id: number`.
+  skills: [nest-validation]
+- id: mass-assignment
+  type: concept
+  front: Why is it dangerous to accept unknown body fields and spread the body into a database row?
+  back: A client can set columns you never meant to expose, such as `isAdmin` or `ownerId`. This is called mass assignment.
+  skills: [nest-validation]
+- id: validation-is-not-authorisation
+  type: comparison
+  front: Validation vs authorisation
+  back: Validation checks that input is well-formed. Authorisation checks that this caller may do this to this resource. A valid `ownerId` can still belong to someone else.
+  skills: [nest-validation]

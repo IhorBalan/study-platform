@@ -1,0 +1,40 @@
+packages:
+  - apps/*
+  - packages/*
+
+catalog:
+  typescript: 7.0.2
+  turbo: 2.11.11
+  oxlint: ^1.94.0
+  prettier: ^3.6.0
+  vitest: 5.1.0
+  zod: ^4.6.7
+  drizzle-orm: 0.45.4
+  drizzle-kit: 0.31.11
+  pg: ^8.16.0
+  '@types/pg': ^8.15.0
+  '@types/node': ^24.0.0
+
+allowBuilds:
+  '@swc/core': true
+  esbuild: true
+  # Optional native speed-ups pulled in by testcontainers. Not needed, so not built.
+  cpu-features: false
+  ssh2: false
+  protobufjs: false
+
+# Supply-chain policy. See docs/security-decisions.md (S-001 to S-004).
+# Wait one day before installing a newly published version, so hijacked releases are usually caught first.
+# No version is ever exempted. If a release is too new, use the previous one or wait a day (docs/decisions.md D-109).
+minimumReleaseAge: 1440
+# Refuse a version that was published with weaker evidence (no provenance or trusted publisher) than an earlier one.
+trustPolicy: no-downgrade
+# Transitive dependencies may only come from the registry, never from git URLs or tarballs.
+blockExoticSubdeps: true
+# Fail the install when a dependency wants to run an install script that allowBuilds does not mention.
+strictDepBuilds: true
+
+auditConfig:
+  ignoreGhsas:
+    # picomatch ReDoS: no fixed version exists. Only reached by dev build tooling with globs we write ourselves. S-005.
+    - GHSA-fc5q-39xc-vjpf

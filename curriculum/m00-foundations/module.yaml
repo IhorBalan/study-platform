@@ -1,0 +1,21 @@
+title: "Foundations: HTTP, the Node runtime and TypeScript for the backend"
+summary: >-
+  You can read a raw HTTP exchange, reason about what the Node event loop is doing under load,
+  control concurrency and streams without a library, set up TypeScript for a server, and build
+  a small JSON API on node:http alone.
+kind: core
+effort: M
+services: []
+skills:
+  - { id: http-semantics, title: "HTTP methods, status codes and headers" }
+  - { id: http-caching, title: "HTTP caching and conditional requests" }
+  - { id: http-versions, title: "HTTP/1.1, HTTP/2 and HTTP/3 in practice" }
+  - { id: node-event-loop, title: "The Node event loop" }
+  - { id: node-cpu-work, title: "Keeping CPU work off the event loop" }
+  - { id: async-control-flow, title: "Async control flow, cancellation and timeouts" }
+  - { id: node-streams, title: "Streams and backpressure" }
+  - { id: ts-server-setup, title: "TypeScript and ESM set-up for a server" }
+  - { id: boundary-validation, title: "Validating data at the boundary" }
+  - { id: error-modelling, title: "Modelling errors and results" }
+  - { id: node-http-server, title: "HTTP servers on node:http" }
+  - { id: graceful-shutdown, title: "Graceful shutdown" }

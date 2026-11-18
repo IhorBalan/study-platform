@@ -1,0 +1,50 @@
+- id: endpoints-block
+  type: concept
+  front: "The `endpoints` block lists `s3` and `sqs` but the configuration also reads an SSM parameter. What happens?"
+  back: The SSM calls go to real AWS, because unlisted services keep their default endpoints.
+  skills: [iac-local-practice]
+- id: path-style
+  type: concept
+  front: Why does the AWS provider need `s3_use_path_style = true` for a local emulator?
+  back: "Virtual-hosted URLs put the bucket in the host name (`bucket.localhost`), which needs DNS a laptop does not have. Path style puts it in the path."
+  skills: [iac-local-practice]
+- id: skip-credentials-validation
+  type: term
+  front: "`skip_credentials_validation`"
+  back: "Skips the STS call that checks credentials at start-up. Needed when the endpoint has no STS; wrong for a real account."
+  skills: [iac-local-practice]
+- id: skip-account-id
+  type: concept
+  front: "What is the side effect of `skip_requesting_account_id = true`?"
+  back: Some resources that build their ARNs locally get an empty account id in them.
+  skills: [iac-local-practice]
+- id: emulator-credentials
+  type: concept
+  front: The emulator accepts any credentials. Why still set them as environment variables instead of in the provider block?
+  back: So the configuration never contains keys, and the same code works unchanged with real credentials from a role.
+  skills: [iac-local-practice]
+- id: aws-endpoint-url-env
+  type: comparison
+  front: "`AWS_ENDPOINT_URL` in the shell vs an `endpoints` block from a variable"
+  back: "The environment variable needs no code but is invisible to the next reader. The block documents the endpoint in the configuration."
+  skills: [iac-local-practice]
+- id: emulator-iam-gap
+  type: concept
+  front: A configuration applies cleanly against the lab emulator. Why can it still fail on real AWS with AccessDenied?
+  back: The lab emulator accepts any credentials and does not enforce IAM policies.
+  skills: [iac-local-practice]
+- id: emulator-coverage-gap
+  type: concept
+  front: Why can a plan fail against an emulator although the same configuration works on AWS?
+  back: The provider calls many APIs per resource, and the emulator may not implement one of them.
+  skills: [iac-local-practice]
+- id: local-env-directory
+  type: concept
+  front: Where should emulator-only provider settings live?
+  back: "In their own root directory, such as `envs/local`, calling the same modules as the real environments."
+  skills: [iac-local-practice]
+- id: practice-rename-experiment
+  type: concept
+  front: "You rename `aws_sqs_queue.jobs` to `aws_sqs_queue.work` in code only. What does the plan show, and what fixes it?"
+  back: "A destroy and a create. A `moved` block from the old address to the new one turns it into a move."
+  skills: [iac-local-practice]

@@ -1,0 +1,6 @@
+title: Explain it
+type: text
+skills: [http-basics]
+hints: [Think about caching.]
+rubric:
+  - { id: clarity, title: Clear explanation, skill: http-basics }

@@ -1,0 +1,12 @@
+{
+  "name": "make-it-fast",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "db:reset": "psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -c 'drop schema if exists public cascade; create schema public' -f db/schema.sql -f db/seed.sql",
+    "db:migrate": "psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f migrations/001_indexes.sql -c 'analyze'"
+  },
+  "dependencies": {
+    "pg": "^8.16.0"
+  }
+}

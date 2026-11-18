@@ -1,0 +1,21 @@
+title: SQL drills
+type: repo
+skills: [sql-queries]
+services: [postgres]
+runner: nest
+hints:
+  - "A condition on the right-hand table of a LEFT JOIN belongs in the ON clause. In WHERE it removes the rows the LEFT JOIN was meant to keep."
+  - "Joining orders to order_items multiplies order rows. Count orders with count(distinct o.id), or aggregate the items in a CTE first."
+  - "date_trunc on a timestamptz uses the session time zone. Convert with `at time zone 'UTC'` first when you mean UTC."
+  - "rank() gives tied rows the same number. row_number() never does, and its ORDER BY decides who wins a tie."
+  - "Subtracting two dates gives an integer number of days. Subtracting two timestamps gives an interval."
+criteria:
+  - { id: customer-revenue, title: Drill 1 returns every customer with paid orders and revenue }
+  - { id: monthly-revenue, title: Drill 2 returns monthly paid revenue with a running total }
+  - { id: top-products, title: Drill 3 returns the two best-selling products per category }
+  - { id: duplicate-emails, title: Drill 4 returns addresses shared by several customers }
+  - { id: second-order, title: Drill 5 returns the days between the first and second paid order }
+rubric:
+  - { id: right-tool, title: "Each query uses the construct that fits the question: an outer join for drill 1, a window function for the running total and the ranking, and no correlated subquery per row where a join or window would do", skill: sql-queries, max: 4 }
+  - { id: no-fan-out, title: "Aggregates are computed at the right grain: no order is counted twice because of a join to order_items, and no DISTINCT hides a fan-out bug", skill: sql-queries, max: 4 }
+  - { id: readable-sql, title: "Queries are readable: CTEs are named for what they hold, columns are aliased, and joins say how tables relate", skill: sql-queries, max: 3 }

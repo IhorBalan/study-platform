@@ -1,0 +1,55 @@
+- id: webhooks-safely
+  type: concept
+  front: "Interview: how do you handle Stripe webhooks safely?"
+  back: "Verify the signature over the raw body, store each event id once in the same transaction as its effects, make effects order-proof and idempotent, return 2xx fast and process in a job."
+  skills: [webhook-handling]
+- id: signed-string
+  type: cloze
+  front: "Stripe's `v1` signature is HMAC-SHA256 with the endpoint secret over {{the timestamp, a dot and the raw body}}."
+  back: "`${t}.${rawBody}`: the timestamp, a dot and the raw request body"
+  skills: [webhook-handling]
+- id: raw-body-why
+  type: concept
+  front: Why does verifying `JSON.stringify(req.body)` fail?
+  back: "The signature covers the exact bytes sent. Re-serialising changes whitespace, key order or escaping, so the HMAC no longer matches."
+  skills: [webhook-handling]
+- id: nest-raw-body
+  type: snippet
+  front: Make the raw request body available to a NestJS controller.
+  back: "`NestFactory.create(AppModule, { rawBody: true })`, then read `req.rawBody` (a Buffer) from `@Req() req: RawBodyRequest<Request>`."
+  skills: [webhook-handling]
+- id: replay-protection
+  type: concept
+  front: How does the timestamp in `Stripe-Signature` stop replay attacks?
+  back: "It is inside the signed string, so it cannot be changed, and the SDK rejects signatures older than the tolerance (5 minutes by default)."
+  skills: [webhook-handling]
+- id: webhook-duplicates
+  type: concept
+  front: "Interview: why does a webhook handler see the same event twice, and how do you stop double processing?"
+  back: "Delivery is at least once: retries after timeouts or errors, and manual resends. Record the event id in the same transaction as the effects and skip ids already stored."
+  skills: [webhook-handling]
+- id: retry-signature-fresh
+  type: concept
+  front: Why does signature checking not catch a retried Stripe event?
+  back: "Each delivery attempt gets a new timestamp and signature. Only the event id identifies the duplicate."
+  skills: [webhook-handling]
+- id: out-of-order
+  type: concept
+  front: "Interview: how do you handle webhook events that arrive out of order?"
+  back: "Never order by `created`. Treat the event as a signal, fetch the object's current state from the API and store that, and use one-way conditional transitions for statuses."
+  skills: [webhook-handling]
+- id: failed-processing-status
+  type: concept
+  front: What should your endpoint return when processing a verified event fails, and why?
+  back: "A 5xx, with the transaction rolled back. Stripe then retries; a 200 would tell it the event was handled and it would never come back."
+  skills: [webhook-handling]
+- id: respond-fast
+  type: concept
+  front: "Interview: how do retries interact with a slow webhook handler?"
+  back: "Stripe treats a slow response as a failure and retries while the first attempt may still be running. Acknowledge quickly and process in a job keyed by the event id."
+  skills: [webhook-handling]
+- id: secret-rolling
+  type: concept
+  front: How can you rotate a Stripe webhook signing secret without dropping events?
+  back: "Roll it with a delay of up to 7 days. Stripe signs with both secrets meanwhile and you accept any matching `v1` signature while you deploy the new one."
+  skills: [webhook-handling]

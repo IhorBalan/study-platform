@@ -1,0 +1,16 @@
+title: CI/CD and deployment
+summary: >-
+  You can design a CI pipeline that gives fast, trustworthy feedback, write and harden a GitHub
+  Actions workflow (caching, service containers, least-privilege tokens, pinned actions), build and
+  publish container images by digest, ship a release without downtime and roll it back safely,
+  and set up environments and continuous delivery for a small team.
+kind: core
+effort: S
+services: []
+skills:
+  - { id: ci-pipeline-design, title: Designing a CI pipeline }
+  - { id: github-actions, title: GitHub Actions workflows }
+  - { id: ci-workflow-security, title: "Securing workflows: permissions, pinning and secrets" }
+  - { id: ci-container-images, title: Building and publishing images in CI }
+  - { id: zero-downtime-deploys, title: Zero-downtime deploys and rollbacks }
+  - { id: continuous-delivery, title: "Environments, preview deploys and continuous delivery" }

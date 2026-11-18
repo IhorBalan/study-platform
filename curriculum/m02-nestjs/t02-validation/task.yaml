@@ -1,0 +1,27 @@
+title: Validate the notes API
+type: repo
+skills: [nest-validation]
+services: []
+runner: nest
+hints:
+  - "With class-validator: a DTO class with decorators, plus ValidationPipe with `whitelist` and `forbidNonWhitelisted`. Import the DTO as a value; with `import type` the pipe cannot find the class and your rules are never applied."
+  - "With zod: `@Body({ schema })` only attaches the schema. StandardSchemaValidationPipe from @nestjs/common is what runs it, so register that pipe as well."
+  - "A global pipe set with app.useGlobalPipes() in main.ts is invisible to the checks. Provide it in a module under the APP_PIPE token from @nestjs/core."
+  - "z.object() drops unknown keys without complaining. z.strictObject() rejects them."
+  - An optional body means the key may be absent. It does not mean that a number is acceptable.
+criteria:
+  - { id: compiles, title: The project compiles with tsc }
+  - { id: accepts-valid, title: "Valid notes are still created, including at the length limits" }
+  - { id: rejects-missing-title, title: A note without a title is rejected with 400 }
+  - { id: rejects-title-length, title: The title must have 1 to 100 characters }
+  - { id: rejects-body-length, title: The body must have at most 2000 characters }
+  - { id: rejects-wrong-types, title: Title and body must be strings }
+  - { id: rejects-unknown-fields, title: A field that is not title or body is rejected with 400 }
+  - { id: error-names-field, title: The 400 response is JSON and names the field at fault }
+  - { id: other-routes-intact, title: Reading and deleting notes still work }
+rubric:
+  - { id: boundary, title: "Validation runs in a pipe before the handler, and neither the controller method nor the service contains hand-written checks of the input", skill: nest-validation, max: 4 }
+  - { id: single-source, title: "The rules are declared once (one DTO class or one schema) and the handler's parameter type comes from that declaration", skill: nest-validation, max: 4 }
+  - { id: registration, title: "The pipe is registered through the container (APP_PIPE) or on the route, so it also applies when the app is created without main.ts", skill: nest-validation, max: 3 }
+  - { id: readme-trade-off, title: "README states which approach was chosen and names at least one concrete trade-off against the other one", max: 3 }
+limits: { timeoutSeconds: 120 }

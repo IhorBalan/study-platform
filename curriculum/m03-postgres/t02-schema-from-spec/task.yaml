@@ -1,0 +1,26 @@
+title: Design a schema from a spec
+type: repo
+skills: [data-modelling, sql-indexes]
+services: [postgres]
+runner: nest
+hints:
+  - "A unique constraint compares strings exactly. A unique index on an expression such as lower(email) does not."
+  - "A foreign key to users proves the assignee exists. To prove they belong to the task's team, reference the table that records team membership."
+  - "Since PostgreSQL 15, ON DELETE SET NULL can take a column list, so a composite foreign key can clear one column and keep the other."
+  - "A rule that links two columns of the same row, such as status and completed_at, is a table-level CHECK constraint."
+  - "PostgreSQL indexes the referenced side of a foreign key (it must be unique) but never the referencing side. A composite primary key only helps a lookup on its leading column."
+criteria:
+  - { id: applies, title: schema.sql runs on an empty database and creates the four tables }
+  - { id: accepts-valid, title: Valid rows are accepted and defaults are filled in }
+  - { id: required-fields, title: Required columns reject NULL }
+  - { id: value-rules, title: Values outside the allowed range are rejected }
+  - { id: unique-rules, title: "Duplicate emails (ignoring case), team names and memberships are rejected" }
+  - { id: foreign-keys, title: References to rows that do not exist are rejected }
+  - { id: assignee-is-member, title: A task can only be assigned to a member of its team }
+  - { id: delete-behaviour, title: Deletes cascade or unassign as the spec says }
+  - { id: keys-and-indexes, title: Every table has a primary key and every foreign key is indexed }
+rubric:
+  - { id: rules-in-database, title: "Every rule in the spec is a constraint (NOT NULL, CHECK, UNIQUE, foreign key) rather than a trigger, except where no declarative constraint can express it", skill: data-modelling, max: 4 }
+  - { id: types, title: "Column types fit the data: timestamptz for instants, date for due_on, an exact numeric for estimate_hours, and identity or UUID keys that clients never set", skill: data-modelling, max: 3 }
+  - { id: indexes, title: "Indexes exist for each foreign key and none duplicates an index the primary key already provides", skill: sql-indexes, max: 3 }
+  - { id: design-notes, title: "README explains how the assignee rule and case-insensitive email are enforced and names one concrete denormalisation with its cost", skill: data-modelling, max: 4 }

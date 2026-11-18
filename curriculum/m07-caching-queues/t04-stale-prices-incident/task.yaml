@@ -1,0 +1,17 @@
+title: "Incident: the cache shows old prices"
+type: text
+skills: [cache-invalidation, cache-strategies, distributed-locks]
+hints:
+  - Follow one price change from the admin's click to the shopper's screen. Write down every copy of the price it has to pass.
+  - Some copies are yours to delete (Valkey). Some are not (a browser cache, a CDN). Those only get shorter lifetimes or new URLs.
+  - What happens to the database in the first second after FLUSHALL, when every hot key misses at once?
+  - Which number must never come from a cache, whatever the page shows?
+  - A lock with a TTL can expire while its holder is still working. What could a second holder then overwrite?
+rubric:
+  - { id: diagnosis, title: "Explains at least two independent causes of stale prices from the scenario: the missing invalidation for bulk imports, the Cache-Control max-age on the API response (browsers and CDN), the read-then-set race between a slow read and the admin's update, and the 24-hour TTL that makes each one last", skill: cache-invalidation, max: 4 }
+  - { id: invalidation-fix, title: "Proposes invalidation on every write path (admin edit and bulk import), by deleting rather than updating the cached value, and closes the read-then-set race (version or lease) or explains why a short TTL is an acceptable bound", skill: cache-invalidation, max: 4 }
+  - { id: stampede, title: "Explains why FLUSHALL took the database down (every hot key misses at once, a thundering herd) and gives at least two remedies: single-flight or a short lock per key, stale-while-revalidate, TTL jitter, or targeted invalidation instead of flushing", skill: cache-strategies, max: 4 }
+  - { id: what-not-to-cache, title: "States that checkout must read the price from the database (or re-validate it) and never charge a cached price, and names one other value in the scenario that should not be cached or needs a very short TTL, such as stock", skill: cache-strategies, max: 3 }
+  - { id: http-caching, title: "Fixes the HTTP layer: a short max-age or no-cache with ETag revalidation for prices, and a way to purge or version CDN entries, and explains why deleting the Valkey key does not reach browsers", skill: cache-strategies, max: 3 }
+  - { id: lock-limits, title: "Identifies the problem with the nightly import's Valkey lock (it expires after 60 seconds while the import runs longer, so two imports can overlap) and proposes a fix: fencing tokens checked by the database, a Postgres advisory lock, or making the import idempotent", skill: distributed-locks, max: 3 }
+  - { id: verification, title: "Says how to confirm the fix and catch a recurrence: a metric or check comparing cached and database prices, cache hit ratio and database load during invalidation, or an alert on checkout price mismatches", max: 2 }

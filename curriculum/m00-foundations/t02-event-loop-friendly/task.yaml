@@ -1,0 +1,22 @@
+title: Keep the server responsive under CPU load
+type: repo
+skills: [node-cpu-work, node-event-loop]
+services: []
+runner: node
+hints:
+  - Reproduce the problem first. Start the server, request /hash with a few million rounds, and time a /health request in a second terminal while it runs.
+  - Awaiting a resolved promise does not give the event loop a turn. Only a macrotask such as setImmediate does.
+  - A worker file is easiest to locate with new URL('./file.mjs', import.meta.url).
+  - Whichever approach you choose, the hash for a given input and rounds must not change.
+criteria:
+  - { id: hash-correct, title: GET /hash returns the same digest as the original implementation }
+  - { id: rejects-bad-input, title: Missing or invalid input and rounds still get 400 }
+  - { id: stays-responsive, title: GET /health answers within 300 ms while a heavy hash is running }
+  - { id: heavy-result-correct, title: The heavy hash that ran during the responsiveness check is correct }
+  - { id: concurrent-hashes, title: Several hashes requested at the same time are all correct }
+rubric:
+  - { id: approach, title: The CPU work no longer runs as one uninterrupted block on the main thread and the chosen technique (chunking or worker) is applied correctly, skill: node-cpu-work, max: 4 }
+  - { id: failure-handling, title: Errors in the heavy work reach the client as a 500 response and a worker or pending job is not leaked when the work fails, skill: node-cpu-work, max: 3 }
+  - { id: trade-offs, title: README names the chosen approach and states at least one cost of it and when the alternative would be the better choice, skill: node-event-loop, max: 4 }
+  - { id: measurement, title: README reports a before and after measurement of /health latency or event loop delay with the method used, skill: node-event-loop, max: 3 }
+limits: { timeoutSeconds: 120 }

@@ -1,0 +1,28 @@
+title: Cursor pagination for an articles feed
+type: repo
+skills: [api-pagination, api-rest-design]
+services: []
+runner: nest
+hints:
+  - "Sort by createdAt descending, then by id descending. Without the second key, articles that share a timestamp have no fixed order, and a page boundary can fall between them."
+  - "The cursor is the sort key of the last item you sent, not its index. The next page is every row that sorts strictly after that key."
+  - "Fetch limit + 1 rows. If you got the extra one, there is a next page; send only limit of them."
+  - "base64url-encoded JSON is enough to make a cursor opaque. Decode it defensively: anything that does not decode to the shape you issued is a 400."
+  - "Query parameters arrive as strings. '2.5', '' and 'abc' all need to be rejected, not turned into NaN or 0."
+criteria:
+  - { id: compiles, title: The project compiles with tsc }
+  - { id: first-page, title: GET /articles returns the 20 newest articles with ties broken by id }
+  - { id: walks-all, title: "Following nextCursor visits every article exactly once, in order" }
+  - { id: no-empty-last-page, title: "nextCursor is null on the last page, even when the total divides evenly" }
+  - { id: limit-bounds, title: "limit defaults to 20, accepts 1 to 100 and rejects anything else with 400" }
+  - { id: opaque-cursor, title: The cursor is an opaque string and an invalid one is rejected with 400 }
+  - { id: stable-under-inserts, title: Articles created between two page requests cause no duplicates and no gaps }
+  - { id: survives-deletes, title: Deleting the last article of a page does not break or shift the next page }
+  - { id: filter-by-author, title: "?author= narrows the list and works together with the cursor" }
+  - { id: errors-are-problems, title: A 400 is an application/problem+json document }
+rubric:
+  - { id: keyset-logic, title: "The page is selected by comparing the (createdAt, id) pair with the cursor, not by finding an index or counting an offset, and the comparison is written once", skill: api-pagination, max: 4 }
+  - { id: cursor-handling, title: "Encoding and decoding the cursor live in one small unit, decoding validates the shape and never throws past the controller as a 500", skill: api-pagination, max: 3 }
+  - { id: boundary-parsing, title: "limit and cursor are parsed and validated at the controller boundary; the service receives typed values", skill: api-rest-design, max: 3 }
+  - { id: readme-sql, title: "README names the SQL WHERE clause and the index a PostgreSQL version would need, and the index column order matches the sort", skill: api-pagination, max: 3 }
+limits: { timeoutSeconds: 120 }

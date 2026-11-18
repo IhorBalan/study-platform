@@ -1,0 +1,30 @@
+{
+  "name": "@study/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch --preserveWatchOutput",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "generate": "drizzle-kit generate",
+    "migrate": "node dist/migrate-cli.js"
+  },
+  "dependencies": {
+    "drizzle-orm": "catalog:",
+    "pg": "catalog:",
+    "@study/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "drizzle-kit": "catalog:",
+    "typescript": "catalog:",
+    "@types/node": "catalog:",
+    "@types/pg": "catalog:"
+  }
+}

@@ -1,0 +1,50 @@
+- id: loop-length
+  type: concept
+  front: How many rounds does a typical seed to Series C startup loop have, and over how long?
+  back: Three to five rounds over one to three weeks. Big tech usually runs five to seven over several weeks.
+  skills: [interview-loop]
+- id: most-common-format
+  type: concept
+  front: Which technical format do you meet most often at small product companies?
+  back: Practical live coding or pair programming, 60 to 90 minutes, building or extending a small feature in a real editor. Not algorithm puzzles.
+  skills: [interview-loop]
+- id: take-home-judged
+  type: concept
+  front: What does a take-home reviewer look for beyond working code?
+  back: "Tests, clear structure, input validation, error handling, a README with assumptions and trade-offs, and scope discipline: do what was asked well and list what comes next."
+  skills: [interview-loop, interview-take-home]
+- id: design-red-flag
+  type: concept
+  front: What is the classic red flag in a startup system design round?
+  back: Over-engineering, for example Kubernetes and Kafka for five engineers and a thousand users. They want a design a team of 3 to 10 can build and run.
+  skills: [interview-loop, interview-system-design]
+- id: rubric-dimensions
+  type: concept
+  front: Name the five common scorecard dimensions in a startup loop.
+  back: Problem decomposition, technical depth for the level, articulating trade-offs, ownership, and culture add.
+  skills: [interview-loop]
+- id: think-aloud
+  type: concept
+  front: Why does thinking out loud matter in a technical round?
+  back: The interviewer can only score reasoning they hear. Silent coding gives them evidence for the result and none for decomposition or trade-offs.
+  skills: [interview-loop]
+- id: startup-signal
+  type: comparison
+  front: '"The architecture review took four weeks" vs "I shipped a first version in two weeks"'
+  back: The first reads as slow process at a startup. The second shows speed and ownership, which startups weight heavily.
+  skills: [interview-loop, interview-behavioural]
+- id: ask-the-format
+  type: concept
+  front: What is the cheapest thing you can do to prepare for a specific loop?
+  back: Ask the recruiter what each round is. It is a normal question, and the answer tells you what to practise.
+  skills: [interview-loop]
+- id: frontend-angle
+  type: concept
+  front: Name one backend-relevant strength a frontend developer should mention.
+  back: "Years of consuming APIs: you know what bad error formats, missing pagination and inconsistent status codes cost a client."
+  skills: [interview-loop]
+- id: questions-for-them
+  type: concept
+  front: Name three questions worth asking a startup at the end of a loop.
+  back: How much runway they have, who is on call and how often it pages, and how technical decisions get made (with a recent example).
+  skills: [interview-loop]

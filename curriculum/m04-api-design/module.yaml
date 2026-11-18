@@ -1,0 +1,17 @@
+title: API design
+summary: >-
+  You can design a REST API that clients can rely on: resource URLs, status codes and problem-details
+  errors, cursor pagination, idempotent POSTs, an OpenAPI contract that stays in sync, and changes that
+  do not break old clients. You can say when GraphQL, gRPC or tRPC fits better, and push live updates
+  with Server-Sent Events or WebSockets across more than one instance.
+kind: core
+effort: M
+services: [postgres, valkey]
+skills:
+  - { id: api-rest-design, title: "REST resources, status codes and error formats" }
+  - { id: api-pagination, title: "Pagination, filtering and sorting" }
+  - { id: api-idempotency, title: Idempotency keys and safe retries }
+  - { id: api-openapi, title: OpenAPI contracts and generated clients }
+  - { id: api-versioning, title: Versioning and evolving an API }
+  - { id: api-paradigms, title: "GraphQL, gRPC and tRPC compared with REST" }
+  - { id: api-realtime, title: "Real-time with SSE, WebSockets and Socket.IO" }

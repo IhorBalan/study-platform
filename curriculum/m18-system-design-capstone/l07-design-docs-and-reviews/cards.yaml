@@ -1,0 +1,55 @@
+- id: when-design-doc
+  type: concept
+  front: When is a change worth a design doc?
+  back: "When it is hard to reverse, crosses module or team boundaries, or takes more than a week or two."
+  skills: [sd-design-docs]
+- id: one-way-door
+  type: comparison
+  front: One-way door vs two-way door decision
+  back: "A two-way door can be undone cheaply, so decide fast. A one-way door (tenancy model, public API) deserves careful thought."
+  skills: [sd-design-docs]
+- id: doc-sections
+  type: concept
+  front: Name the sections of a short design doc.
+  back: "Context, goals, non-goals, numbers, design, alternatives considered, failure modes and operations, security, rollout, open questions."
+  skills: [sd-design-docs]
+- id: skipped-sections
+  type: concept
+  front: Which design doc sections are most often skipped and most valuable?
+  back: "Non-goals, numbers, alternatives considered and failure modes."
+  skills: [sd-design-docs]
+- id: request-path-steps
+  type: concept
+  front: Why write the path of one request or job as numbered steps in a design doc?
+  back: "It exposes missing pieces, such as who creates a row or what happens if step 3 fails, better than a diagram."
+  skills: [sd-design-docs]
+- id: tradeoff-table
+  type: concept
+  front: What makes a trade-off table useful rather than decorative?
+  back: "Criteria specific to this decision, all options on the same axes, and a closing line naming the dominating criteria and the choice."
+  skills: [sd-design-docs]
+- id: adr
+  type: term
+  front: ADR (architecture decision record)
+  back: "A short numbered file recording one decision: title, status, context, decision, consequences. Example: docs/adr/0007-postgres-schedules.md."
+  skills: [sd-design-docs]
+- id: adr-supersede
+  type: concept
+  front: A team changes its mind about an accepted ADR. What do they do?
+  back: "Write a new ADR that supersedes it and mark the old one superseded. Never rewrite the old decision."
+  skills: [sd-design-docs]
+- id: review-every-arrow
+  type: concept
+  front: What do you ask of every arrow in a design you review?
+  back: "What if this call is slow, fails, or happens twice? Look for a timeout, a retry policy and idempotency."
+  skills: [sd-design-docs]
+- id: severity-labels
+  type: concept
+  front: Why label design review comments as blocking, should or nit?
+  back: "Without labels every comment reads as blocking, and the author cannot tell what must change before building."
+  skills: [sd-design-docs]
+- id: review-against-requirements
+  type: concept
+  front: What should a design review judge the design against?
+  back: "The doc's own requirements, numbers and team, not the reviewer's preferred technologies."
+  skills: [sd-design-docs]

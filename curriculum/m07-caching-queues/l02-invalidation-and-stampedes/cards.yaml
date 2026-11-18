@@ -1,0 +1,60 @@
+- id: how-to-invalidate
+  type: concept
+  front: "Interview: how do you invalidate a cache?"
+  back: "Delete the key on every write path (API, imports, scripts), keep a TTL as the safety net, and use a version check if a slow read could store an old value."
+  skills: [cache-invalidation]
+- id: delete-not-update
+  type: concept
+  front: Why delete the cached value on write rather than set the new one?
+  back: "Two writers' cache SETs can land in the opposite order to their database writes. After a delete, the next read loads what the database holds now."
+  skills: [cache-invalidation]
+- id: read-then-set-race
+  type: concept
+  front: How can a cache hold an old value even though the writer deleted the key?
+  back: "A slow read loaded the old value before the write, then stored it after the delete."
+  skills: [cache-invalidation]
+- id: version-check
+  type: concept
+  front: How does a version marker stop a slow read from storing an old value?
+  back: "Invalidation changes the version. The reader notes it before loading and stores only if it is unchanged, in one atomic script."
+  skills: [cache-invalidation]
+- id: stampede
+  type: concept
+  front: "Interview: what is a cache stampede and how do you prevent it?"
+  back: "A hot key expires and many requests load it at once, overloading the database. Prevent it with single flight, a short per-key lock, stale-while-revalidate and TTL jitter."
+  skills: [cache-invalidation]
+- id: single-flight
+  type: term
+  front: Single flight
+  back: "Concurrent callers for the same key share one in-flight load. Example: a Map from key to the pending promise."
+  skills: [cache-invalidation]
+- id: stampede-lock-limits
+  type: concept
+  front: What two limits does a stampede lock across processes need?
+  back: "A TTL on the lock, so a crashed holder frees it, and a deadline for waiters, after which they load themselves."
+  skills: [cache-invalidation]
+- id: swr
+  type: term
+  front: Stale-while-revalidate
+  back: "After a soft expiry, serve the old value at once and refresh it in the background. Users never wait for the reload."
+  skills: [cache-invalidation]
+- id: negative-caching
+  type: concept
+  front: Why cache a "not found" result, and for how long?
+  back: "So repeated lookups of a missing id do not each hit the database. Briefly, because a later create may not invalidate it."
+  skills: [cache-invalidation]
+- id: never-cache-errors
+  type: concept
+  front: Why must a database timeout never be cached as "not found"?
+  back: "A timeout means unknown. Caching it hides an existing record from every reader until the TTL ends."
+  skills: [cache-invalidation]
+- id: price-at-checkout
+  type: concept
+  front: Where must checkout read the price from?
+  back: "From the database, inside the transaction that creates the order. Cached prices are for display only."
+  skills: [cache-strategies]
+- id: key-includes-inputs
+  type: cloze
+  front: "A cache key must include {{every input that changes the result}}, such as user, tenant, locale and currency."
+  back: "every input that changes the result"
+  skills: [cache-strategies]

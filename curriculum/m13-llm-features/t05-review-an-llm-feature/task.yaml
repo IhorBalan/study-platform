@@ -1,0 +1,18 @@
+title: Review an LLM feature before it ships
+type: text
+skills: [llm-production, llm-evaluation, llm-security]
+hints:
+  - "Estimate cost from tokens, not requests: tickets per day times (input tokens + output tokens), with input and output priced separately. Use symbols for prices; they change."
+  - "Ask what in the prompt repeats on every call. A long, stable prefix can be cached; the ticket text cannot."
+  - "Anything the model reads can carry instructions: the ticket body, an attachment's text, a CRM note. Then ask what the model's output can do: who reads it, what it is rendered into, which tools it can trigger."
+  - "Rendering model output as HTML or Markdown with images can leak data through a URL. Treat the summary like any other untrusted input."
+  - "An eval set needs real cases with known good answers, including the awkward ones. Name what you score with code and what needs a judge or a human."
+  - "Personal data question: what leaves your system, who stores it and for how long, and what ends up in your logs."
+rubric:
+  - { id: cost, title: "Gives a token-based cost estimate with input and output counted separately, names at least two levers (caching the stable prefix, a smaller model for the summary, capping output, batch for the nightly backfill) and a per-tenant or global budget with an alert", skill: llm-production, max: 4 }
+  - { id: reliability, title: "Covers timeouts, a bounded retry with backoff on 429 and 5xx only, a fallback when the model is down (ticket shown without summary) and what is logged per call (model, tokens, latency, finish reason) without logging ticket text", skill: llm-production, max: 3 }
+  - { id: evaluation, title: "Proposes an offline eval set built from real, anonymised tickets with expected facts, separates code checks (schema, length, no invented order ids) from judged qualities with a rubric, and runs it on every prompt or model change before release", skill: llm-evaluation, max: 4 }
+  - { id: online-signals, title: "Names at least two production signals (agent edits or thumbs down on summaries, schema failures, refusals, cost per ticket) and how a regression is noticed", skill: llm-evaluation, max: 2 }
+  - { id: injection, title: "Identifies indirect prompt injection through ticket text and attachments, explains why prompt wording alone is not a control, and limits impact: no tools with side effects, output validated against a schema, untrusted content delimited", skill: llm-security, max: 4 }
+  - { id: output-handling, title: "Treats the summary as untrusted output: escaped or rendered as plain text, no remote images or auto-linked URLs, so a crafted summary cannot exfiltrate data or run script in the agent's browser", skill: llm-security, max: 3 }
+  - { id: data, title: "Addresses customer data: data processing terms and retention with the provider, region, sending only the fields needed, redacting secrets such as card numbers before the call, and keeping ticket text out of logs and traces", skill: llm-security, max: 3 }

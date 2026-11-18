@@ -1,0 +1,55 @@
+- id: tests-vs-evals
+  type: comparison
+  front: Tests vs evaluations for an LLM feature
+  back: "Tests check your code around the model with a fake model, deterministically, on every commit. Evaluations measure a real model's answers on a golden set when prompts or models change."
+  skills: [llm-evaluation]
+- id: fake-model-assert-prompt
+  type: concept
+  front: What can you assert with `model.doGenerateCalls` from MockLanguageModelV4?
+  back: "Exactly what your code sent: which messages, in which roles, which tools, and that data that must not be there (another tenant's, secrets) is absent."
+  skills: [llm-evaluation]
+- id: golden-set
+  type: term
+  front: Golden set
+  back: "A fixed set of real, anonymised inputs with known expected outputs, used to score a feature. Example: 80 tickets with their correct category and priority."
+  skills: [llm-evaluation]
+- id: golden-set-sources
+  type: concept
+  front: Where should golden set examples come from?
+  back: "Real inputs from logs or beta users, covering common cases, edge cases, past bugs and adversarial inputs, with part of the set held out from prompt tuning."
+  skills: [llm-evaluation]
+- id: code-graders-first
+  type: concept
+  front: Why grade with code before reaching for an LLM judge?
+  back: "Code checks (exact match, schema validity, citation checks, length, no PII) are free, fast and deterministic. Keep the judge for what code cannot decide."
+  skills: [llm-evaluation]
+- id: retrieval-recall
+  type: concept
+  front: Why measure RAG retrieval separately from the generated answer?
+  back: "If the right chunk is not retrieved (low recall@k), no prompt change can fix the answer. Separate numbers tell you which half to fix."
+  skills: [llm-evaluation, llm-rag]
+- id: judge-limits
+  type: concept
+  front: "Interview: what are the limits of LLM-as-judge?"
+  back: "It shares model blind spots, prefers longer answers, its own style and one position in comparisons, and costs per call. Calibrate it against human grades before trusting it."
+  skills: [llm-evaluation]
+- id: judge-narrow
+  type: concept
+  front: How should you phrase an LLM judge prompt?
+  back: "One narrow question per call with a pass or fail answer and a short reason, returned as structured output. Not a 1 to 10 quality score."
+  skills: [llm-evaluation]
+- id: ci-gates
+  type: concept
+  front: Why not run real-model evaluations on every commit?
+  back: "They are slow, cost money and vary run to run, which makes the pipeline flaky. Run them when prompts, models or retrieval change, and nightly."
+  skills: [llm-evaluation]
+- id: eval-threshold
+  type: concept
+  front: What makes a good evaluation gate?
+  back: "A minimum score with a margin plus a must-pass list of examples, instead of demanding an identical score on every run."
+  skills: [llm-evaluation]
+- id: ai-output-check
+  type: concept
+  front: "Interview: how do you check the output of AI tools before relying on it?"
+  back: "Treat it as untrusted input: validate against a schema or tests, compare with known cases, review the risky parts yourself, and measure error rates on real examples."
+  skills: [llm-evaluation]

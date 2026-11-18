@@ -1,0 +1,50 @@
+- id: k8s-one-line
+  type: term
+  front: Kubernetes
+  back: "A system that runs containers across a group of machines and keeps them matching a desired state you declare. Example: `replicas: 3` stays three after a crash."
+  skills: [k8s-when-to-use]
+- id: desired-state-idea
+  type: concept
+  front: What is the core idea behind how you use Kubernetes?
+  back: "You declare what should exist (image, copies, resources, ports) and controllers keep changing the cluster until it matches. You never say which machine to start a container on."
+  skills: [k8s-when-to-use]
+- id: problems-solved
+  type: concept
+  front: Name four problems Kubernetes solves that a single `docker run` does not.
+  back: "For example: placement across machines, restarting failed containers elsewhere, rolling deploys, stable service names with load balancing, scaling, config and secret delivery."
+  skills: [k8s-when-to-use]
+- id: managed-not-free
+  type: concept
+  front: What does a managed cluster (EKS, GKE, AKS) still leave to you?
+  back: "Everything you install on it: ingress or gateway, certificates, logging, metrics, secrets tooling, deploy pipeline, add-on and version upgrades, and debugging."
+  skills: [k8s-when-to-use]
+- id: upgrade-cadence
+  type: concept
+  front: Why does running Kubernetes create recurring upgrade work?
+  back: "A new minor version ships about three times a year and each is supported for roughly a year, so clusters and add-ons must be upgraded regularly."
+  skills: [k8s-when-to-use]
+- id: paas-vs-k8s
+  type: comparison
+  front: PaaS (Render, Railway, Fly.io) vs Kubernetes for a small team
+  back: "A PaaS gives rolling deploys, health checks, TLS, logs and scaling with no platform to run. Kubernetes gives more control and flexibility at the cost of running that platform yourself."
+  skills: [k8s-when-to-use]
+- id: ecs-cloud-run
+  type: comparison
+  front: ECS on Fargate or Cloud Run vs Kubernetes
+  back: "Both run your containers without machines or a cluster to manage. You lose Kubernetes' ecosystem and portability, and gain far less to operate."
+  skills: [k8s-when-to-use]
+- id: good-reasons
+  type: concept
+  front: Give three signals that Kubernetes is worth adopting.
+  back: "Many services owned by several teams; workloads a PaaS cannot run well (GPUs, custom networking, on-premises installs); a platform already run well by the company; PaaS cost that exceeds the people cost."
+  skills: [k8s-when-to-use]
+- id: interview-when-worth-it
+  type: concept
+  front: "Interview: when is Kubernetes worth it, and when is a PaaS or a single container service enough?"
+  back: "Worth it with many services and teams, special workloads or real portability needs, and people to run it. Otherwise a PaaS or ECS/Cloud Run gives the same deploy features with far less work. Name the signal that would change your mind."
+  skills: [k8s-when-to-use]
+- id: interview-red-flag
+  type: concept
+  front: "Interview: a 5-engineer startup with 1,000 users proposes Kubernetes. What do you say?"
+  back: "Too early. The platform work outweighs the benefit. Use a PaaS or a container service, keep a good Dockerfile so moving later is cheap, and revisit when services or teams multiply."
+  skills: [k8s-when-to-use]

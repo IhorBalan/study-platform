@@ -1,0 +1,16 @@
+title: Debug failing Pods and deploys
+type: text
+skills: [k8s-architecture, k8s-workloads, k8s-config, k8s-health-scaling, k8s-networking]
+hints:
+  - "`kubectl describe pod` (its Events and Last State) and `kubectl logs --previous` answer most first questions."
+  - For A, look at which ReplicaSet each Pod belongs to and what maxUnavailable 0 means for the old ones.
+  - For B, exit code 137 is 128 + 9. Which signal is 9, and who sent it?
+  - For C, count how long it takes for a container that fails liveness three times, then backs off, to serve traffic again.
+  - For D, put the Service's selector next to the Pod's labels.
+rubric:
+  - { id: method, title: "For each of the four states gives a sensible first command (describe, events, logs --previous, get endpointslices) and plausible causes: Pending (insufficient CPU or memory for the requests, unschedulable constraints, unbound volume), ImagePullBackOff (wrong tag or name, missing registry credentials), CrashLoopBackOff (app exits at start-up: config, crash, OOMKilled, failing liveness), not ready (readiness failing, wrong probe port or path, dependency down)", skill: k8s-architecture, max: 4 }
+  - { id: incident-a, title: "For A: customers are not affected because maxUnavailable 0 keeps the three old Pods serving; cause is the missing REDIS_URL in the new version's config, shown by the zod log line; fix by adding the config (or rolling back) and preventing it by shipping config with the code and having the pipeline wait on rollout status with a timeout and fail or roll back", skill: k8s-workloads, max: 4 }
+  - { id: incident-b, title: "For B: identifies OOMKilled by the kernel at the 256Mi limit (exit 137 is SIGKILL) and that customers see failed in-flight requests and reduced capacity; proposes a heap limit below the container limit and a reviewed limit, and to tell a leak from undersizing by watching memory over time (steady growth vs plateau under load) or heap snapshots", skill: k8s-config, max: 4 }
+  - { id: incident-c, title: "For C: explains that the liveness probe depending on the database restarted every Pod at once, and that restarts plus CrashLoopBackOff delays and cold starts stretched a 40 s failover into minutes; fix by making liveness check only the process, and keeping database checks out of liveness", skill: k8s-health-scaling, max: 4 }
+  - { id: incident-d, title: "For D: identifies that the Service selector app: search does not match the Pod label app.kubernetes.io/name: search, so the Service has no endpoints and all requests fail; fixes the selector and suggests a guard such as a shared label convention, Kustomize labels or a post-deploy smoke test through the route", skill: k8s-networking, max: 3 }
+  - { id: impact-first, title: "For every incident states customer impact before the fix, and chooses the fastest safe mitigation (rollback, scale, config fix) ahead of the permanent change", max: 3 }

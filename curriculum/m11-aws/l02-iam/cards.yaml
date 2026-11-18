@@ -1,0 +1,60 @@
+- id: evaluation-order
+  type: concept
+  front: "Interview: how does AWS decide whether to allow a request within one account?"
+  back: "Default deny. Any matching explicit Deny wins. Otherwise any matching Allow (identity or resource policy) allows. Otherwise the default deny stands."
+  skills: [aws-iam]
+- id: roles-vs-users
+  type: comparison
+  front: "Interview: IAM role vs IAM user?"
+  back: "A user has long-lived credentials (password, access keys). A role has none: a trusted principal assumes it and gets temporary credentials that expire."
+  skills: [aws-iam]
+- id: credentials-without-keys
+  type: concept
+  front: "Interview: how does a service on AWS get credentials without a key in code?"
+  back: "The platform attaches a role (ECS task role, Lambda execution role, EC2 instance profile) and the SDK's default credential chain fetches and refreshes temporary credentials."
+  skills: [aws-iam]
+- id: least-privilege
+  type: concept
+  front: "Interview: what does least privilege mean for a workload's IAM policy?"
+  back: "Only the actions its code calls, only on the named resources it uses, one role per workload, with conditions where they are cheap."
+  skills: [aws-iam]
+- id: identity-vs-resource-policy
+  type: comparison
+  front: Identity-based policy vs resource-based policy
+  back: "Identity-based attaches to a user or role and says what it may do. Resource-based attaches to a queue, bucket or secret and names the principals that may use it."
+  skills: [aws-iam]
+- id: trust-vs-permissions
+  type: comparison
+  front: "A role's trust policy vs its permissions policy"
+  back: "The trust policy says who may assume the role (e.g. `ecs-tasks.amazonaws.com`). The permissions policy says what the role may do once assumed."
+  skills: [aws-iam]
+- id: gsi-resource
+  type: concept
+  front: "A role may `dynamodb:Query` on `table/orders` but a query on its GSI is denied. Why?"
+  back: "Indexes are separate resources. Add `arn:...:table/orders/index/*` (or the index name) to the statement's Resource."
+  skills: [aws-iam]
+- id: source-arn
+  type: concept
+  front: Why add an `aws:SourceArn` condition to a queue policy that lets SNS send messages?
+  back: "Without it, any SNS topic, in any account, could write to the queue. The condition limits it to your topic."
+  skills: [aws-iam]
+- id: explicit-deny-admin
+  type: concept
+  front: "A role has `AdministratorAccess` plus a statement denying `dynamodb:DeleteTable`. Can it delete a table?"
+  back: No. An explicit deny always wins over any allow.
+  skills: [aws-iam]
+- id: policy-statement-cloze
+  type: cloze
+  front: "A policy statement has `Effect`, `Action`, `Resource` and optionally {{`Condition`}}; a resource policy also names the {{`Principal`}}."
+  back: "`Condition`; `Principal`"
+  skills: [aws-iam]
+- id: task-vs-execution-role
+  type: comparison
+  front: ECS task role vs task execution role
+  back: "The task role is what your application code may do. The execution role is what the ECS agent needs to pull the image, write logs and fetch injected secrets."
+  skills: [aws-iam]
+- id: ci-without-keys
+  type: concept
+  front: How does a GitHub Actions workflow deploy to AWS without stored access keys?
+  back: It exchanges its OIDC token for temporary credentials of a role whose trust policy names that repository.
+  skills: [aws-iam]

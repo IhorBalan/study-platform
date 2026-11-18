@@ -1,0 +1,27 @@
+title: Trace a request across two services
+type: repo
+skills: [distributed-tracing]
+services: []
+runner: nest
+hints:
+  - "OpenTelemetry JS 2.x takes span processors in the provider's constructor: new NodeTracerProvider({ resource, spanProcessors: [...] }). There is no addSpanProcessor any more."
+  - "resourceFromAttributes() from @opentelemetry/resources builds the resource. ATTR_SERVICE_NAME from @opentelemetry/semantic-conventions is the key."
+  - "provider.register() installs the W3C traceparent propagator and an AsyncLocalStorage context manager. Without it, propagation.extract and context.with do nothing useful."
+  - "propagation.extract(context.active(), req.headers) gives you the caller's context. Pass it as the third argument of tracer.startSpan, then run next() inside context.with(trace.setSpan(ctx, span), ...)."
+  - "tracer.startActiveSpan makes the new span the active one inside its callback, so a propagation.inject(context.active(), headers) there names that span as the parent."
+  - "End the server span when the response is done. The route template (req.route.path) is only known by then, and span.updateName() can rename the span."
+criteria:
+  - { id: typechecks, title: tsc reports no type errors }
+  - { id: provider-setup, title: "startTracing() exports to the given exporter with service.name quote-api" }
+  - { id: server-span, title: "One SERVER span per request, named after the route, with HTTP attributes" }
+  - { id: child-spans, title: fetch-price (CLIENT) and calculate-total (INTERNAL) are children of the server span }
+  - { id: honours-traceparent, title: "An incoming traceparent is continued, including its sampling decision" }
+  - { id: propagates, title: The call to pricing carries a traceparent naming the fetch-price span }
+  - { id: records-errors, title: "Pricing failures are recorded as errors; a 404 is not a server error" }
+  - { id: own-tests, title: Your tests pass and catch a lost traceparent and errors that are not recorded }
+rubric:
+  - { id: api-vs-sdk, title: "Only src/tracing.ts and the entry point import SDK packages; the app code depends on @opentelemetry/api alone", skill: distributed-tracing, max: 3 }
+  - { id: span-lifecycle, title: "Every span is ended on every path (try/finally or equivalent), and errors set both an exception event and an ERROR status with a message", skill: distributed-tracing, max: 4 }
+  - { id: semantic-conventions, title: "Attribute names come from the semantic conventions (http.request.method, http.route, http.response.status_code, url.full), not invented names", skill: distributed-tracing, max: 3 }
+  - { id: readme-production, title: "README says what changes for production: BatchSpanProcessor, an OTLP exporter to a collector, a head-sampling ratio with the parent-based sampler, and how a log line would carry the trace id", skill: distributed-tracing, max: 4 }
+limits: { timeoutSeconds: 120 }

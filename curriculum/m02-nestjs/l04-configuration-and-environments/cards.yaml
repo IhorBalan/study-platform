@@ -1,0 +1,55 @@
+- id: twelve-factor-config
+  type: concept
+  front: What does the twelve-factor rule say about configuration?
+  back: Everything that varies between deployments comes from environment variables, so one build runs unchanged in every environment.
+  skills: [nest-config]
+- id: fail-fast-why
+  type: concept
+  front: Why validate all environment variables at start-up instead of where each one is used?
+  back: A bad value then stops the deploy with one clear message, instead of failing some request later while the app looks healthy.
+  skills: [nest-config]
+- id: env-values-are-strings
+  type: concept
+  front: "`PORT=3000` is set. What is `typeof process.env.PORT`?"
+  back: "`'string'`. Every environment value is a string or `undefined`, so numbers must be coerced and checked."
+  skills: [nest-config]
+- id: coerce-boolean-trap
+  type: concept
+  front: "Why is `z.coerce.boolean()` wrong for a variable like `FEATURE_X=false`?"
+  back: It applies `Boolean()` to the string, and any non-empty string, including `"false"`, is truthy.
+  skills: [nest-config]
+- id: config-provider-snippet
+  type: snippet
+  front: Provide the parsed environment under the token `ENV` so that invalid config stops `NestFactory.create()`.
+  back: |-
+    ```ts
+    { provide: ENV, useFactory: () => loadEnv() }
+    ```
+  skills: [nest-config, nest-di]
+- id: env-file-flag
+  type: cloze
+  front: "Load a `.env` file without any package: `node {{...}} dist/main.js`"
+  back: "`--env-file=.env`"
+  skills: [nest-config]
+- id: env-example-term
+  type: term
+  front: "`.env.example`"
+  back: |-
+    A committed file that lists every variable the app needs, with placeholder values. The real `.env` stays git-ignored.
+    Example: `SESSION_SECRET=change-me`.
+  skills: [nest-config]
+- id: secret-default
+  type: concept
+  front: Why should a secret such as `SESSION_SECRET` have no default value in the schema?
+  back: The default is in the repository, so it is public. A missing secret must stop the app, not fall back to a known one.
+  skills: [nest-config]
+- id: build-time-vs-run-time-config
+  type: comparison
+  front: "Vite's `import.meta.env.VITE_*` vs server environment variables"
+  back: Vite values are baked into the bundle at build time and are public. Server values are read when the process starts and stay on the server.
+  skills: [nest-config]
+- id: error-names-not-values
+  type: concept
+  front: What should a start-up error about invalid configuration contain, and what must it leave out?
+  back: The variable names and the rules they broke. Never the received values, because one of them may be a secret.
+  skills: [nest-config]

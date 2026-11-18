@@ -1,0 +1,24 @@
+title: Map with bounded concurrency
+type: repo
+skills: [async-control-flow]
+services: []
+runner: node
+hints:
+  - Think of a fixed number of slots. Whenever a call finishes, the freed slot takes the next item that has not started.
+  - Store each result at the index of its item, not in completion order.
+  - After the first failure or an abort, the calls already in flight cannot be stopped, but no new one may start.
+  - Calls that are still running when you reject can fail later. Make sure those rejections are handled.
+criteria:
+  - { id: ordered-results, title: Results are in input order and fn receives the item and its index }
+  - { id: respects-limit, title: Never more than limit calls are in flight and the limit is fully used }
+  - { id: refills-slots, title: A finished call frees its slot at once instead of waiting for a whole batch }
+  - { id: fail-fast, title: The first failure rejects immediately and no further calls start }
+  - { id: abort-in-flight, title: Aborting the signal rejects with its reason and no further calls start }
+  - { id: already-aborted, title: An already aborted signal rejects without calling fn }
+  - { id: invalid-limit, title: A limit that is not a positive integer rejects with a RangeError }
+rubric:
+  - { id: scheduling, title: Scheduling uses a slot or worker model with no polling or timers and no batch-by-batch waiting, skill: async-control-flow, max: 4 }
+  - { id: cleanup, title: The abort listener is removed once the call settles and late rejections from in-flight calls are handled, skill: async-control-flow, max: 4 }
+  - { id: in-flight-explanation, title: README states what happens to calls already in flight after a failure or abort and how fn could be changed to cancel them, skill: async-control-flow, max: 4 }
+  - { id: readability, title: The function is short enough to follow in one read and state changes happen in one place, max: 3 }
+limits: { timeoutSeconds: 60 }

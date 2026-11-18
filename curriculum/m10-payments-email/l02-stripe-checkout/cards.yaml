@@ -1,0 +1,50 @@
+- id: product-vs-price
+  type: comparison
+  front: Stripe Product vs Price
+  back: "A Product is what you sell. A Price fixes amount, currency and interval for it; to change the amount you create a new Price."
+  skills: [stripe-checkout]
+- id: lookup-keys
+  type: concept
+  front: Why refer to Stripe prices by lookup key rather than by `price_...` id in code?
+  back: "Ids differ between test and live mode and change when you replace a price. A lookup key you choose stays stable."
+  skills: [stripe-checkout]
+- id: server-decides-amount
+  type: concept
+  front: Where must the amount of a Checkout Session come from?
+  back: "From your server's catalogue or order. Never from a price or total sent by the browser."
+  skills: [stripe-checkout]
+- id: client-reference-id
+  type: concept
+  front: What is `client_reference_id` on a Checkout Session for?
+  back: "It carries your own order id, which comes back in every webhook for the session, so you know which order was paid."
+  skills: [stripe-checkout]
+- id: session-id-placeholder
+  type: concept
+  front: How does your success page learn which Checkout Session the customer just completed?
+  back: "Put the literal placeholder `{CHECKOUT_SESSION_ID}` in `success_url`; Stripe replaces it with the session id when it redirects."
+  skills: [stripe-checkout]
+- id: completed-not-paid
+  type: concept
+  front: "Can `checkout.session.completed` arrive for an order that is not paid yet?"
+  back: "Yes. With delayed methods such as bank debits, `payment_status` is `unpaid`; the money is confirmed later by `checkout.session.async_payment_succeeded`."
+  skills: [stripe-checkout]
+- id: fulfil-once
+  type: snippet
+  front: Mark an order paid so that only one of several concurrent fulfilment calls wins.
+  back: "`update orders set status = 'paid' where id = $1 and status = 'pending'`, and fulfil only when `rowCount` is 1."
+  skills: [stripe-checkout]
+- id: fulfil-from-both
+  type: concept
+  front: Why may `fulfilCheckout` be called from both the webhook and the success page?
+  back: "The webhook guarantees it happens; the success page makes it fast when the customer is present. Being idempotent makes two callers safe."
+  skills: [stripe-checkout]
+- id: session-expiry
+  type: concept
+  front: How long does a Checkout Session live by default, and what tells you it lapsed?
+  back: "24 hours, shorter if you set `expires_at`. Stripe then sends `checkout.session.expired`, your cue to release stock."
+  skills: [stripe-checkout]
+- id: checkout-idempotency
+  type: concept
+  front: Why derive the idempotency key for creating a Checkout Session from the order id?
+  back: "A double click or a retried request then returns the same session instead of opening a second one for the same order."
+  skills: [stripe-checkout]

@@ -1,0 +1,63 @@
+- id: init-phase
+  type: concept
+  front: Why create SDK clients at module level in a Lambda function rather than inside the handler?
+  back: "Module-level code runs once per execution environment (init) and is reused by later invocations in it."
+  skills: [aws-lambda]
+- id: one-event-per-environment
+  type: concept
+  front: How many events does one Lambda execution environment handle at the same time?
+  back: One. Concurrent events get separate environments.
+  skills: [aws-lambda]
+- id: cold-start
+  type: term
+  front: Cold start (Lambda)
+  back: "An invocation that waits for a new environment's init phase, e.g. the first request after the function was idle."
+  skills: [aws-lambda]
+- id: cold-start-reduce
+  type: concept
+  front: Name three ways to shorten a Node Lambda cold start.
+  back: "Bundle and tree-shake, import only needed clients, avoid heavy framework start-up, raise memory (more CPU), or pay for provisioned concurrency."
+  skills: [aws-lambda]
+- id: dangling-promises
+  type: concept
+  front: What happens to a promise still running when a Lambda handler returns?
+  back: "The environment is frozen; the work may never finish. Await everything before returning."
+  skills: [aws-lambda]
+- id: batch-item-failures
+  type: snippet
+  front: Tell Lambda's SQS trigger that only one message of the batch failed.
+  back: |-
+    ```ts
+    return { batchItemFailures: [{ itemIdentifier: record.messageId }] }; // with ReportBatchItemFailures on
+    ```
+  skills: [aws-lambda]
+- id: whole-batch-retry
+  type: concept
+  front: An SQS-triggered function throws on one message of ten. What is retried without partial batch responses?
+  back: "All ten, including the nine that succeeded."
+  skills: [aws-lambda]
+- id: retries-by-invocation
+  type: comparison
+  front: "Lambda retries: synchronous vs asynchronous invocation"
+  back: "Synchronous (API Gateway, function URL): no retries, the caller gets the error. Asynchronous (EventBridge, SNS): two retries, then the on-failure destination."
+  skills: [aws-lambda]
+- id: visibility-vs-function-timeout
+  type: concept
+  front: How should the SQS visibility timeout relate to the function timeout of its Lambda consumer?
+  back: "Well above it (AWS suggests at least six times), or messages are redelivered while still being processed."
+  skills: [aws-lambda, aws-sqs]
+- id: function-url-vs-api-gateway
+  type: comparison
+  front: Function URL vs API Gateway
+  back: "A function URL is one HTTPS endpoint for one function. API Gateway adds routing across functions, authorisers, throttling, custom domains and usage plans."
+  skills: [aws-lambda]
+- id: package-ts
+  type: concept
+  front: How do you package a TypeScript Lambda function?
+  back: "Bundle it (e.g. esbuild, ESM, target node24) into one file, zip it, and set the handler to `index.handler`; usually through CDK, SAM or another IaC tool."
+  skills: [aws-lambda]
+- id: lambda-idempotency
+  type: concept
+  front: Why must an EventBridge- or SQS-triggered Lambda handler be idempotent?
+  back: "Both triggers deliver at least once and Lambda retries on errors, so the same event can run more than once."
+  skills: [aws-lambda]

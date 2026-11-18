@@ -1,0 +1,60 @@
+# Full mode: API, worker and web run as containers built from the repository.
+#   pnpm full:up      build and start (web on http://localhost:8080)
+#   pnpm full:down    stop
+# The host bridge still runs natively, because it is the only process allowed
+# to start containers: `pnpm bridge` in a second terminal.
+# Dev mode (`pnpm dev`) remains the everyday way to run the platform.
+name: study-platform
+
+include:
+  - compose.yaml
+
+services:
+  api:
+    build: { context: ../.., dockerfile: infra/docker/app/Dockerfile, target: api }
+    environment:
+      DATABASE_URL: postgres://study:study@platform-db:5432/study
+      WEB_ORIGIN: http://localhost:8080
+      BRIDGE_URL: http://host.docker.internal:${BRIDGE_PORT:-4100}
+      BRIDGE_SECRET: ${BRIDGE_SECRET:?Run "pnpm dev" once, or "node scripts/ensure-env.mjs", to create .env}
+    depends_on:
+      platform-db: { condition: service_healthy }
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+    mem_limit: 512m
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  worker:
+    build: { context: ../.., dockerfile: infra/docker/app/Dockerfile, target: worker }
+    environment:
+      DATABASE_URL: postgres://study:study@platform-db:5432/study
+      BRIDGE_URL: http://host.docker.internal:${BRIDGE_PORT:-4100}
+      BRIDGE_SECRET: ${BRIDGE_SECRET:?Run "pnpm dev" once, or "node scripts/ensure-env.mjs", to create .env}
+    depends_on:
+      api: { condition: service_healthy }
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+    mem_limit: 256m
+
+  web:
+    build: { context: ../.., dockerfile: infra/docker/app/Dockerfile, target: web }
+    ports: ['127.0.0.1:${WEB_PORT:-8080}:8080']
+    depends_on:
+      api: { condition: service_healthy }
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+    mem_limit: 128m

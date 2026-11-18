@@ -1,0 +1,57 @@
+- id: lifecycle-order
+  type: cloze
+  front: "Request order in Nest: middleware → {{...}} → interceptors (before) → pipes → handler → interceptors (after)."
+  back: guards
+  skills: [nest-request-lifecycle]
+- id: pipes-after-interceptors
+  type: concept
+  front: A validation pipe throws. Did the "before" part of the interceptors already run?
+  back: Yes. Pipes run inside `next.handle()`, after the interceptors' "before" code and just ahead of the handler.
+  skills: [nest-request-lifecycle]
+- id: guard-false
+  type: concept
+  front: What does the client receive when a guard's `canActivate` returns `false`?
+  back: "`403 Forbidden`. Nest throws `ForbiddenException`, and interceptors, pipes and the handler never run."
+  skills: [nest-request-lifecycle]
+- id: middleware-vs-guard
+  type: comparison
+  front: Middleware vs guard
+  back: Middleware sees only the raw request and response. A guard also gets the `ExecutionContext`, so it knows which handler will run and can read its metadata.
+  skills: [nest-request-lifecycle]
+- id: post-default-status
+  type: concept
+  front: Which status does a Nest handler decorated with `@Post()` send by default?
+  back: "`201 Created`. Other methods default to `200`. `@HttpCode()` overrides either."
+  skills: [nest-request-lifecycle]
+- id: param-is-string
+  type: concept
+  front: "`@Param('id') id: number` in a handler: what is `typeof id` at run time?"
+  back: "`'string'`. The annotation is erased; a pipe such as `ParseIntPipe` has to convert the value."
+  skills: [nest-request-lifecycle]
+- id: interceptor-error-branch
+  type: concept
+  front: "An interceptor logs in `next.handle().pipe(tap(() => log()))`. Why is nothing logged when the handler throws?"
+  back: The stream ends with an error, and a plain `tap` callback only fires for emitted values. Use `tap({ error })`, `catchError` or `finalize`.
+  skills: [nest-request-lifecycle]
+- id: res-passthrough
+  type: concept
+  front: "Why prefer `@Res({ passthrough: true })` over plain `@Res()`?"
+  back: Plain `@Res()` makes you send the response yourself and hides the return value from interceptors. With `passthrough` Nest still sends what you return.
+  skills: [nest-request-lifecycle]
+- id: delete-204-snippet
+  type: snippet
+  front: Write a Nest route for `DELETE /notes/:id` that answers `204 No Content`.
+  back: |-
+    ```ts
+    @Delete(':id')
+    @HttpCode(204)
+    remove(@Param('id') id: string): void { /* ... */ }
+    ```
+  skills: [nest-request-lifecycle]
+- id: exception-filter-term
+  type: term
+  front: Exception filter
+  back: |-
+    The last stage of the lifecycle: it receives a thrown exception and writes the error response.
+    Example: one global filter that gives every error the same JSON shape.
+  skills: [nest-request-lifecycle, nest-errors]

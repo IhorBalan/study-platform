@@ -1,0 +1,55 @@
+- id: http-exception-term
+  type: term
+  front: "`HttpException`"
+  back: |-
+    Nest's base class for errors that carry an HTTP status; the built-in filter turns it into that status with a JSON body.
+    Example: `throw new NotFoundException('Note 42 not found')`.
+  skills: [nest-errors]
+- id: unknown-error-default
+  type: concept
+  front: A handler throws a plain `TypeError` and no custom filter is bound. What does the client receive from Nest?
+  back: A `500` with a generic "Internal server error" body. The original message is not sent.
+  skills: [nest-errors]
+- id: domain-error-why
+  type: concept
+  front: Why should a service throw its own error class instead of `ConflictException`?
+  back: The service may be called from a queue worker or CLI where HTTP statuses mean nothing. The mapping to a status belongs at the HTTP edge.
+  skills: [nest-errors]
+- id: problem-media-type
+  type: cloze
+  front: "RFC 9457 problem documents are served with the content type `{{...}}`."
+  back: "`application/problem+json`"
+  skills: [nest-errors]
+- id: problem-type-about-blank
+  type: concept
+  front: 'What does `"type": "about:blank"` mean in a problem document?' 
+  back: The problem has no meaning beyond its HTTP status, and `title` should be the status phrase, such as "Not Found".
+  skills: [nest-errors]
+- id: title-vs-detail
+  type: comparison
+  front: "`title` vs `detail` in a problem document"
+  back: "`title` is a short summary that is the same for every occurrence of that problem type. `detail` explains this particular occurrence."
+  skills: [nest-errors]
+- id: catch-all-filter
+  type: comparison
+  front: "`@Catch()` vs `@Catch(HttpException)`"
+  back: "`@Catch()` with no arguments receives every exception. `@Catch(HttpException)` receives only that class and its subclasses; other errors still get Nest's default response."
+  skills: [nest-errors]
+- id: app-filter-snippet
+  type: snippet
+  front: Register `ProblemDetailsFilter` globally through the container.
+  back: |-
+    ```ts
+    providers: [{ provide: APP_FILTER, useClass: ProblemDetailsFilter }]
+    ```
+  skills: [nest-errors]
+- id: no-internal-detail
+  type: concept
+  front: Why must a `500` response not include the caught error's message?
+  back: Library and runtime messages can contain SQL, file paths, host names or credentials. They help an attacker and give a client nothing to act on.
+  skills: [nest-errors]
+- id: log-4xx-vs-5xx
+  type: comparison
+  front: Logging a `4xx` vs logging an unexpected `5xx`
+  back: A `5xx` is your bug or outage, so log it as an error with the stack and request details. A `4xx` is the client's mistake, so log it quietly or not at all.
+  skills: [nest-errors]

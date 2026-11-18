@@ -1,0 +1,64 @@
+- id: three-kinds-of-slow
+  type: concept
+  front: "Every route slow, lag high, CPU at one core: what kind of problem, and which tool?"
+  back: "Synchronous work blocking the main thread. Record a CPU profile and look for the widest frames under the handler."
+  skills: [node-diagnostics]
+- id: waiting-not-blocking
+  type: concept
+  front: "One route slow, event-loop lag normal, CPU low: why will a CPU profile not help?"
+  back: "The process is idle while it waits on a pool, a query or an API. Traces and pool metrics show where the time goes."
+  skills: [node-diagnostics]
+- id: event-loop-lag-term
+  type: term
+  front: Event-loop lag
+  back: "How late the loop gets to scheduled work. Example: a p99 of 200 ms from monitorEventLoopDelay means something blocks the thread for that long."
+  skills: [node-diagnostics]
+- id: cpu-prof-snippet
+  type: snippet
+  front: Record a CPU profile of a Node service under load
+  back: |
+    ```sh
+    node --cpu-prof --cpu-prof-dir=./profiles start.mjs
+    # send traffic, Ctrl+C, open the .cpuprofile in DevTools or VS Code
+    ```
+  skills: [node-diagnostics]
+- id: flame-graph-axes
+  type: concept
+  front: What does the width of a bar in a flame graph mean?
+  back: "The share of samples in which that function was on the stack, so roughly its share of time. The x-axis is not time order."
+  skills: [node-diagnostics]
+- id: redos
+  type: concept
+  front: Why can `/^([a-z0-9]+-?)+$/` freeze a Node server?
+  back: "Nested quantifiers make a non-matching input backtrack exponentially. 30 characters can take seconds on the only thread (ReDoS)."
+  skills: [node-diagnostics]
+- id: leak-vs-sawtooth
+  type: concept
+  front: How do you tell a memory leak from normal GC behaviour?
+  back: "A healthy heap is a sawtooth that returns to the same floor. A leak is a floor (heap used after GC) that keeps rising with traffic."
+  skills: [node-diagnostics]
+- id: common-leaks
+  type: concept
+  front: Name three common memory leaks in Node web services.
+  back: "An unbounded cache Map, listeners added per request to a long-lived emitter, and timers or intervals that are never cleared."
+  skills: [node-diagnostics]
+- id: snapshot-comparison
+  type: concept
+  front: How do two heap snapshots find a leak?
+  back: "Take one after warm-up and one after many requests, use the Comparison view to find objects that grew with traffic, then read their retainers to the root."
+  skills: [node-diagnostics]
+- id: snapshot-risks
+  type: concept
+  front: What are the risks of taking a heap snapshot in production?
+  back: "It pauses the process and needs about the heap's size in extra memory, and the file contains every secret and personal record in memory."
+  skills: [node-diagnostics]
+- id: db-timeout-first-checks
+  type: concept
+  front: "Interview: 'database connection timeout' alerts are firing. What do you check first?"
+  back: "Pool saturation (in use and waiting), slow or blocked queries and locks in pg_stat_activity, the database's connection limit, and what changed: a deploy, traffic, or a new instance count."
+  skills: [node-diagnostics]
+- id: p99-after-deploy-full
+  type: concept
+  front: "Interview: p99 latency on one endpoint spiked right after a deploy. Walk through it."
+  back: "Roll back first. Then compare p50 and p99, lag and CPU to classify; open slow traces from after the deploy; diff the release for new queries or calls; confirm with numbers; add the test and alert that would have caught it."
+  skills: [node-diagnostics]

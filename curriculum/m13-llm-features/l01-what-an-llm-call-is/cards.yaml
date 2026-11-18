@@ -1,0 +1,55 @@
+- id: llm-call-shape
+  type: concept
+  front: What does a chat model API call send, and what does it return?
+  back: "It sends instructions, the whole message history and settings (model, output cap, tools). It returns the next assistant turn, a stop reason and token usage."
+  skills: [llm-api-basics]
+- id: stateless-history
+  type: concept
+  front: Why does a chat backend send the full conversation on every call?
+  back: "The API is stateless. The model only knows what is in this request, so the history has to be resent, and it counts as input tokens every time."
+  skills: [llm-api-basics]
+- id: truncated-answer
+  type: concept
+  front: "What does a stop reason of `max_tokens` (AI SDK: `length`) mean for your code?"
+  back: "The answer was cut off at your output cap. Do not show it as complete or parse it as JSON; raise the cap or handle the truncation."
+  skills: [llm-api-basics]
+- id: context-window
+  type: term
+  front: Context window
+  back: "The most tokens one call can hold, input and output together. Instructions, history, retrieved documents and tool definitions all count."
+  skills: [llm-api-basics]
+- id: token-cost-shape
+  type: concept
+  front: "Interview: how is an LLM call billed, and which side is more expensive?"
+  back: "Per million input tokens and per million output tokens. Output costs several times more than input, so long answers dominate the bill."
+  skills: [llm-api-basics]
+- id: latency-shape
+  type: concept
+  front: Why does a long LLM answer take many seconds even on a fast provider?
+  back: "Output is generated one token at a time. After a roughly fixed time to first token, every output token adds a few milliseconds."
+  skills: [llm-api-basics]
+- id: temperature-not-determinism
+  type: concept
+  front: Can you make model output repeatable by setting temperature to 0?
+  back: "No. It was never a guarantee, and current Claude models reject sampling parameters. Make the code around the model deterministic: validate, test with a fake model, store results."
+  skills: [llm-api-basics]
+- id: sdk-vs-ai-sdk
+  type: comparison
+  front: Provider SDK vs the Vercel AI SDK
+  back: "A provider SDK exposes every feature of one provider. The AI SDK gives one interface (and test doubles) across providers, with the model passed in as a value."
+  skills: [llm-api-basics]
+- id: ai-sdk7-instructions
+  type: cloze
+  front: "In AI SDK 7, system instructions go in the `{{instructions}}` option of generateText, not in a system message."
+  back: instructions
+  skills: [llm-api-basics]
+- id: local-openai-compatible
+  type: snippet
+  front: Create an AI SDK model for a local Ollama server.
+  back: "```ts\ncreateOpenAICompatible({ name: 'ollama', baseURL: 'http://localhost:11434/v1' })\n  .chatModel('llama3.2')\n```"
+  skills: [llm-api-basics]
+- id: model-as-dependency
+  type: concept
+  front: Why pass the model into a service instead of creating it inside?
+  back: "Production injects a real provider and tests inject a fake one, so the logic can be tested offline and the provider swapped in one place."
+  skills: [llm-api-basics]

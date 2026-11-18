@@ -1,0 +1,66 @@
+- id: account-boundary
+  type: concept
+  front: Why do companies keep production and staging in separate AWS accounts?
+  back: An account is the outer security and billing boundary. Nothing in staging can touch production unless a policy explicitly allows it.
+  skills: [aws-basics]
+- id: region-term
+  type: term
+  front: AWS region
+  back: "A geographic location with its own copy of most services. A resource lives in one region, e.g. a queue in `eu-central-1` does not exist in `us-east-1`."
+  skills: [aws-basics]
+- id: arn-parts
+  type: cloze
+  front: "`arn:aws:sqs:eu-central-1:123456789012:orders` is partition, service, {{region, account id, resource}}."
+  back: "region (`eu-central-1`), account id (`123456789012`), resource name (`orders`)"
+  skills: [aws-basics]
+- id: shared-responsibility
+  type: concept
+  front: In the shared responsibility model, what stays your job even on fully managed services like DynamoDB?
+  back: "Who may call it (IAM), what is public, which data is encrypted with which key, and what your code does with the data."
+  skills: [aws-basics]
+- id: console-cli-sdk-iac
+  type: comparison
+  front: SDK vs infrastructure as code
+  back: "The SDK is for runtime data calls (send a message, read an item). IaC creates the queue or table those calls use, so it is reviewed and reproducible."
+  skills: [aws-basics]
+- id: credential-chain
+  type: concept
+  front: How does `new SQSClient({})` get credentials on a laptop and on AWS without code changes?
+  back: The default provider chain tries options, environment variables and `~/.aws` profiles, then the role attached to the container or function.
+  skills: [aws-basics]
+- id: client-reuse
+  type: concept
+  front: Why create one SDK client per process instead of one per request?
+  back: The client holds an HTTP connection pool and resolved configuration. Recreating it opens new connections and slows every call.
+  skills: [aws-basics]
+- id: sdk-error-name
+  type: snippet
+  front: Treat a failed DynamoDB condition as a domain error and rethrow everything else.
+  back: |-
+    ```ts
+    catch (e) { if (e instanceof Error && e.name === 'ConditionalCheckFailedException') throw new Conflict(); throw e; }
+    ```
+  skills: [aws-basics]
+- id: surprise-bill
+  type: concept
+  front: Name three common sources of a surprise AWS bill.
+  back: "Resources left running (NAT gateway, idle instances or databases), data transfer out to the internet, and a leaked access key used for mining."
+  skills: [aws-basics]
+- id: first-day-account
+  type: concept
+  front: What two things should you do on the first day of a new AWS account?
+  back: Create a budget alert, and protect the root user with MFA and stop using it.
+  skills: [aws-basics]
+- id: emulator-endpoint
+  type: snippet
+  front: Point every AWS SDK client at a local emulator without changing code.
+  back: |-
+    ```sh
+    export AWS_ENDPOINT_URL=http://localhost:4566
+    ```
+  skills: [aws-basics]
+- id: emulator-limits
+  type: concept
+  front: What does a local AWS emulator not tell you?
+  back: "Whether IAM permissions are right (it allows everything), plus throttling, real limits, eventual consistency and cost."
+  skills: [aws-basics]

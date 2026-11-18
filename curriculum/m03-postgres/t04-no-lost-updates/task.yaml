@@ -1,0 +1,24 @@
+title: Reserve stock without lost updates
+type: repo
+skills: [transactions-isolation, db-access-node]
+services: [postgres]
+runner: nest
+hints:
+  - "Run the demo first. Count how many reservations succeed and how much stock is left, and explain the numbers before you change code."
+  - "Reading a value, deciding in JavaScript and writing back an absolute value is the classic lost update. Let the database do the arithmetic and the check in one statement, or lock the row before you read it."
+  - "BEGIN and COMMIT only form a transaction when they run on the same connection. pool.query() may pick a different client for each call; take one with pool.connect()."
+  - "Release the client in a finally block. A client that is never released is gone from the pool for good."
+  - "pg sends values separately from the SQL text when you use $1, $2 placeholders. Never build SQL with template strings."
+criteria:
+  - { id: compiles, title: The project compiles with tsc }
+  - { id: reserves, title: A reservation takes stock and an oversized one is refused }
+  - { id: no-lost-update, title: Concurrent reservations never sell more than the stock }
+  - { id: atomic, title: A failed reservation leaves no trace }
+  - { id: parameterised, title: "Values are sent as parameters, not pasted into SQL" }
+  - { id: releases-clients, title: "Every pooled client is returned, also after errors" }
+rubric:
+  - { id: concurrency-control, title: "The lost update is prevented by the database (a conditional UPDATE, a row lock, or SERIALIZABLE with a retry on 40001), not by an in-process lock or a check done only in JavaScript", skill: transactions-isolation, max: 4 }
+  - { id: transaction-scope, title: "The stock change and the reservation insert share one transaction on one client, the transaction holds no lock across unrelated work, and errors roll it back", skill: transactions-isolation, max: 4 }
+  - { id: client-handling, title: "Clients are released in finally, and a helper keeps BEGIN, COMMIT, ROLLBACK and release in one place", skill: db-access-node, max: 3 }
+  - { id: notes, title: "README names the chosen approach, explains why the starter lost updates, and states one cost of the approach under contention", skill: transactions-isolation, max: 3 }
+limits: { timeoutSeconds: 120 }

@@ -1,0 +1,16 @@
+title: Choose between Kafka, SQS and BullMQ
+type: text
+skills: [kafka-vs-queues, kafka-log-model]
+hints:
+  - "For each workload, ask first: is this a job one worker must do, or a fact several systems want to know about?"
+  - Retries with delay and priorities per item are features of job queues. Which workload asks for them?
+  - Three months of history for a consumer that does not exist yet. Which tools can give a new reader old messages at all?
+  - A timeout does not tell you whether the supplier received the request. What can you send so that a second attempt is harmless?
+rubric:
+  - { id: label-jobs, title: "Chooses a job queue (BullMQ, given Valkey and Node, or SQS) for label printing and ties it to per-job retries with backoff, priorities or concurrency limits; rejects Kafka with a concrete reason such as missing per-job delay and priority", skill: kafka-vs-queues, max: 4 }
+  - { id: stock-stream, title: "Chooses a log (Kafka, usually managed) for stock changes and justifies it with several independent consumers and replay of history; keys by product (or SKU) so per-product order holds, and says ordering is per partition only", skill: kafka-log-model, max: 4 }
+  - { id: history-and-cost, title: "Explains how forecasting gets three months of history (retention of at least three months, or a compacted or backfilled source, reading from earliest with a new group) and names concrete operating costs (a managed service bill or cluster ops, monitoring lag, schemas, team learning)", skill: kafka-vs-queues, max: 3 }
+  - { id: webhook-delivery, title: "Chooses a queue with long delays and retries for supplier webhooks (BullMQ, SQS with a DLQ, or a Postgres outbox table) and explains reporting after retries are exhausted", skill: kafka-vs-queues, max: 3 }
+  - { id: no-double-send, title: "Prevents duplicate reorders with an idempotency key per reorder sent to the supplier and/or a recorded send state checked before sending, and states that queues deliver at least once so retries can repeat a call", skill: kafka-vs-queues, max: 3 }
+  - { id: rejected-alternatives, title: "For each workload names one rejected alternative with a specific reason tied to that workload (not a generic pro or con list)", skill: kafka-vs-queues, max: 2 }
+  - { id: change-trigger, title: "States a concrete condition that would change the workload 2 choice (for example: no replay need and fewer consumers favours SNS plus SQS or a Postgres outbox; or a mandate to stay serverless on AWS)", skill: kafka-vs-queues, max: 1 }

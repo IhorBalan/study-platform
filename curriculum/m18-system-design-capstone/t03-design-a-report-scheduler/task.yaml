@@ -1,0 +1,20 @@
+title: "Design review: a multi-tenant report scheduler"
+type: text
+skills: [sd-requirements-estimates, sd-data-design, sd-async-architecture, sd-availability, sd-design-docs]
+hints:
+  - "Europe spans a few zones, so 08:00 local is several different UTC instants. Count how many runs land in the busiest five-minute window, then multiply by average duration to get the concurrency you need."
+  - "If you need more concurrency than the replica allows, something has to give: spread start times within the 5-minute window, cap per-shop concurrency, or ask a product question."
+  - "Give each run an identity: (schedule id, scheduled-for instant). A unique constraint on it turns a duplicate trigger into a no-op."
+  - "Store the cron expression and the IANA zone name, not a UTC offset. Compute the next run with a library that understands zones, and write down the DST rule."
+  - "A scheduler that was down should look for runs whose time has passed and decide, per your catch-up rule, which to create."
+  - "Separate \"report generated\" from \"report delivered\" so a delivery retry never regenerates or re-sends."
+  - Alert on the oldest due schedule that has no run, not only on failed runs.
+rubric:
+  - { id: requirements, title: "States goals and explicit non-goals and writes two clarifying questions with assumed answers", skill: sd-requirements-estimates, max: 2 }
+  - { id: numbers, title: "Estimates runs per week, peak runs in the busiest window across shared-hour zones, and required concurrency from durations, compares it with the replica's ~40 heavy queries, and says what the design does about any gap", skill: sd-requirements-estimates, max: 5 }
+  - { id: data-model, title: "Gives schedules (cron expression, IANA zone, next run time, paused flag) and runs tables with keys, a unique constraint on schedule id plus scheduled-for time, run status columns, and an index on next run time for due, unpaused schedules", skill: sd-data-design, max: 4 }
+  - { id: scheduling, title: "Has one source of truth for schedules, claims due work safely from several processes (for example FOR UPDATE SKIP LOCKED or a single leader), computes next runs in the shop's zone, and states explicit rules for DST gaps and overlaps and for catch-up after downtime", skill: sd-async-architecture, max: 5 }
+  - { id: fairness, title: "Isolates big shops (separate queue or per-tenant concurrency cap), limits total concurrency to protect the replica, and spreads load within the 5-minute window", skill: sd-async-architecture, max: 4 }
+  - { id: delivery, title: "Defines run states that separate generation from delivery, makes email and webhook delivery idempotent (per-run key, recorded delivery, webhook id header) and retries with backoff to a visible failed state in the run history", skill: sd-async-architecture, max: 4 }
+  - { id: failure-handling, title: "Covers scheduler downtime with catch-up, a worker crash mid-report (stalled job reruns safely, or checkpoints), webhook timeouts, replica lag (detect and delay or note data freshness) and an alert on due schedules without a run", skill: sd-availability, max: 4 }
+  - { id: trade-offs, title: "Names at least two trade-offs with their cost (for example Postgres table vs BullMQ job schedulers vs a hosted scheduler), lists what was left out with revisit signals, and stays on the existing stack", skill: sd-design-docs, max: 3 }

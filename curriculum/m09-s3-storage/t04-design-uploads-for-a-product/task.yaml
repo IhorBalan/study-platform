@@ -1,0 +1,16 @@
+title: Design file uploads for a product
+type: text
+skills: [object-storage, presigned-urls, multipart-uploads, storage-operations]
+hints:
+  - "Treat avatars and contracts as two separate problems. Who may see each one, for how long, and how often is it read?"
+  - "Walk through one upload from the browser's first request to the moment a colleague can open the file. Which steps can fail, and what is left behind when they do?"
+  - "For each limit (type, size, count), say where it is enforced: in the browser, in your API, in the signature, or after the upload. Only the last two count."
+  - "Deleting an account and keeping a contract for ten years pull in opposite directions. Decide which wins, and say how S3 helps you keep the promise."
+  - "Price one month at the stated volumes. Storage is rarely the expensive part; look at what is downloaded and how often."
+rubric:
+  - { id: upload-flow, title: "Describes the direct upload flow step by step (request with type and size, server-generated key, presigned URL with a short expiry, upload to S3, confirm step) and states that bytes never pass through the API", skill: presigned-urls, max: 4 }
+  - { id: validation, title: "Enforces type and size in the signature (signed content-type and length, or a POST policy) and again after upload (HEAD and magic bytes), and keeps documents unavailable until a malware scan passes", skill: presigned-urls, max: 4 }
+  - { id: large-files, title: "Handles 200 MB scans with multipart upload (presigned part URLs or a resumable approach), says what happens to abandoned parts, and adds a lifecycle rule that aborts incomplete uploads", skill: multipart-uploads, max: 3 }
+  - { id: access-and-serving, title: "Keeps the bucket private with Block Public Access on, serves avatars through a CDN (or long-cached URLs) and contracts only through short-lived presigned GETs after an authorisation check, with a reason for each", skill: storage-operations, max: 4 }
+  - { id: retention, title: "Gives a concrete key layout and lifecycle plan (orphan clean-up, tmp expiry, versioning or object lock for contracts) and reconciles account deletion with the ten-year retention rule", skill: storage-operations, max: 4 }
+  - { id: cost-and-choice, title: "Estimates monthly storage and transfer at the stated volumes with the dominant cost named, and says whether S3, R2 or a managed service fits this team, with one honest drawback of the choice", skill: object-storage, max: 3 }

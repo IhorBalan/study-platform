@@ -1,0 +1,6 @@
+-- Drill 3: top 2 products per category.
+-- Columns: category (name), product (name), units_sold, rank
+-- units_sold = sum of quantity in paid orders. Products that sold nothing are left out.
+-- rank is 1 or 2 within the category. Break ties by the lower product id.
+-- Order by category name, then rank.
+-- TODO: write the query.

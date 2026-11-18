@@ -1,0 +1,60 @@
+- id: two-sum-map
+  type: concept
+  front: How does a `Map` make Two Sum O(n) instead of O(n²)?
+  back: Store each value's index as you go, and for each number look up `target - n` in O(1). The cost is O(n) extra memory.
+  skills: [interview-algorithms]
+- id: includes-in-loop
+  type: concept
+  front: "What is the complexity of `a.filter(x => b.includes(x))` for two arrays of size n?"
+  back: O(n²), because `includes` scans `b` each time. Build a `Set` from `b` first to make it O(n).
+  skills: [interview-algorithms]
+- id: default-sort
+  type: concept
+  front: "What does `[10, 9, 1].sort()` return, and why?"
+  back: "`[1, 10, 9]`. Without a comparator elements are compared as strings. Use `(a, b) => a - b`."
+  skills: [interview-algorithms]
+- id: sort-stable
+  type: concept
+  front: Is `Array.prototype.sort` stable in current JavaScript, and why does it matter?
+  back: Yes, since ES2019. Equal elements keep their order, so you can sort by a secondary key first and the primary key second.
+  skills: [interview-algorithms]
+- id: shift-is-linear
+  type: concept
+  front: Why avoid `queue.shift()` in a BFS over a large graph?
+  back: "`shift` is O(n) because it moves every element. Keep a read index into the array instead."
+  skills: [interview-algorithms]
+- id: bfs-vs-dfs
+  type: comparison
+  front: BFS vs DFS
+  back: BFS visits by distance with a queue, so it finds shortest paths in unweighted graphs. DFS goes deep with a stack or recursion, suited to cycles and topological order.
+  skills: [interview-algorithms]
+- id: topological-order
+  type: concept
+  front: Which algorithm gives an order to run jobs so each runs after its dependencies?
+  back: A topological sort, for example DFS that appends a node after all its dependencies and throws when it meets a node still being visited (a cycle).
+  skills: [interview-algorithms]
+- id: graph-complexity
+  type: cloze
+  front: "BFS and DFS over a graph with V nodes and E edges both run in {{...}} time."
+  back: O(V + E)
+  skills: [interview-algorithms]
+- id: sliding-window-linear
+  type: concept
+  front: A sliding window has a `while` loop inside a `for` loop. Why is it still O(n)?
+  back: Each index enters the window once and leaves it at most once, so the total work over the whole run is linear.
+  skills: [interview-algorithms]
+- id: merge-intervals
+  type: concept
+  front: How do you merge overlapping time ranges efficiently?
+  back: Sort by start (O(n log n)), then one pass that extends the last merged range when the next one starts before it ends.
+  skills: [interview-algorithms]
+- id: index-as-big-o
+  type: concept
+  front: Connect Big-O to databases in one sentence.
+  back: An index turns an O(n) sequential scan into an O(log n) B-tree lookup, and an N+1 query pattern is a nested loop over the network.
+  skills: [interview-algorithms]
+- id: algo-round-steps
+  type: concept
+  front: What should you say before writing code in an algorithm round?
+  back: Clarify input size and edge cases, state the brute force and its complexity, then name the better idea.
+  skills: [interview-algorithms]

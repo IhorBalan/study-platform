@@ -1,0 +1,60 @@
+- id: cost-control-interview
+  type: concept
+  front: "Interview: how do you keep the cost of an LLM feature under control?"
+  back: "Log usage per request with feature and tenant, cap output, send less context, cache, use the smallest model that passes your evals, batch non-urgent work, and enforce per-tenant budgets."
+  skills: [llm-production]
+- id: cost-per-outcome
+  type: concept
+  front: Why measure cost per resolved ticket rather than cost per call?
+  back: "A cheap call that needs retries or a second attempt is not cheap. The outcome is what the business pays for."
+  skills: [llm-production]
+- id: price-table-config
+  type: concept
+  front: Why keep model prices in configuration rather than in code?
+  back: "Prices change and differ by model, cached input and batch use. You want to recompute cost without a deploy."
+  skills: [llm-production]
+- id: provider-limits
+  type: term
+  front: "RPM, ITPM, OTPM"
+  back: "Provider rate limits: requests, input tokens and output tokens per minute, per model. Exceeding one returns 429 with retry-after."
+  skills: [llm-production]
+- id: queue-background-llm
+  type: concept
+  front: How do you run 50,000 ticket summaries without starving the live chat feature?
+  back: "A queue with a concurrency limit that honours retry-after, or the batch API, ideally on a separate key or workspace from interactive traffic."
+  skills: [llm-production]
+- id: response-cache-key
+  type: concept
+  front: What must the key of an LLM response cache include?
+  back: "Everything that changes the output: model id, instructions or a prompt version, the input, the schema and settings."
+  skills: [llm-production]
+- id: prompt-caching
+  type: term
+  front: Prompt caching (provider side)
+  back: "The provider reuses a byte-identical prompt prefix from a recent request, cheaper and faster. Example: a long policy document in the system prompt, cached for 5 minutes."
+  skills: [llm-production]
+- id: prompt-cache-order
+  type: concept
+  front: Why does a timestamp at the top of the system prompt hurt cost?
+  back: "Prompt caching matches the prefix byte for byte. A changing value at the start invalidates the cache for everything after it."
+  skills: [llm-production]
+- id: semantic-cache-risk
+  type: concept
+  front: What is the risk of a semantic cache for LLM answers?
+  back: "It reuses an answer for a similar question, and similar questions can differ in the one word that changes the answer."
+  skills: [llm-production]
+- id: fallback-caveats
+  type: concept
+  front: What do you need before falling back to another model on provider errors?
+  back: "An evaluation of the fallback's output, a rule to fall back only on availability errors, and logging of which model answered."
+  skills: [llm-production]
+- id: log-prompts-safely
+  type: concept
+  front: What should an LLM feature log by default, and what only deliberately?
+  back: "By default: feature, model, tokens, finish reason, latency, prompt version. Full prompts only in a restricted store with retention limits, redacted."
+  skills: [llm-production, llm-security]
+- id: minimise-pii
+  type: concept
+  front: What is the one PII control you fully own when calling a model provider?
+  back: "What you send. Pass only the fields the task needs, and replace identifiers with placeholders where possible."
+  skills: [llm-production, llm-security]

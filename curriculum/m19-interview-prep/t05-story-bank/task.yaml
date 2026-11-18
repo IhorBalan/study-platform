@@ -1,0 +1,16 @@
+title: Write three behavioural stories
+type: text
+skills: [interview-behavioural]
+hints:
+  - Draft the action as a bullet list of things you did, in order, before you write any prose. If the list has fewer than four bullets, the story is probably too thin.
+  - Search old pull requests, incident channels and release notes for dates and numbers. Specific details are what make a story credible.
+  - "The disagreement story is about how you disagreed: what you proposed, what evidence you brought, how it was decided, and how you worked with the outcome."
+  - "For the incomplete-requirements story, show the decision: what you chose to build first, what you cut, and how you checked the choice with users or the team."
+  - Read each story aloud with a timer. Over two and a half minutes means the situation is too long.
+rubric:
+  - { id: structure, title: "Each story has all four STAR parts, with situation and task together at most about a quarter of the story and the action the largest part", skill: interview-behavioural, max: 4 }
+  - { id: ownership, title: "Actions are written in the first person and make clear what the writer did personally, as distinct from the team", skill: interview-behavioural, max: 3 }
+  - { id: specificity, title: "Each story contains concrete details (tools, timelines, what was said or decided and why) and each result has a number or an observable outcome", skill: interview-behavioural, max: 4 }
+  - { id: prompt-fit, title: "Each story answers its prompt directly: the incident story includes a mistake the writer owns, the requirements story shows a scoping decision, the disagreement story shows how the disagreement was resolved", skill: interview-behavioural, max: 3 }
+  - { id: learning, title: "Each story ends with a concrete change in how the writer works, not a generic lesson, and no mistake is a disguised strength", skill: interview-behavioural, max: 3 }
+  - { id: follow-ups, title: "Two plausible follow-up questions per story with short honest answers, and a story bank table mapping each story to prompts covered, an outcome and a backend angle", skill: interview-behavioural, max: 3 }

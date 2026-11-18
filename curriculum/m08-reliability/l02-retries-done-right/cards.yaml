@@ -1,0 +1,60 @@
+- id: retry-conditions
+  type: concept
+  front: What two things must be true before a retry is worth it?
+  back: "The failure is likely transient, and the operation is safe to repeat (idempotent)."
+  skills: [retry-policies]
+- id: retryable-statuses
+  type: concept
+  front: Which HTTP statuses are usually worth retrying?
+  back: "408, 429, 502, 503 and 504, plus network errors and your own attempt timeout. 500 at most once. Never other 4xx."
+  skills: [retry-policies]
+- id: full-jitter
+  type: snippet
+  front: Compute a full-jitter backoff delay for retry `n` with base `b` and cap `max`.
+  back: "`Math.random() * Math.min(max, b * 2 ** (n - 1))`"
+  skills: [retry-policies]
+- id: why-jitter
+  type: concept
+  front: Why add jitter to exponential backoff?
+  back: "Clients that failed together would otherwise retry together. Randomness spreads the retries so they do not knock the dependency over again."
+  skills: [retry-policies]
+- id: retry-one-layer
+  type: concept
+  front: Why retry at only one layer of the stack?
+  back: "Retries multiply: three layers that each try three times turn one failure into 27 calls."
+  skills: [retry-policies]
+- id: retry-budget
+  type: term
+  front: Retry budget
+  back: "A cap on retries as a share of traffic, for example 10% in the last ten seconds. During an outage it keeps extra load small; when spent, calls fail fast."
+  skills: [retry-policies]
+- id: circuit-breaker-states
+  type: concept
+  front: What are the three states of a circuit breaker?
+  back: "Closed: calls pass. Open: calls fail at once for a cool-down. Half-open: a few trial calls decide whether to close or open again."
+  skills: [retry-policies]
+- id: interview-timeouts-retries
+  type: concept
+  front: "Interview: timeouts, retries with backoff and jitter, circuit breakers. When and why?"
+  back: "Timeouts on every call so nothing hangs. Retries with jittered backoff for transient errors on idempotent calls. A breaker to stop calling a dependency that is failing and let it recover."
+  skills: [retry-policies]
+- id: interview-dependency-down
+  type: concept
+  front: "Interview: an external API your service depends on is down. What does your service do?"
+  back: "Fail fast (timeouts, breaker), degrade (cache, default, hide the feature), queue work that can wait, isolate its resources (bulkhead), and alert."
+  skills: [retry-policies]
+- id: retry-after
+  type: concept
+  front: What should a client do with `Retry-After` on a `429` or `503`?
+  back: "Wait that long instead of its own backoff. If that passes the deadline, stop and return the response."
+  skills: [retry-policies]
+- id: load-shedding
+  type: term
+  front: Load shedding
+  back: "Rejecting some requests early (503 with Retry-After) when overloaded, so the rest finish in time. Example: a cap on concurrent requests per instance."
+  skills: [retry-policies]
+- id: bulkhead
+  type: term
+  front: Bulkhead
+  back: "Separate resources per dependency, such as its own pool or concurrency limit, so one slow service cannot use up everything."
+  skills: [retry-policies]

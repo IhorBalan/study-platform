@@ -1,0 +1,6 @@
+-- Drill 2: monthly revenue with a running total.
+-- Columns: month (a date, the first day of the month in UTC), revenue, running_total
+-- Paid orders only. Months without paid orders are left out.
+-- running_total is the sum of revenue for this month and every earlier month.
+-- Order by month.
+-- TODO: write the query.

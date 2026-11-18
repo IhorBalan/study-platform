@@ -1,0 +1,19 @@
+{
+  "name": "payment-reconciliation",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "reconcile": "npm run build && node dist/cli.js",
+    "test": "npm run build && node --test --test-concurrency=1 \"dist/test/*.test.js\""
+  },
+  "dependencies": {
+    "pg": "^8.16.0",
+    "stripe": "23.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/pg": "^8.15.0",
+    "typescript": "7.0.2"
+  }
+}

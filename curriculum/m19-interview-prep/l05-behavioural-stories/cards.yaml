@@ -1,0 +1,55 @@
+- id: star-parts
+  type: term
+  front: STAR
+  back: "Situation, Task, Action, Result. A structure for behavioural answers, e.g. context in one line, then mostly what you did."
+  skills: [interview-behavioural]
+- id: star-proportions
+  type: concept
+  front: Roughly how should a two-minute STAR answer be split?
+  back: About 10% situation, 10% task, 60% action, 20% result. Weak answers spend most of it on background.
+  skills: [interview-behavioural]
+- id: past-not-hypothetical
+  type: concept
+  front: Why do interviewers ask "tell me about a time" instead of "how would you"?
+  back: Past behaviour predicts future behaviour better, and real stories carry details that are hard to invent.
+  skills: [interview-behavioural]
+- id: i-not-we
+  type: concept
+  front: Why say "I" rather than "we" when describing the action?
+  back: '"We migrated the API" hides your part. The interviewer is scoring you, not the team.'
+  skills: [interview-behavioural]
+- id: not-scripted
+  type: concept
+  front: How do you prepare stories without sounding rehearsed?
+  back: Write them as bullet points to fix the facts, practise from the bullets, never memorise sentences, and stop after the result.
+  skills: [interview-behavioural]
+- id: story-bank-size
+  type: concept
+  front: How many stories should a story bank hold, and why does that suffice?
+  back: Six to eight. One good story answers two or three prompts from different angles.
+  skills: [interview-behavioural]
+- id: startup-signals
+  type: concept
+  front: Which traits do startups listen for in behavioural answers?
+  back: Ownership, speed with judgement, comfort with ambiguity, learning from mistakes, and clear communication.
+  skills: [interview-behavioural]
+- id: why-startup
+  type: concept
+  front: 'How should you answer "Why a startup instead of a big company?"'
+  back: Say what you want to do (own features end to end, see users quickly), not what you want to escape.
+  skills: [interview-behavioural]
+- id: fake-weakness
+  type: concept
+  front: What goes wrong with a "mistake" story that is really a disguised strength?
+  back: Interviewers see through it, and it shows you cannot admit a real error, which is the signal they wanted.
+  skills: [interview-behavioural]
+- id: frontend-stories
+  type: concept
+  front: Name two kinds of frontend story that make good backend-interview material.
+  back: A slow page whose cause was on the server (an N+1, an uncached endpoint), and a client change that exposed a missing server-side check.
+  skills: [interview-behavioural]
+- id: ai-tools-answer
+  type: concept
+  front: 'Interview: "How do you use AI coding tools, and how do you check their output?" What makes a good answer?'
+  back: Be specific about what you use them for, then how you verify (read every diff, tests that fail when it is wrong, run it). Vague enthusiasm or denial both read badly.
+  skills: [interview-behavioural]

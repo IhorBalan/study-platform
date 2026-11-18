@@ -1,0 +1,6 @@
+-- Drill 5: how long until a customer's second paid order.
+-- Columns: customer_id, first_order_at, second_order_at, days_between
+-- Customers with at least two paid orders. Orders are ranked by created_at, then id.
+-- days_between = the UTC calendar date of the second order minus that of the first (an integer).
+-- Order by days_between, then customer_id.
+-- TODO: write the query.

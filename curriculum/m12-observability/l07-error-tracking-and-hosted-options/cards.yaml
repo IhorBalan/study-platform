@@ -1,0 +1,50 @@
+- id: tracker-vs-logs
+  type: comparison
+  front: Error tracker vs searching error logs
+  back: "The tracker groups identical exceptions into one issue with counts, affected users, first release and an owner, and alerts on new or regressed issues. Logs give you every line, ungrouped."
+  skills: [error-tracking]
+- id: sentry-load-first
+  type: concept
+  front: Why must Sentry's Node SDK be loaded with `--import` before the app?
+  back: "It instruments modules as they are imported. Loaded later, the modules are already in memory and are not instrumented."
+  skills: [error-tracking]
+- id: sentry-release
+  type: concept
+  front: Why set `release` in Sentry.init from the commit or version?
+  back: "Issues are then tied to the deploy that introduced them, so you can see what a release broke and spot regressions."
+  skills: [error-tracking]
+- id: sentry-scrub
+  type: concept
+  front: What must you configure before sending error events from production?
+  back: "Data scrubbing: keep sendDefaultPii off and strip secrets and personal data in beforeSend, because events carry headers, bodies and variables."
+  skills: [error-tracking]
+- id: source-maps
+  type: concept
+  front: Why upload source maps to the error tracker from CI?
+  back: "Stack traces then point at your TypeScript lines instead of compiled JavaScript."
+  skills: [error-tracking]
+- id: nest-sentry-filter
+  type: concept
+  front: "In NestJS with @sentry/nestjs, how are unhandled exceptions reported?"
+  back: "Register SentryGlobalFilter as an APP_FILTER provider, or, if you already have a catch-all filter, decorate its catch() with @SentryExceptionCaptured()."
+  skills: [error-tracking]
+- id: otel-no-lock-in
+  type: concept
+  front: Why instrument with OpenTelemetry rather than a vendor's agent?
+  back: "Every major backend accepts OTLP, so switching from self-hosted to Grafana Cloud or Datadog is a collector change, not a rewrite."
+  skills: [error-tracking]
+- id: self-host-cost
+  type: concept
+  front: What is the main cost of self-hosting Prometheus, Loki, Tempo and Grafana?
+  back: "People's time: storage, retention, upgrades, availability and monitoring the monitoring. For a small team that can be a day a month."
+  skills: [error-tracking]
+- id: grafana-cloud-vs-datadog
+  type: comparison
+  front: Grafana Cloud vs Datadog for a small team
+  back: "Grafana Cloud: open standards (PromQL, Grafana), a free tier, usage pricing. Datadog: the most polished all-in-one product, priced per host and volume, costly and harder to leave."
+  skills: [error-tracking]
+- id: small-team-path
+  type: concept
+  front: A pragmatic observability path for a new small product?
+  back: "Platform logs plus an error tracker from day one; a hosted free tier with OpenTelemetry once there are users; self-host only with a reason and people to run it."
+  skills: [error-tracking]

@@ -1,0 +1,55 @@
+- id: lambda-vs-service
+  type: comparison
+  front: "Interview: when would you use Lambda instead of a long-running service?"
+  back: "Lambda for short, event-triggered, spiky or rare work with no idle cost. A container for long, steady, stateful or connection-heavy work such as the main API."
+  skills: [aws-compute]
+- id: nest-on-aws
+  type: concept
+  front: Where does a NestJS API with a Postgres pool usually run on AWS, and why?
+  back: "ECS on Fargate behind a load balancer: a long-running container that pools connections and serves many requests at once."
+  skills: [aws-compute]
+- id: fargate-term
+  type: term
+  front: Fargate
+  back: "The ECS launch type where AWS provides the machines: you give a task definition (image, CPU, memory, role) and pay per second for running tasks."
+  skills: [aws-compute]
+- id: task-definition
+  type: concept
+  front: What does an ECS task definition describe?
+  back: "The container image, CPU and memory, environment and secrets, the task role, ports and logging."
+  skills: [aws-compute]
+- id: lambda-limit
+  type: cloze
+  front: "One Lambda invocation can run for at most {{15 minutes}}."
+  back: "15 minutes"
+  skills: [aws-compute, aws-lambda]
+- id: lambda-db-connections
+  type: concept
+  front: Why can a traffic spike on a Lambda-based API exhaust Postgres connections?
+  back: "Each concurrent execution environment opens its own connections. Use RDS Proxy or a pooler, or a container with a shared pool."
+  skills: [aws-compute]
+- id: app-runner-status
+  type: concept
+  front: Should a new project start on AWS App Runner?
+  back: "No. Since 30 April 2026 it accepts no new customers; AWS recommends ECS Express Mode."
+  skills: [aws-compute]
+- id: ec2-when
+  type: concept
+  front: Name two reasons to choose EC2 over Fargate for a workload.
+  back: "Special hardware such as GPUs, kernel or OS-level control, non-containerised software, or the lowest steady-state price with reserved capacity."
+  skills: [aws-compute]
+- id: forty-minute-report
+  type: concept
+  front: A nightly report takes 40 minutes. Lambda or a container?
+  back: "A container task (for example Fargate started by an EventBridge schedule). It exceeds Lambda's 15-minute limit."
+  skills: [aws-compute]
+- id: idle-cost
+  type: comparison
+  front: Idle cost of Fargate vs Lambda
+  back: "Fargate bills running tasks whether or not requests arrive. Lambda bills only invocations and their duration."
+  skills: [aws-compute]
+- id: worker-same-image
+  type: concept
+  front: How can an SQS worker for a NestJS app run on ECS without a second codebase?
+  back: "As a second ECS service from the same image, started with a different command and its own task role."
+  skills: [aws-compute]

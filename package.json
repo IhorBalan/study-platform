@@ -1,0 +1,33 @@
+{
+  "name": "study-platform",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.28.12",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "node scripts/ensure-env.mjs && pnpm infra:up && turbo run dev",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "lint": "oxlint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "infra:up": "docker compose -f infra/compose/compose.yaml up -d --wait",
+    "infra:down": "docker compose -f infra/compose/compose.yaml down",
+    "db:generate": "pnpm --filter @study/db generate",
+    "db:migrate": "pnpm --filter @study/db migrate",
+    "curriculum:check": "pnpm --filter @study/curriculum build && pnpm --filter @study/curriculum check",
+    "lab": "turbo run build --filter=@study/lab-cli --output-logs=errors-only --log-prefix=none >/dev/null && node packages/lab-cli/dist/cli.js",
+    "full:up": "node scripts/ensure-env.mjs && docker compose --env-file .env -f infra/compose/full.compose.yaml up -d --build --wait",
+    "full:down": "docker compose --env-file .env -f infra/compose/full.compose.yaml down",
+    "bridge": "node scripts/ensure-env.mjs && turbo run build --filter=@study/bridge --output-logs=errors-only && pnpm --filter @study/bridge start"
+  },
+  "devDependencies": {
+    "oxlint": "catalog:",
+    "prettier": "catalog:",
+    "turbo": "catalog:",
+    "typescript": "catalog:"
+  }
+}

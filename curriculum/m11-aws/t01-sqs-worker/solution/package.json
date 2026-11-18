@@ -1,0 +1,16 @@
+{
+  "name": "sqs-worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test --test-force-exit \"test/**/*.test.ts\"",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@aws-sdk/client-sqs": "3.1169.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "7.0.2"
+  }
+}

@@ -1,0 +1,55 @@
+- id: constraints-not-code
+  type: concept
+  front: Why put business rules in database constraints when the API already validates input?
+  back: "Every write passes through the database, including scripts, migrations and other services. A constraint cannot be bypassed."
+  skills: [data-modelling]
+- id: surrogate-vs-natural
+  type: comparison
+  front: Surrogate primary key vs natural primary key (such as email)
+  back: "Natural keys change, and every referencing row must change with them. Use a surrogate id and a separate UNIQUE constraint on the natural key."
+  skills: [data-modelling]
+- id: uuid-v4-vs-v7
+  type: comparison
+  front: UUID v4 vs UUID v7 as a primary key
+  back: "v4 is random, so inserts land all over the B-tree. v7 starts with a timestamp, so inserts append like an identity. Postgres 18 has `uuidv7()`."
+  skills: [data-modelling]
+- id: fk-index
+  type: concept
+  front: Does PostgreSQL create an index for the referencing column of a foreign key?
+  back: "No. Only the referenced side is indexed (it must be unique). Without one, parent deletes and joins scan the child table."
+  skills: [data-modelling, sql-indexes]
+- id: case-insensitive-unique
+  type: snippet
+  front: Make users.email unique regardless of letter case.
+  back: "```sql\ncreate unique index users_email_lower_key on users (lower(email));\n```"
+  skills: [data-modelling]
+- id: check-two-columns
+  type: snippet
+  front: "Enforce that completed_at is set exactly when status is 'done'."
+  back: "```sql\ncheck ((status = 'done') = (completed_at is not null))\n```"
+  skills: [data-modelling]
+- id: composite-fk-membership
+  type: concept
+  front: How can the schema guarantee that a task's assignee is a member of the task's team?
+  back: "A composite foreign key from tasks (team_id, assignee_id) to memberships (team_id, user_id)."
+  skills: [data-modelling]
+- id: third-normal-form
+  type: concept
+  front: "What is wrong with orders (id, customer_id, customer_email)?"
+  back: "customer_email depends on the customer, not the order. It is stored many times and drifts when the customer changes it."
+  skills: [data-modelling]
+- id: unit-price-not-duplication
+  type: concept
+  front: Is order_items.unit_price a duplicate of products.price?
+  back: "No. It records the price at the time of the order, a different fact that must not change with the catalogue."
+  skills: [data-modelling]
+- id: denormalise-when
+  type: concept
+  front: When is denormalising worth it, and what does it cost?
+  back: "When a measured read is too slow. The cost is keeping a second copy in sync on every write path."
+  skills: [data-modelling]
+- id: jsonb-fit
+  type: concept
+  front: When is a jsonb column a poor choice?
+  back: "When you filter, join or need constraints on its fields. Those fields deserve real columns."
+  skills: [data-modelling]

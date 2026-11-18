@@ -1,0 +1,50 @@
+- id: rls-purpose
+  type: concept
+  front: What problem does Row-Level Security solve in a multi-tenant app?
+  back: "A forgotten `where tenant_id = $1` leaks data. RLS makes Postgres add the condition to every query itself."
+  skills: [row-level-security]
+- id: using-vs-with-check
+  type: comparison
+  front: "`USING` vs `WITH CHECK` in an RLS policy"
+  back: "USING filters existing rows a query can see or change. WITH CHECK validates rows being inserted or updated."
+  skills: [row-level-security]
+- id: rls-bypass
+  type: concept
+  front: Which roles ignore RLS policies?
+  back: "Superusers, roles with BYPASSRLS, and the table owner unless FORCE ROW LEVEL SECURITY is set."
+  skills: [row-level-security]
+- id: rls-no-policy
+  type: concept
+  front: RLS is enabled on a table but no policy applies to the role. What does a SELECT return?
+  back: "No rows. The default is deny."
+  skills: [row-level-security]
+- id: set-config-local
+  type: concept
+  front: "Why set the tenant with `set_config('app.tenant_id', $1, true)` inside a transaction when using a pool?"
+  back: "true makes it transaction-local. A session setting would stay on the pooled connection and leak into the next request."
+  skills: [row-level-security, db-access-node]
+- id: document-model
+  type: concept
+  front: How do you design documents in a document store?
+  back: "Around the queries you will run: embed what is read together, so one lookup returns everything."
+  skills: [document-stores]
+- id: document-store-fit
+  type: concept
+  front: When does a document store such as MongoDB fit well?
+  back: "Self-contained aggregates of varying shape, read and written as one unit, with known access patterns."
+  skills: [document-stores]
+- id: document-store-pain
+  type: concept
+  front: When does a document store fight you?
+  back: "Data with many relationships queried from several directions, and invariants that span records."
+  skills: [document-stores]
+- id: sql-vs-nosql
+  type: comparison
+  front: "SQL vs NoSQL for a new product (interview)"
+  back: "Default to Postgres for constraints, transactions and ad hoc joins, with jsonb for flexible parts. Choose a document store for independent aggregates and horizontal write scale."
+  skills: [document-stores]
+- id: jsonb-instead
+  type: concept
+  front: "What can you use in Postgres for \"flexible attributes\" before adding a document database?"
+  back: "A jsonb column with a GIN index."
+  skills: [document-stores, data-modelling]

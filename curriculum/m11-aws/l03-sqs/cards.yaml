@@ -1,0 +1,63 @@
+- id: visibility-timeout
+  type: term
+  front: Visibility timeout (SQS)
+  back: "How long a received message stays hidden from other consumers. If it is not deleted in time, it becomes visible and is delivered again."
+  skills: [aws-sqs]
+- id: delete-after-success
+  type: concept
+  front: When exactly should an SQS consumer call `DeleteMessage`?
+  back: Only after the handler has succeeded. A failure leaves the message alone so it is redelivered and eventually dead-lettered.
+  skills: [aws-sqs]
+- id: at-least-once
+  type: concept
+  front: Name two ways a standard SQS queue ends up running the same message twice.
+  back: "The handler finishes but the delete fails or comes after the visibility timeout; or SQS itself occasionally delivers a duplicate."
+  skills: [aws-sqs]
+- id: standard-vs-fifo
+  type: comparison
+  front: SQS standard vs FIFO queue
+  back: "Standard: near-unlimited throughput, best-effort order, occasional duplicates. FIFO: strict order per message group, 5-minute deduplication, limited throughput."
+  skills: [aws-sqs]
+- id: message-group
+  type: concept
+  front: What should you use as the `MessageGroupId` on a FIFO queue?
+  back: "The entity whose events must stay in order, such as `orderId`. Different groups are processed in parallel."
+  skills: [aws-sqs]
+- id: long-polling
+  type: concept
+  front: "Why set `WaitTimeSeconds: 20` on `ReceiveMessage`?"
+  back: "The call waits for messages instead of returning empty at once, checks all servers, and costs one request per 20 idle seconds."
+  skills: [aws-sqs]
+- id: heartbeat
+  type: snippet
+  front: Keep a slow SQS message hidden while it is still being processed.
+  back: |-
+    ```ts
+    setInterval(() => sqs.send(new ChangeMessageVisibilityCommand({ QueueUrl, ReceiptHandle, VisibilityTimeout: 30 })), 15_000)
+    ```
+  skills: [aws-sqs]
+- id: dlq-redrive
+  type: concept
+  front: What moves a message to an SQS dead-letter queue, and what must the worker do?
+  back: "The source queue's redrive policy, after `maxReceiveCount` receives. The worker only has to not delete failed messages."
+  skills: [aws-sqs]
+- id: dlq-alarm
+  type: concept
+  front: Why is a DLQ without an alarm a problem?
+  back: "Messages pile up unseen until their retention runs out, which is a slow, silent data loss."
+  skills: [aws-sqs]
+- id: idempotency-key-choice
+  type: concept
+  front: Why key consumer idempotency on a business id and not the SQS `MessageId`?
+  back: A producer that retries a send creates a new message with a new `MessageId` and the same content.
+  skills: [aws-sqs]
+- id: batch-partial-failure
+  type: concept
+  front: "`DeleteMessageBatch` returned without throwing. Is every message deleted?"
+  back: "Not necessarily. Batch calls report per entry; check the `Failed` list and retry those."
+  skills: [aws-sqs]
+- id: graceful-stop
+  type: concept
+  front: What should an SQS worker do on SIGTERM?
+  back: "Stop receiving, abort the pending long poll, let messages in progress finish and be deleted, then exit."
+  skills: [aws-sqs]

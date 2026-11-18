@@ -1,0 +1,7 @@
+import { createApp } from './server.mjs';
+import { createShortener } from './shortener.mjs';
+
+const port = Number(process.env.PORT ?? 3000);
+createApp(createShortener()).listen(port, '127.0.0.1', () => {
+  console.log(`Listening on http://127.0.0.1:${port}`);
+});

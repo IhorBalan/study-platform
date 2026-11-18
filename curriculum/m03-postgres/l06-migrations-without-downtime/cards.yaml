@@ -1,0 +1,55 @@
+- id: lock-queue
+  type: concept
+  front: Why can a 5 ms ALTER TABLE stall every query on the table?
+  back: "It waits for an exclusive lock behind a long-running query, and every later query queues behind it."
+  skills: [zero-downtime-migrations]
+- id: lock-timeout
+  type: snippet
+  front: Make a migration give up instead of queueing traffic behind its lock.
+  back: "```sql\nset lock_timeout = '3s';\n```"
+  skills: [zero-downtime-migrations]
+- id: constant-default
+  type: concept
+  front: Does adding a column with a constant default rewrite a large table?
+  back: "No, since PostgreSQL 11 it is catalog-only. A volatile default such as gen_random_uuid() does rewrite it."
+  skills: [zero-downtime-migrations]
+- id: not-null-column-steps
+  type: concept
+  front: "How do you add a NOT NULL column to a large live table? (interview)"
+  back: "Add it nullable, write it in new code, backfill in batches, add CHECK (col IS NOT NULL) NOT VALID, VALIDATE it, then SET NOT NULL."
+  skills: [zero-downtime-migrations]
+- id: not-valid
+  type: concept
+  front: What does adding a constraint with NOT VALID do?
+  back: "Enforces it for new writes at once, without scanning old rows. VALIDATE CONSTRAINT checks them later without blocking writes."
+  skills: [zero-downtime-migrations]
+- id: set-not-null-skip
+  type: concept
+  front: Why is SET NOT NULL instant after validating CHECK (col IS NOT NULL)?
+  back: "Postgres uses the validated check as proof that no nulls exist, so it skips the full table scan."
+  skills: [zero-downtime-migrations]
+- id: index-concurrently
+  type: comparison
+  front: CREATE INDEX vs CREATE INDEX CONCURRENTLY
+  back: "The plain form blocks writes during the build. CONCURRENTLY allows writes, is slower and cannot run in a transaction."
+  skills: [zero-downtime-migrations, sql-indexes]
+- id: invalid-index
+  type: concept
+  front: A CREATE INDEX CONCURRENTLY failed halfway. What is left, and what do you do?
+  back: "An INVALID index that slows writes and serves no reads. Drop it (DROP INDEX CONCURRENTLY) and build it again."
+  skills: [zero-downtime-migrations]
+- id: batched-backfill
+  type: concept
+  front: Why backfill a new column in batches instead of one UPDATE?
+  back: "One huge UPDATE holds row locks for its whole run, bloats the table and delays replicas. Small batches keep each transaction short."
+  skills: [zero-downtime-migrations]
+- id: expand-contract
+  type: term
+  front: Expand and contract
+  back: "Change a schema in additive steps first, migrate code and data, and remove the old parts last. Each step works with old and new code."
+  skills: [zero-downtime-migrations]
+- id: rename-column
+  type: concept
+  front: Why not rename a column in one migration during a rolling deploy?
+  back: "Old instances still use the old name and fail until the deploy finishes. Add the new column, dual-write, switch reads, then drop."
+  skills: [zero-downtime-migrations]

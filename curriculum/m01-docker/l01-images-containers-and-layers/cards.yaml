@@ -1,0 +1,59 @@
+- id: image-vs-container
+  type: comparison
+  front: Image vs container
+  back: An image is a read-only package of files and start-up metadata. A container is a process started from it, with its own thin writable layer.
+  skills: [docker-images]
+
+- id: writable-layer-lifetime
+  type: concept
+  front: What happens to a file a process wrote inside a container (not in a volume) when you run `docker rm`?
+  back: It is deleted. The file lived in the container's writable layer, which is removed with the container.
+  skills: [docker-images]
+
+- id: layer-instructions
+  type: concept
+  front: Which Dockerfile instructions add a filesystem layer to the image?
+  back: "`RUN`, `COPY` and `ADD`. The others (`ENV`, `USER`, `CMD`, …) only change metadata."
+  skills: [docker-images]
+
+- id: cache-invalidation
+  type: concept
+  front: During `docker build`, one step misses the cache. What happens to the steps after it?
+  back: They all run again. A layer can only be reused when every step before it was also reused.
+  skills: [docker-images]
+
+- id: delete-in-later-layer
+  type: concept
+  front: Why does `RUN rm -rf /big-folder` not shrink an image if the folder was added by an earlier instruction?
+  back: The files still exist in the earlier layer. The later layer only hides them.
+  skills: [docker-images]
+
+- id: tag-vs-digest
+  type: comparison
+  front: Image tag vs image digest
+  back: A tag is a movable name, like a Git branch. A digest (`name@sha256:…`) is the content hash of one exact image, like a commit SHA.
+  skills: [docker-images]
+
+- id: namespaces
+  type: term
+  front: Namespaces (Linux)
+  back: The kernel feature that limits what a process can *see*. Example, the PID namespace makes a container's main process believe it is PID 1.
+  skills: [docker-images]
+
+- id: cgroups
+  type: term
+  front: Control groups (cgroups)
+  back: The kernel feature that limits what a process can *use*. Example, `--memory 512m` becomes a cgroup memory limit.
+  skills: [docker-images]
+
+- id: docker-stop-signals
+  type: cloze
+  front: "`docker stop` sends {{...}} to the main process and, if it is still running after 10 seconds, sends SIGKILL."
+  back: SIGTERM
+  skills: [docker-images]
+
+- id: macos-linux-vm
+  type: concept
+  front: Why do containers on macOS run inside a Linux virtual machine?
+  back: Containers are Linux processes isolated by Linux kernel features (namespaces, cgroups). macOS has no Linux kernel, so the runtime provides one in a VM.
+  skills: [docker-images]

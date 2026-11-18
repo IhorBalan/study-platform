@@ -1,0 +1,55 @@
+- id: s3-key
+  type: term
+  front: S3 object key
+  back: "The object's full name inside a bucket, a flat UTF-8 string up to 1024 bytes. Example: `users/42/avatars/9f1c.png`."
+  skills: [object-storage]
+- id: no-folders
+  type: concept
+  front: Why is renaming a "folder" in S3 expensive?
+  back: "There are no folders, only key prefixes. Renaming means copying and deleting every object under the prefix."
+  skills: [object-storage]
+- id: immutable-objects
+  type: concept
+  front: How do you change part of an existing S3 object?
+  back: You cannot. Objects are immutable; you replace the whole object with a new PUT.
+  skills: [object-storage]
+- id: single-put-limit
+  type: cloze
+  front: "A single PUT uploads at most {{5 GB}}. Larger objects need multipart upload."
+  back: 5 GB
+  skills: [object-storage]
+- id: s3-consistency
+  type: concept
+  front: After a successful PUT, can a GET or LIST on S3 still miss the new object?
+  back: "No. Since December 2020 S3 has strong read-after-write consistency for all operations."
+  skills: [object-storage]
+- id: s3-cost-shape
+  type: concept
+  front: Which part of an S3 bill usually surprises people who download a lot?
+  back: "Data transfer out to the internet (about $0.09 per GB), which is several times the monthly storage price of the same data."
+  skills: [object-storage]
+- id: standard-ia
+  type: comparison
+  front: S3 Standard vs Standard-IA?
+  back: "Standard-IA costs about half per GB-month but charges per GB retrieved and has a 30-day minimum. Use it for files that are rarely read."
+  skills: [object-storage]
+- id: bytea-vs-s3
+  type: comparison
+  front: Files in a Postgres `bytea` column vs in S3?
+  back: "`bytea` bloats WAL, replicas and backups and is held in memory when read. S3 streams, costs less per GB and has cheaper tiers. Keep metadata in Postgres, bytes in S3."
+  skills: [object-storage]
+- id: files-table
+  type: concept
+  front: What does Postgres store for each file kept in S3?
+  back: "A row with the S3 key, owner, content type, size and a status (pending, ready, rejected). The original file name is for display only."
+  skills: [object-storage]
+- id: no-proxy-uploads
+  type: concept
+  front: Why should uploads not stream through your API server?
+  back: "Every byte crosses the network twice, large uploads hit request timeouts and body limits, and you scale API instances just to move bytes."
+  skills: [object-storage]
+- id: server-generated-keys
+  type: concept
+  front: Why should the server, not the user's file name, decide an object's key?
+  back: "File names collide, leak personal data into URLs and logs, and can contain path tricks. A generated key such as `users/42/<uuid>.png` avoids all three."
+  skills: [object-storage]

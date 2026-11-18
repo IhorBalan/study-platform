@@ -1,0 +1,42 @@
+import { createDatabase } from '@study/db';
+import { CHECKS_QUEUE, ChecksJob } from '@study/shared';
+import { PgBoss } from 'pg-boss';
+import { createBridgeClient } from './bridge-client.js';
+import { processChecksJob } from './checks-job.js';
+import { loadConfig } from './config.js';
+
+const config = loadConfig();
+const { db, pool } = createDatabase(config.DATABASE_URL, {
+  onPoolError: (error) => console.warn('[worker] idle connection lost:', error.message),
+});
+const runOnBridge = createBridgeClient(config);
+
+const boss = new PgBoss(config.DATABASE_URL);
+boss.on('error', (error) => console.warn('[worker] queue error:', error.message));
+await boss.start();
+await boss.createQueue(CHECKS_QUEUE);
+
+await boss.work(CHECKS_QUEUE, async (jobs) => {
+  for (const job of jobs) {
+    const parsed = ChecksJob.safeParse(job.data);
+    if (!parsed.success) {
+      console.warn('[worker] dropped a malformed job', job.id);
+      continue;
+    }
+    await processChecksJob({ db, runOnBridge }, parsed.data.runId);
+  }
+});
+console.log('[worker] waiting for check jobs');
+
+let stopping = false;
+for (const signal of ['SIGINT', 'SIGTERM'] as const) {
+  process.on(signal, () => {
+    if (stopping) return;
+    stopping = true;
+    // Let a running check finish, then release the connections.
+    void boss
+      .stop({ graceful: true, timeout: 30_000 })
+      .then(() => pool.end())
+      .finally(() => process.exit(0));
+  });
+}

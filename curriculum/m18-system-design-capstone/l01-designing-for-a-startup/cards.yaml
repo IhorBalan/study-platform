@@ -1,0 +1,60 @@
+- id: scarce-resource
+  type: concept
+  front: What is the scarce resource a startup design must save, and what follows from it?
+  back: "Engineering time and attention, not machines. Prefer fewer, managed components that a small team can run."
+  skills: [sd-requirements-estimates]
+- id: non-functional-drive
+  type: concept
+  front: "Why does \"we never lose an uploaded file\" shape the architecture more than \"users can upload receipts\"?"
+  back: "The non-functional requirement forces durable object storage, a record of every upload and a recovery plan. The feature alone forces nothing."
+  skills: [sd-requirements-estimates]
+- id: non-requirements
+  type: term
+  front: Non-requirement
+  back: "Something a reader might expect that you deliberately will not do, written down. Example: \"one region only, no offline mode\"."
+  skills: [sd-requirements-estimates]
+- id: rps-arithmetic
+  type: cloze
+  front: "10,000 active users × 300 calls a day is 3 million calls, about {{30 requests/s}} on average and 150 to 300 at peak."
+  back: "30 requests/s (3,000,000 / ~100,000 seconds), peak 5 to 10 times higher."
+  skills: [sd-requirements-estimates]
+- id: files-not-in-postgres
+  type: concept
+  front: "Your estimate says 18 TB of uploads a year. What does that decide?"
+  back: "Files go to object storage, not Postgres, and storage cost plus lifecycle rules become part of the design from the start."
+  skills: [sd-requirements-estimates]
+- id: cost-vs-people
+  type: concept
+  front: Why compare infrastructure savings with engineering time?
+  back: "One engineer-month usually costs more than an early SaaS's whole monthly bill. Saving $200 a month for a week of work a quarter is a loss."
+  skills: [sd-requirements-estimates]
+- id: default-architecture
+  type: concept
+  front: Name the parts of the boring default architecture for a startup SaaS.
+  back: "Load balancer, 2+ stateless API instances of one codebase, managed Postgres with backups, a queue and worker, object storage, managed email and payments."
+  skills: [sd-requirements-estimates]
+- id: two-instances
+  type: concept
+  front: Why run two API instances when one can handle the load?
+  back: "So a crash, a bad host or a rolling deploy does not take the product down."
+  skills: [sd-requirements-estimates]
+- id: signal-for-cache
+  type: concept
+  front: What signal justifies adding a cache to a design?
+  back: "A measured hot read served many times that is still the bottleneck after fixing queries and indexes."
+  skills: [sd-requirements-estimates]
+- id: name-unadded
+  type: concept
+  front: Why name the signal for components you did not add yet?
+  back: "It shows the design can grow, sets a measurable trigger, and stops reviewers adding components on instinct."
+  skills: [sd-requirements-estimates]
+- id: interview-10x
+  type: concept
+  front: "Interview: what breaks first at 10x traffic?"
+  back: "Walk the request path with the numbers ×10 and compare each step with its limit: DB connections, hot queries or rows, third-party rate limits, worker throughput, cost. Give the first two fixes."
+  skills: [sd-requirements-estimates]
+- id: interview-saas-start
+  type: concept
+  front: "Interview: design a multi-tenant SaaS backend with subscriptions. Where do you start?"
+  back: "Requirements and non-requirements, then numbers. Then one API, Postgres with a tenant id on every row, a queue for webhooks and email, S3 for files, Stripe as billing source with entitlements in your DB."
+  skills: [sd-requirements-estimates]

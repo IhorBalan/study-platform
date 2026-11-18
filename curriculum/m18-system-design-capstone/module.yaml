@@ -1,0 +1,19 @@
+title: System design and capstone
+summary: >-
+  You can design a backend that a small team can build and run: turn a vague product into
+  requirements and numbers, choose a data model and consistency per operation, scale reads and
+  writes in the right order, make work asynchronous and safe to retry, plan for failure and
+  recovery, draw module boundaries, write and review a design document, and then build and
+  report on a small multi-tenant SaaS that pulls the earlier modules together.
+kind: core
+effort: L
+services: []
+skills:
+  - { id: sd-requirements-estimates, title: "Requirements, estimates and the default startup architecture" }
+  - { id: sd-data-design, title: "Data models, consistency and access paths" }
+  - { id: sd-scaling, title: Scaling reads and writes }
+  - { id: sd-async-architecture, title: Asynchronous architecture and scheduled work }
+  - { id: sd-availability, title: "Availability, failure and recovery" }
+  - { id: sd-service-boundaries, title: "Monoliths, modules and service boundaries" }
+  - { id: sd-design-docs, title: "Design documents, ADRs and design reviews" }
+  - { id: capstone-delivery, title: Scoping and delivering a production-shaped product }

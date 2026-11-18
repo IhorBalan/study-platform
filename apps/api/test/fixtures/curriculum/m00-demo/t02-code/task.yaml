@@ -1,0 +1,7 @@
+title: Write a greeting
+type: repo
+skills: [http-basics]
+criteria:
+  - { id: greets, title: Exports a greeting }
+rubric:
+  - { id: clarity, title: Clear code, skill: http-basics }

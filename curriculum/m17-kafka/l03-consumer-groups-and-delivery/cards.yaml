@@ -1,0 +1,64 @@
+- id: interview-consumer-group
+  type: concept
+  front: "Interview: what is a consumer group, and how does it scale consumption?"
+  back: "Consumers sharing a `group.id`. Each partition goes to one member, so members split the work, up to one member per partition."
+  skills: [kafka-consumer-groups]
+- id: idle-consumer
+  type: concept
+  front: A topic has 6 partitions and the group runs 8 instances. What do the extra 2 do?
+  back: "Nothing. They sit idle as standbys until a rebalance gives them a partition."
+  skills: [kafka-consumer-groups]
+- id: rebalance-term
+  type: term
+  front: Rebalance
+  back: "The group coordinator moving partitions between members after a join, leave or presumed failure. Example: a deploy restarts pods one by one."
+  skills: [kafka-consumer-groups]
+- id: poll-interval
+  type: concept
+  front: Why can a slow `eachMessage` handler cause duplicate processing?
+  back: "If it exceeds `max.poll.interval.ms`, the consumer is removed from the group, its partitions move, and the new owner replays from the last commit."
+  skills: [kafka-consumer-groups]
+- id: commit-next-offset
+  type: cloze
+  front: "After processing the record at offset 41, commit offset {{42}}."
+  back: "42: the committed offset is the next record to read."
+  skills: [kafka-consumer-groups]
+- id: interview-delivery-semantics
+  type: comparison
+  front: "Interview: at-most-once vs at-least-once"
+  back: "At-most-once commits before processing, so a crash skips records. At-least-once processes then commits, so a crash replays them."
+  skills: [kafka-consumer-groups]
+- id: interview-exactly-once
+  type: concept
+  front: "Interview: does Kafka's exactly-once mean your handler runs exactly once?"
+  back: "No. Transactions make read-process-write between Kafka topics atomic. Side effects in a database or API still need an idempotent consumer."
+  skills: [kafka-consumer-groups]
+- id: idempotent-consumer
+  type: snippet
+  front: Skip an already-processed event in Postgres, inside the handler's transaction.
+  back: |-
+    ```sql
+    INSERT INTO processed_events (consumer, event_id)
+    VALUES ('billing', $1) ON CONFLICT DO NOTHING; -- 0 rows: skip
+    ```
+  skills: [kafka-consumer-groups]
+- id: poison-message
+  type: term
+  front: Poison message
+  back: "A record the handler can never process, which blocks its partition if the consumer keeps retrying it. Example: malformed JSON."
+  skills: [kafka-consumer-groups]
+- id: dead-letter-topic
+  type: concept
+  front: What do you do with a record that still fails after bounded retries?
+  back: "Publish it to a dead-letter topic with error and source headers, commit, move on, and alert on the dead-letter topic."
+  skills: [kafka-consumer-groups]
+- id: consumer-lag
+  type: term
+  front: Consumer lag
+  back: "Per partition, log-end offset minus the group's committed offset. Example: end 9120, committed 5871, lag 3249."
+  skills: [kafka-consumer-groups]
+- id: lag-one-partition
+  type: concept
+  front: Lag grows on one partition only. What are the two likely causes?
+  back: "A poison message blocking that partition, or a hot key sending most traffic there."
+  skills: [kafka-consumer-groups]

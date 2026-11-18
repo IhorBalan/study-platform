@@ -1,0 +1,25 @@
+title: Fix a vulnerable invoices API
+type: repo
+skills: [web-vulnerabilities, access-control]
+services: [postgres]
+runner: nest
+hints:
+  - "Read every place where a string is glued into SQL text. Values move into the params array as $1, $2, ..."
+  - "A column name or ASC/DESC cannot be a parameter. Map the allowed sort keys to SQL fragments you wrote, and reject the rest."
+  - "zod's strictObject rejects unknown keys. Nest's StandardSchemaValidationPipe runs a schema passed as @Body({ schema }), once it is registered under APP_PIPE."
+  - "RETURNING * and SELECT * return every column, including the ones you never meant to send. Name the columns."
+  - "Put the owner condition into the WHERE clause of the read and the delete. Then another user's id behaves exactly like an id that does not exist."
+criteria:
+  - { id: compiles, title: The project compiles with tsc }
+  - { id: normal-flows, title: "Sign-up, login, profile, invoices, search and sort still work" }
+  - { id: sqli-search, title: The search parameter cannot change the query }
+  - { id: sqli-sort, title: Sort accepts only the listed columns and anything else gets 400 }
+  - { id: mass-assignment, title: Clients cannot set role or other server-owned fields }
+  - { id: bola, title: "A user cannot read or delete another user's invoice by id" }
+  - { id: no-secrets, title: Responses never contain password hashes }
+rubric:
+  - { id: parameterised, title: "Every SQL statement keeps input out of the SQL text: values are bound parameters and the only dynamic fragment (ORDER BY) comes from a fixed allow-list", skill: web-vulnerabilities, max: 4 }
+  - { id: allow-listed-input, title: "Request bodies are validated against explicit schemas that list the allowed fields, and the SQL names its columns instead of deriving them from the body", skill: web-vulnerabilities, max: 4 }
+  - { id: ownership-in-query, title: "Ownership is enforced in the queries (or one service method) used by both read and delete, and a foreign id is indistinguishable from a missing one", skill: access-control, max: 3 }
+  - { id: readme-attacks, title: "README lists each hole with a concrete attack request and its fix, and explains why ORDER BY cannot use a bind parameter", skill: web-vulnerabilities, max: 3 }
+limits: { timeoutSeconds: 120 }

@@ -1,0 +1,50 @@
+- id: card-parties
+  type: concept
+  front: Which party decides whether a card payment is approved?
+  back: "The issuer, the customer's bank. The processor and the card network only route the request to it."
+  skills: [payments-fundamentals]
+- id: auth-vs-capture
+  type: comparison
+  front: Authorisation vs capture
+  back: "Authorisation asks the issuer to reserve the funds. Capture takes them. Most shops capture at once; a hotel or marketplace may capture days later."
+  skills: [payments-fundamentals]
+- id: pci-scope
+  type: concept
+  front: Why should card numbers never reach your server, even just to forward them?
+  back: "Any system that transmits card data is in PCI DSS scope: the server, its network, its logs and its staff. Hosted Checkout or Elements keeps you in the lightest category."
+  skills: [payments-fundamentals]
+- id: elements-iframes
+  type: concept
+  front: How can Stripe Elements sit inside your page without your JavaScript seeing the card number?
+  back: "Each field is an iframe served by Stripe. Your page receives a result or an id, never what the customer typed."
+  skills: [payments-fundamentals]
+- id: checkout-vs-elements
+  type: comparison
+  front: Hosted Checkout vs Elements
+  back: "Checkout: Stripe's page, little front-end work, fewer edge cases. Elements: your own payment UI built from Stripe iframes, more control and more work."
+  skills: [payments-fundamentals]
+- id: storable-card-data
+  type: concept
+  front: Which card details may you store in your own database?
+  back: "Anything the Stripe API returns to you, such as the brand, last four digits and expiry month and year. Never the full number or the security code."
+  skills: [payments-fundamentals]
+- id: requires-action
+  type: term
+  front: "PaymentIntent status `requires_action`"
+  back: "The issuer wants the customer to authenticate, usually with 3D Secure. Only the customer, in the browser or app, can complete it."
+  skills: [payments-fundamentals]
+- id: success-page-not-proof
+  type: concept
+  front: Why is reaching the success URL not proof of payment?
+  back: "Anyone can open that URL, and a paying customer may never reach it. The signed webhook from Stripe is the reliable signal."
+  skills: [payments-fundamentals]
+- id: payments-async
+  type: concept
+  front: Why does a payment's outcome reach your server asynchronously?
+  back: "The decision happens between the customer, the issuer and Stripe, possibly after 3D Secure or days of bank processing. Stripe then tells you with a webhook."
+  skills: [payments-fundamentals]
+- id: payment-not-final
+  type: concept
+  front: Name two ways a succeeded payment can move money back later.
+  back: "A refund you issue, and a dispute (chargeback) the customer opens through their bank, which takes the money and a fee at once."
+  skills: [payments-fundamentals]

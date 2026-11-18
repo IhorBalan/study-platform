@@ -1,0 +1,60 @@
+- id: dual-write
+  type: term
+  front: Dual-write problem
+  back: "Writing to two systems (database and queue) without a shared transaction, so a crash between the writes leaves them disagreeing. Example: order saved, event never sent."
+  skills: [transactional-outbox]
+- id: interview-outbox
+  type: concept
+  front: "Interview: what is the outbox pattern, and what problem does it solve?"
+  back: "The message is inserted into an outbox table in the same transaction as the data; a relay publishes it later. It solves dual writes: data and event commit together or not at all."
+  skills: [transactional-outbox]
+- id: db-then-queue
+  type: concept
+  front: What goes wrong if you commit the order and then publish the event?
+  back: "A crash or broker outage after the commit loses the event for good: the order exists and nobody is told."
+  skills: [transactional-outbox]
+- id: publish-before-commit
+  type: concept
+  front: Why is publishing inside the transaction, before commit, also wrong?
+  back: "The consumer may read before the commit is visible, and if the commit fails the message is already out."
+  skills: [transactional-outbox]
+- id: skip-locked-relay
+  type: cloze
+  front: "Two relays can poll one outbox safely with `select ... where published_at is null order by id limit 50 {{for update skip locked}}`."
+  back: "for update skip locked"
+  skills: [transactional-outbox]
+- id: outbox-at-least-once
+  type: concept
+  front: Why is outbox delivery at least once and not exactly once?
+  back: "The relay can publish and then die before committing `published_at`, so the next run publishes the same row again."
+  skills: [transactional-outbox]
+- id: inbox-pattern
+  type: term
+  front: Inbox pattern
+  back: "The consumer inserts the message id into an inbox table in the same transaction as its work, and skips ids already there. Example: `insert into inbox (message_id) values ($1) on conflict do nothing`."
+  skills: [transactional-outbox]
+- id: inbox-rollback
+  type: concept
+  front: The consumer's handler throws after the inbox row was inserted. What happens on redelivery?
+  back: "The whole transaction rolled back, inbox row included, so the redelivered message is processed again from scratch."
+  skills: [transactional-outbox]
+- id: stable-message-id
+  type: concept
+  front: Why must a message id come from the outbox row and not be generated at publish time?
+  back: "A re-published message would get a new id, and the consumer's inbox would treat the duplicate as new."
+  skills: [transactional-outbox]
+- id: skip-locked-ordering
+  type: concept
+  front: What do you give up when several relays use `skip locked`?
+  back: "Global order. Use a per-entity partition key on the broker, or a single relay, when consumers need order."
+  skills: [transactional-outbox]
+- id: notify-on-commit
+  type: concept
+  front: Why is `NOTIFY` a safe way to wake the outbox relay?
+  back: "Postgres delivers notifications only when the sending transaction commits, so the relay never wakes for a rolled-back message."
+  skills: [transactional-outbox]
+- id: outbox-vs-cdc
+  type: comparison
+  front: Polling outbox relay vs change data capture (Debezium)
+  back: "Polling needs only a table and a loop but adds latency and load. CDC reads the write-ahead log for lower latency, at the cost of more infrastructure."
+  skills: [transactional-outbox]

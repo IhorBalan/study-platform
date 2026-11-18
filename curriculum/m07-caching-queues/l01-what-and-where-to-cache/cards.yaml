@@ -1,0 +1,55 @@
+- id: when-to-cache
+  type: concept
+  front: "Interview: when would you add a cache, and what would you cache?"
+  back: "After measuring: data read far more often than it changes, expensive to produce, and allowed to be slightly old. Check indexes and N+1 queries first."
+  skills: [cache-strategies]
+- id: cache-aside-vs-write-through
+  type: comparison
+  front: "Interview: cache-aside vs write-through?"
+  back: "Cache-aside loads into the cache on a read miss, so only read data is cached. Write-through writes cache and database together on every update, so the cache is always fresh but holds unread data too."
+  skills: [cache-strategies]
+- id: cache-aside-steps
+  type: concept
+  front: What does a cache-aside read do on a miss?
+  back: "Loads the value from the database, stores it in the cache with a TTL, and returns it."
+  skills: [cache-strategies]
+- id: read-through
+  type: term
+  front: Read-through cache
+  back: "The cache calls a registered loader on a miss, so callers only ask the cache. Example: `cache.getOrLoad(key, loader)`."
+  skills: [cache-strategies]
+- id: write-behind-risk
+  type: concept
+  front: What is the risk of a write-behind cache?
+  back: "Writes sit in the cache before they reach the database, so a crash loses them."
+  skills: [cache-strategies]
+- id: http-cache-cannot-recall
+  type: concept
+  front: Why is a long max-age wrong for prices even if you invalidate Valkey on change?
+  back: "Browsers and CDNs keep their copy for the whole max-age. Deleting a Valkey key does not reach them."
+  skills: [cache-strategies]
+- id: no-cache-vs-no-store
+  type: comparison
+  front: "`Cache-Control: no-cache` vs `no-store`"
+  back: "no-cache may store but must revalidate before each reuse (cheap with an ETag and 304). no-store must not store at all."
+  skills: [cache-strategies]
+- id: private-directive
+  type: concept
+  front: "Why must a per-user response carry `Cache-Control: private`?"
+  back: "Without it a shared cache such as a CDN may store it and serve one user's data to another."
+  skills: [cache-strategies]
+- id: ttl-from-business
+  type: concept
+  front: How do you choose a cache TTL?
+  back: "From how stale the data may be for the business. The TTL is the upper bound on staleness when invalidation fails."
+  skills: [cache-strategies]
+- id: ttl-jitter
+  type: concept
+  front: Why add random jitter to TTLs?
+  back: "Keys written together would otherwise expire together and all miss at the same moment."
+  skills: [cache-strategies]
+- id: cache-is-a-copy
+  type: concept
+  front: What should still work after `FLUSHALL` on a cache?
+  back: "Everything. A cache is a copy; it may be slower, but nothing may be lost or broken."
+  skills: [cache-strategies]

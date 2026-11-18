@@ -1,0 +1,60 @@
+- id: output-object
+  type: snippet
+  front: Ask generateText (AI SDK 7) for output that matches a zod schema.
+  back: "```ts\nconst { output } = await generateText({ model, prompt,\n  output: Output.object({ schema: Triage }) });\n```"
+  skills: [llm-structured-output]
+- id: why-validate-locally
+  type: concept
+  front: Why validate structured output yourself when the provider supports JSON output?
+  back: "Enforcement varies: many models only promise JSON, not your fields or limits. The schema check on your side is what makes the data safe to use."
+  skills: [llm-structured-output]
+- id: no-object-error
+  type: term
+  front: "`NoObjectGeneratedError`"
+  back: "Thrown by generateText when the output cannot be parsed or fails the schema. It carries the raw `text`, the `cause` and the `usage`."
+  skills: [llm-structured-output]
+- id: repair-once
+  type: concept
+  front: What goes into a repair call for invalid model output, and how many repairs should you allow?
+  back: "The original messages, the invalid answer and the validation errors by field. Allow one; after that, fail with a domain error."
+  skills: [llm-structured-output]
+- id: repair-not-transport
+  type: concept
+  front: Why not run the repair step when the model call failed with a timeout?
+  back: "A transport error is not bad output. Repairing it doubles calls during an outage and hides the real failure."
+  skills: [llm-structured-output]
+- id: nullable-not-invent
+  type: concept
+  front: Why make a field like orderId nullable instead of required?
+  back: "If the input may not contain it, a required field pushes the model to invent a value. Null makes 'unknown' a valid answer."
+  skills: [llm-structured-output]
+- id: tool-loop-steps
+  type: concept
+  front: What happens in one step of a tool loop?
+  back: "The model returns a tool call, the SDK validates the arguments and runs `execute`, then calls the model again with the whole conversation plus the result."
+  skills: [llm-structured-output]
+- id: step-cap
+  type: cloze
+  front: "In AI SDK 7, `stopWhen: {{isStepCount(5)}}` allows at most five model calls in a tool loop."
+  back: isStepCount(5)
+  skills: [llm-structured-output]
+- id: step-cap-hit
+  type: concept
+  front: How do you detect that a tool loop stopped because it hit the step cap?
+  back: "The last step's finishReason is still `tool-calls` and the text is usually empty. Treat that as a failure, not an answer."
+  skills: [llm-structured-output]
+- id: authorise-in-execute
+  type: concept
+  front: "Interview: how do you stop an LLM agent from calling a tool it should not?"
+  back: "Enforce permissions inside the tool's code with the session's identity, validate arguments with a schema, cap side effects and require human approval for irreversible actions. Prompt rules are not controls."
+  skills: [llm-structured-output, llm-security]
+- id: tool-errors-as-results
+  type: concept
+  front: "Why return `{ error: 'refund_not_allowed' }` from a tool instead of throwing?"
+  back: "The model gets the result in the next step and can explain the refusal. A throw ends the loop with no answer for the user."
+  skills: [llm-structured-output]
+- id: tool-call-cost
+  type: concept
+  front: Why does a five-step tool loop cost much more than five times the first call?
+  back: "Each step resends the whole conversation, which grows with every tool call and result, so input tokens grow step by step."
+  skills: [llm-structured-output, llm-production]

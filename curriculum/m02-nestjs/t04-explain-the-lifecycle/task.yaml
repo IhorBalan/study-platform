@@ -1,0 +1,15 @@
+title: Explain the request lifecycle
+type: text
+skills: [nest-request-lifecycle, nest-errors]
+hints:
+  - Write the happy path as one line first. Then go through the failures one at a time and ask which stages have already started.
+  - An interceptor wraps the rest of the pipeline. What does its part after `next.handle()` receive when something inside it throws?
+  - Guards run before interceptors. Think about what that means for a request log written by an interceptor.
+  - A guard can fail in two ways, by returning false or by throwing. Both end in the same place.
+rubric:
+  - { id: happy-path-order, title: "Lists the stages of the valid request in the correct order: RequestIdMiddleware, ApiKeyGuard, TimingInterceptor before, the body pipe, the handler, TimingInterceptor after, and states that the filter does not run", skill: nest-request-lifecycle, max: 4 }
+  - { id: guard-failure, title: "For the missing API key: states that the guard stops the request with 401 before the interceptor, pipe and handler run, that the filter builds the response, and that no timing line is logged", skill: nest-request-lifecycle, max: 4 }
+  - { id: pipe-failure, title: "For the invalid body: states that the handler never runs, that the error passes through TimingInterceptor's stream as an error (so its success branch is skipped unless it handles errors), and that the filter then produces the 400", skill: nest-request-lifecycle, max: 4 }
+  - { id: handler-failure, title: "For the handler's TypeError: states that the filter turns it into a 500 without the original message, and that the middleware's X-Request-Id header is still on the response", skill: nest-errors, max: 3 }
+  - { id: stage-purposes, title: "Gives each of the five building blocks (middleware, guard, interceptor, pipe, filter) one purpose that is specific to it and not shared with the other four", skill: nest-request-lifecycle, max: 3 }
+  - { id: design-fix, title: "Proposes a concrete change that makes rejected and failed requests appear in the timing log (for example moving the logging to middleware, or handling the error branch in the interceptor) and names one thing that change costs or still cannot see, such as guard rejections never reaching an interceptor", skill: nest-request-lifecycle, max: 3 }

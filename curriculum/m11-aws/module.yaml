@@ -1,0 +1,18 @@
+title: AWS building blocks
+summary: >-
+  You can work with AWS as an application developer: grant a workload exactly the permissions it
+  needs through a role, run a reliable SQS consumer, fan events out with SNS and EventBridge, model
+  a DynamoDB table around its queries and protect it with conditional writes, load configuration and
+  secrets at start-up, and choose between Lambda and a container for a given workload.
+kind: core
+effort: L
+services: [aws]
+skills:
+  - { id: aws-basics, title: "AWS accounts, regions, tooling and cost" }
+  - { id: aws-iam, title: "IAM policies, roles and least privilege" }
+  - { id: aws-sqs, title: "SQS queues and reliable consumers" }
+  - { id: aws-fan-out, title: "Fan-out and routing with SNS and EventBridge" }
+  - { id: aws-dynamodb, title: DynamoDB data modelling }
+  - { id: aws-config-secrets, title: "Configuration and secrets with SSM and Secrets Manager" }
+  - { id: aws-compute, title: Choosing AWS compute }
+  - { id: aws-lambda, title: Lambda functions in practice }

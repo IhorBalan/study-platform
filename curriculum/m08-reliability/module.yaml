@@ -1,0 +1,16 @@
+title: Reliability patterns
+summary: >-
+  You can make calls across a network fail predictably: timeouts and deadlines on every call, retries
+  with backoff and jitter only where they are safe, operations that run once however often they are
+  retried, events that leave the database with the data through an outbox, multi-step workflows with
+  compensation, and concurrent writes that never lose an update.
+kind: core
+effort: M
+services: [postgres]
+skills:
+  - { id: failure-handling, title: "Partial failure, timeouts and deadlines" }
+  - { id: retry-policies, title: "Retries, backoff, jitter and circuit breakers" }
+  - { id: idempotent-operations, title: Idempotent operations end to end }
+  - { id: transactional-outbox, title: "The transactional outbox and inbox" }
+  - { id: sagas, title: "Sagas and compensation" }
+  - { id: concurrency-control, title: "Optimistic and pessimistic concurrency control" }

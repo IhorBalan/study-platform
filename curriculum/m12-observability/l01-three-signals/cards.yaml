@@ -1,0 +1,50 @@
+- id: monitoring-vs-observability
+  type: comparison
+  front: Monitoring vs observability
+  back: "Monitoring checks for failures you predicted (error rate above 1%). Observability lets you investigate failures you did not predict, from the outside, without shipping new code."
+  skills: [obs-signals]
+- id: logs-metrics-traces
+  type: concept
+  front: "Interview: logs vs metrics vs traces. What does each answer?"
+  back: "Logs: what happened in one event, in detail. Metrics: how much and how often, cheaply over time, for dashboards and alerts. Traces: where one request spent its time across services."
+  skills: [obs-signals]
+- id: metric-cost-flat
+  type: concept
+  front: Why does a request counter cost the same at ten requests and ten million?
+  back: "Only the running total per series is stored and scraped. The cost grows with the number of series, not with traffic."
+  skills: [obs-signals]
+- id: cardinality-term
+  type: term
+  front: Cardinality
+  back: "The number of distinct values a field can take. `status_code` has dozens; `user_id` has one per user."
+  skills: [obs-signals]
+- id: user-id-label
+  type: concept
+  front: Why must `user_id` never be a metric label?
+  back: "Each distinct label combination is a separate time series held in memory. One series per user multiplies memory and cost by your user count."
+  skills: [obs-signals]
+- id: high-cardinality-home
+  type: concept
+  front: Where do high-cardinality values such as order ids belong?
+  back: In log fields and span attributes. Each event is stored on its own there, so many distinct values are fine.
+  skills: [obs-signals]
+- id: structured-vs-text
+  type: comparison
+  front: A structured log line vs a text log line
+  back: "Structured: JSON with fixed fields, so you can filter by `provider` and count by `status`. Text: only grep, and the format drifts."
+  skills: [obs-signals]
+- id: investigation-chain
+  type: concept
+  front: What makes it possible to jump from an alert to the logs of one bad request?
+  back: "Shared identifiers: the same route names in metrics and spans, and the trace or request id in every log line."
+  skills: [obs-signals]
+- id: instrument-first
+  type: concept
+  front: What should a small product instrument first?
+  back: "Structured logs with a request id and logged errors, then error tracking, then RED metrics per route with one or two alerts."
+  skills: [obs-signals]
+- id: trace-sampling-why
+  type: concept
+  front: Why do most systems keep only a sample of traces?
+  back: Traces are the most expensive signal to collect and store. One in ten (plus slow and failed requests) usually answers the same questions.
+  skills: [obs-signals]

@@ -1,0 +1,55 @@
+- id: why-stream-llm
+  type: concept
+  front: "Interview: when would you stream a response instead of buffering it?"
+  back: "When the full answer takes seconds but the first part is ready early, as with LLM output. Streaming moves the first visible output from the end of the call to the start."
+  skills: [llm-streaming]
+- id: own-event-vocabulary
+  type: concept
+  front: Why define your own SSE events instead of piping the provider's stream to the browser?
+  back: "It hides provider details and error messages, keeps the frontend independent of the provider, and gives you a place for your own error codes."
+  skills: [llm-streaming]
+- id: post-not-eventsource
+  type: concept
+  front: Why do chat UIs read SSE with fetch instead of EventSource?
+  back: "A chat request has a body, so it is a POST. EventSource can only send GET and cannot set custom headers."
+  skills: [llm-streaming]
+- id: streamtext-errors
+  type: concept
+  front: What happens in `streamText` when the provider answers 429?
+  back: "It does not throw. The error arrives as an `error` part in the stream (and goes to `onError`), so your loop must handle it."
+  skills: [llm-streaming]
+- id: ai-sdk7-stream-name
+  type: cloze
+  front: "In AI SDK 7, the full stream of typed parts from streamText is `result.{{stream}}` (formerly `fullStream`)."
+  back: stream
+  skills: [llm-streaming]
+- id: disconnect-abort
+  type: concept
+  front: What does it cost if a client disconnects and you do not abort the model call?
+  back: "The provider keeps generating to the end and you pay for every token nobody reads. Wire the disconnect to the call's AbortSignal."
+  skills: [llm-streaming]
+- id: combine-signals
+  type: snippet
+  front: Cancel a model call on client disconnect or after 30 seconds, whichever comes first.
+  back: "```ts\nabortSignal: AbortSignal.any([clientGone.signal, AbortSignal.timeout(30_000)])\n```"
+  skills: [llm-streaming]
+- id: nest-sse-signal
+  type: term
+  front: "`@SseSignal()` (NestJS 12)"
+  back: "A parameter decorator that injects an AbortSignal which aborts when the SSE stream ends, including on client disconnect. Example: `stream(@SseSignal() signal: AbortSignal)`."
+  skills: [llm-streaming]
+- id: backpressure
+  type: concept
+  front: "Interview: what is backpressure, and how does it reach the model provider in a Node stream proxy?"
+  back: "A slow consumer making the producer wait. When `res.write()` returns false you await `drain`, the loop stops pulling parts, and the SDK stops reading from the provider."
+  skills: [llm-streaming]
+- id: retry-after-tokens
+  type: concept
+  front: Why not retry a streamed answer automatically after tokens were sent?
+  back: "The user has already seen part of the answer. A retry starts it again, so retry only before the first token or let the client decide."
+  skills: [llm-streaming]
+- id: timeout-vs-disconnect
+  type: concept
+  front: "The stream ended with an `abort` part. How do you know whether to send an error event?"
+  back: "Check which signal fired. A disconnected client needs nothing; if the timeout fired and the client is still there, send an error with a code like `timeout`."
+  skills: [llm-streaming]

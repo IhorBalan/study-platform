@@ -1,0 +1,31 @@
+title: Describe a small stack in OpenTofu
+type: repo
+skills: [iac-workflow, iac-local-practice, iac-modules-environments]
+services: []
+runner: node
+hints:
+  - "`maxReceiveCount` inside `jsonencode({ ... })` must be a number. A quoted `\"5\"` is a string, and the provider documentation warns about exactly that."
+  - "A lifecycle rule needs `status = \"Enabled\"` and at least one action block. With no `filter` it applies to every object."
+  - "The provider's `default_tags` block tags every resource it manages, so `tags = local.tags` there saves repeating it on each resource."
+  - "A resource name such as `\"${local.name_prefix}-jobs\"` counts as built from `var.environment` when the local is built from it."
+  - "Credentials for the emulator can be any value. Export AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY instead of writing them into the provider."
+criteria:
+  - { id: parses, title: "Every .tf file parses and the configuration declares resources" }
+  - { id: version-constraints, title: OpenTofu and the AWS provider have version constraints }
+  - { id: emulator-provider, title: The provider reaches the emulator through a variable }
+  - { id: no-hardcoded-credentials, title: No access keys in the configuration }
+  - { id: typed-variables, title: "Every variable declares a type, and there is an environment variable" }
+  - { id: bucket-versioning, title: The bucket has versioning enabled }
+  - { id: bucket-lifecycle, title: The bucket has an enabled lifecycle rule with an action }
+  - { id: queue-with-dlq, title: A queue sends failed messages to a dead-letter queue }
+  - { id: ssm-parameter, title: An SSM parameter is declared without a secret in the code }
+  - { id: names-from-inputs, title: Resource names include the environment }
+  - { id: tags-from-local, title: Tags come from a local that includes the environment }
+  - { id: outputs, title: "The bucket, the queue URL and the parameter are outputs" }
+rubric:
+  - { id: queue-settings, title: "The dead-letter queue keeps messages longer than the source queue, maxReceiveCount is a number between 3 and 10, and the README gives the reason for both", skill: iac-workflow, max: 3 }
+  - { id: lifecycle-fits-versioning, title: "The lifecycle rule deals with what versioning leaves behind (noncurrent versions or delete markers) and with abandoned multipart uploads, and depends on the versioning resource", skill: iac-workflow, max: 3 }
+  - { id: inputs, title: "Variables have descriptions, sensible defaults only where a default is safe (no default for environment), and at least one validation block", skill: iac-modules-environments, max: 3 }
+  - { id: emulator-vs-aws, title: "The README says which provider settings exist only for the emulator and what would change to deploy to a real account, including where credentials would come from", skill: iac-local-practice, max: 3 }
+  - { id: readability, title: "Files are split by purpose, references are used instead of repeated names, and there are no leftover TODOs or commented-out blocks", max: 2 }
+limits: { timeoutSeconds: 60 }

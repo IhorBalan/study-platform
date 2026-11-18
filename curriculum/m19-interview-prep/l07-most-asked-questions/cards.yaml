@@ -1,0 +1,60 @@
+- id: event-loop-phases
+  type: concept
+  front: "Interview: what is the Node.js event loop, and what are its phases in order?"
+  back: "One thread runs callbacks from queues in a fixed cycle: timers, pending callbacks, idle/prepare, poll (I/O), check (`setImmediate`), close callbacks."
+  skills: [interview-core-questions]
+- id: nexttick-microtasks
+  type: concept
+  front: "Interview: when do `process.nextTick`, promise callbacks, `setImmediate` and `setTimeout(fn, 0)` run?"
+  back: "After the current operation, the nextTick queue drains first, then promise microtasks. `setTimeout(0)` waits for the timers phase and `setImmediate` for the check phase."
+  skills: [interview-core-questions]
+- id: blocked-loop-production
+  type: concept
+  front: "Interview: how do you detect and fix a blocked event loop in production?"
+  back: "Export event-loop delay (`perf_hooks.monitorEventLoopDelay`) as a metric, profile when it spikes, then move the synchronous hot spot to a worker or a job."
+  skills: [interview-core-questions]
+- id: cpu-bound-choice
+  type: concept
+  front: "Interview: `worker_threads`, `cluster` or `child_process` for a CPU-bound task such as resizing images?"
+  back: "`worker_threads` (a pool) for CPU work in the same process, `cluster` to use more cores for request handling, `child_process` to run another program. Heavy or slow work often belongs in a job queue."
+  skills: [interview-core-questions]
+- id: memory-leak-hunt
+  type: concept
+  front: "Interview: how do you find a memory leak in a long-running Node process?"
+  back: "Confirm heap growth over time in metrics, take two heap snapshots minutes apart, and compare which objects grew. Usual suspects: unbounded caches or maps, listeners never removed, closures holding requests."
+  skills: [interview-core-questions]
+- id: nest-di-container
+  type: concept
+  front: "Interview: how does NestJS dependency injection resolve a provider?"
+  back: "Each module registers providers by token. Nest reads constructor parameter types (or `@Inject` tokens), builds the graph and creates singletons by default, failing at start-up if a dependency is not visible from that module."
+  skills: [interview-core-questions]
+- id: pg-isolation-levels
+  type: concept
+  front: "Interview: what isolation levels does PostgreSQL offer, and which is the default?"
+  back: "Read Committed (default), Repeatable Read and Serializable. Read Uncommitted is accepted but behaves like Read Committed. Higher levels can fail with SQLSTATE 40001, so the app must retry."
+  skills: [interview-core-questions]
+- id: seq-scan-despite-index
+  type: concept
+  front: "Interview: why might Postgres choose a sequential scan when an index exists?"
+  back: "The query matches a large share of rows, the table is small, statistics are stale, or the predicate cannot use the index (a function on the column, a type mismatch)."
+  skills: [interview-core-questions]
+- id: offset-vs-cursor
+  type: comparison
+  front: "Interview: offset vs cursor pagination"
+  back: "Offset reads and discards every skipped row and shifts when rows are inserted. A cursor (`WHERE (created_at, id) < ($1, $2)`) uses an index, stays fast and stable, but cannot jump to page N."
+  skills: [interview-core-questions]
+- id: rate-limiter-state
+  type: concept
+  front: "Interview: you run three API instances. Where does rate limiter state live, and which algorithm do you pick?"
+  back: "In a shared store such as Valkey, updated atomically (a Lua script or INCR with expiry). Token bucket or sliding window, not a fixed window, to avoid double bursts at window edges."
+  skills: [interview-core-questions]
+- id: p99-after-deploy
+  type: concept
+  front: "Interview: p99 latency on an endpoint spiked after a deploy. What do you do?"
+  back: "Roll back if users are hurting, then scope (which endpoints and instances, since when), measure where the time goes with traces and metrics, verify one hypothesis at a time, and add the alert or test that would have caught it."
+  skills: [interview-core-questions]
+- id: stripe-webhooks-safely
+  type: concept
+  front: "Interview: how do you handle Stripe webhooks safely?"
+  back: "Verify the signature on the raw body, store the event id to skip duplicates, return 2xx quickly and process in a job, and refetch the object instead of trusting event order."
+  skills: [interview-core-questions]

@@ -1,0 +1,15 @@
+title: Docker and Compose
+summary: >-
+  Build small, cache-friendly images, run containers with sensible network, storage and
+  security settings, and describe a local development stack in a Compose file.
+kind: core
+effort: S
+services: []
+skills:
+  - { id: docker-images, title: 'Images, layers and containers' }
+  - { id: dockerfile, title: Writing Dockerfiles }
+  - { id: docker-networking, title: Container networking }
+  - { id: docker-storage, title: Volumes and bind mounts }
+  - { id: container-config, title: Container configuration and secrets }
+  - { id: container-hardening, title: Resource limits and hardening }
+  - { id: compose, title: Docker Compose }

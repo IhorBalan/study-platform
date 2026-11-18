@@ -1,0 +1,67 @@
+- id: type-module
+  type: concept
+  front: 'What makes Node treat a `.js` file as an ES module?'
+  back: 'The nearest `package.json` contains `"type": "module"`.'
+  skills: [ts-server-setup]
+
+- id: import-extension
+  type: cloze
+  front: "With `\"module\": \"nodenext\"`, `server.ts` imports its sibling `db.ts` as `import { db } from '{{...}}'`."
+  back: "`./db.js`: the name of the emitted file, with its extension."
+  skills: [ts-server-setup]
+
+- id: nodenext
+  type: term
+  front: "`\"module\": \"nodenext\"`"
+  back: 'The compiler setting that applies Node''s own ESM and CommonJS resolution rules, so code that type-checks also resolves at runtime. Example - it rejects `import ''./db''`.'
+  skills: [ts-server-setup]
+
+- id: no-unchecked-indexed-access
+  type: concept
+  front: 'What does `noUncheckedIndexedAccess` change about `rows[0]`?'
+  back: 'Its type becomes `Row | undefined`, so you must handle the empty case before using it.'
+  skills: [ts-server-setup]
+
+- id: verbatim-module-syntax
+  type: concept
+  front: 'What does `verbatimModuleSyntax` require for imports that are only used as types?'
+  back: 'They must be written as `import type`, so the emitted JavaScript keeps exactly the imports you wrote.'
+  skills: [ts-server-setup]
+
+- id: cast-vs-parse
+  type: comparison
+  front: "`body as CreateUser` vs `CreateUser.parse(body)`"
+  back: 'The cast only tells the compiler what to believe. The parse checks the value at runtime and fails if it does not match.'
+  skills: [boundary-validation]
+
+- id: zod-infer
+  type: snippet
+  front: 'Derive a static type from a zod schema named `CreateUser`.'
+  back: |
+    ```ts
+    type CreateUser = z.infer<typeof CreateUser>;
+    ```
+  skills: [boundary-validation]
+
+- id: env-parse-at-startup
+  type: concept
+  front: 'Why parse environment variables into a typed config object once at start-up?'
+  back: 'A missing or malformed value stops the process immediately with a clear message, instead of failing later on the first request that needs it.'
+  skills: [boundary-validation]
+
+- id: result-type
+  type: snippet
+  front: 'Write a generic `Result` type as a discriminated union.'
+  back: |
+    ```ts
+    type Result<T, E> =
+      | { ok: true; value: T }
+      | { ok: false; error: E };
+    ```
+  skills: [error-modelling]
+
+- id: return-vs-throw
+  type: comparison
+  front: 'Returning an error value vs throwing'
+  back: 'Return expected domain outcomes (email taken) so the type forces callers to handle them. Throw for unexpected failures (database down) and handle them in one place.'
+  skills: [error-modelling]

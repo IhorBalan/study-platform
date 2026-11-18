@@ -1,0 +1,66 @@
+- id: sqli-fix
+  type: concept
+  front: "Interview: how do you prevent SQL injection in a Node app?"
+  back: "Keep input out of the SQL text: bind values as parameters ($1, $2), and map identifiers such as sort columns through a fixed allow-list."
+  skills: [web-vulnerabilities]
+- id: identifiers-not-params
+  type: concept
+  front: Why can a column name in ORDER BY not be a bind parameter?
+  back: "Parameters carry values. Column names and ASC/DESC are statement structure, which the database must know before binding."
+  skills: [web-vulnerabilities]
+- id: shell-injection
+  type: snippet
+  front: "Run `convert <file> out.png` with a user-supplied file name, safely."
+  back: |-
+    ```ts
+    execFile('convert', [file, 'out.png']); // no shell, no parsing
+    ```
+  skills: [web-vulnerabilities]
+- id: xss-backend
+  type: concept
+  front: "Interview: what does a backend do to prevent XSS?"
+  back: "Return JSON with the right content type and nosniff, sanitise accepted HTML with a maintained library, serve uploads elsewhere, send a CSP, keep sessions HttpOnly."
+  skills: [web-vulnerabilities]
+- id: csrf-defence
+  type: concept
+  front: "Interview: how do you prevent CSRF with cookie-based sessions?"
+  back: "SameSite cookies, no state changes on GET, reject unsafe requests whose Origin or Sec-Fetch-Site is cross-site, and CSRF tokens where more is needed."
+  skills: [web-vulnerabilities]
+- id: bearer-no-csrf
+  type: concept
+  front: Why is an API that only accepts Authorization Bearer headers not exposed to CSRF?
+  back: "Browsers never attach that header automatically. A forged cross-site request arrives without credentials."
+  skills: [web-vulnerabilities]
+- id: ssrf
+  type: term
+  front: SSRF (server-side request forgery)
+  back: "The server fetches a URL the attacker chose and reaches something only it can reach. Example: a webhook URL of `http://169.254.169.254/` returns cloud credentials."
+  skills: [web-vulnerabilities]
+- id: ssrf-fix
+  type: concept
+  front: Why is checking the URL string not enough to stop SSRF?
+  back: "Redirects and DNS can lead elsewhere. Resolve and check the address, recheck after redirects, and prefer allow-lists or isolated egress."
+  skills: [web-vulnerabilities]
+- id: mass-assignment
+  type: term
+  front: Mass assignment
+  back: "Copying a request body into a model without choosing fields. Example: `update(user.id, req.body)` with `{ \"role\": \"admin\" }`."
+  skills: [web-vulnerabilities]
+- id: mass-assignment-fix
+  type: snippet
+  front: Accept only `name` in `PATCH /me` and reject any other field with 400.
+  back: |-
+    ```ts
+    const UpdateMe = z.strictObject({ name: z.string().min(1).max(100) });
+    ```
+  skills: [web-vulnerabilities]
+- id: owasp-2025-ssrf
+  type: cloze
+  front: "In the OWASP Top 10:2025, SSRF is part of {{A01 Broken Access Control}}."
+  back: A01 Broken Access Control
+  skills: [web-vulnerabilities]
+- id: owasp-2025-xss
+  type: cloze
+  front: "In the OWASP Top 10:2025, XSS is part of {{A05 Injection}}."
+  back: A05 Injection
+  skills: [web-vulnerabilities]

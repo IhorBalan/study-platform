@@ -1,0 +1,68 @@
+- id: counter-gauge-histogram
+  type: concept
+  front: "Counter, gauge or histogram: requests served, requests in flight, request duration?"
+  back: "Counter for requests served (only goes up). Gauge for in flight (up and down). Histogram for duration (a distribution)."
+  skills: [prometheus-metrics]
+- id: histogram-over-summary
+  type: comparison
+  front: Histogram vs summary in Prometheus
+  back: "A summary computes percentiles in each process, and they cannot be combined. A histogram's buckets can be summed across instances before computing a percentile."
+  skills: [prometheus-metrics]
+- id: red-method
+  type: term
+  front: The RED method
+  back: "For request-serving components: Rate, Errors, Duration. Example: requests per second, 5xx share, p95 latency per route."
+  skills: [prometheus-metrics]
+- id: use-method
+  type: term
+  front: The USE method
+  back: "For resources: Utilisation, Saturation, Errors. Example for a DB pool: connections in use, requests waiting, connection timeouts."
+  skills: [prometheus-metrics]
+- id: pull-model
+  type: concept
+  front: How does Prometheus get metrics from a service?
+  back: "It pulls: it scrapes the service's /metrics endpoint every 15 to 30 seconds. A failed scrape sets the target's `up` series to 0."
+  skills: [prometheus-metrics]
+- id: series-definition
+  type: concept
+  front: What is one time series in Prometheus?
+  back: "A metric name plus one unique combination of label values, such as `http_requests_total{route=\"/orders/:id\",status_code=\"200\"}`."
+  skills: [prometheus-metrics]
+- id: route-template-label
+  type: concept
+  front: Why label by route template and map unmatched paths to one value?
+  back: "Raw paths contain ids and scanner junk, so each would create a new series. Templates keep the set small and bounded."
+  skills: [prometheus-metrics]
+- id: averages-hide
+  type: concept
+  front: Why alert on p99 latency rather than average latency?
+  back: "The average hides the tail: 99 fast requests and one 5-second request average out fine while one user in a hundred waits."
+  skills: [prometheus-metrics]
+- id: p95-promql
+  type: snippet
+  front: PromQL for p95 latency per route from a histogram
+  back: |
+    ```promql
+    histogram_quantile(0.95,
+      sum by (le, route) (rate(http_request_duration_seconds_bucket[5m])))
+    ```
+  skills: [prometheus-metrics]
+- id: error-ratio-promql
+  type: snippet
+  front: PromQL for the share of requests that failed with a 5xx
+  back: |
+    ```promql
+    sum(rate(http_requests_total{status_code=~"5.."}[5m]))
+      / sum(rate(http_requests_total[5m]))
+    ```
+  skills: [prometheus-metrics]
+- id: quantile-estimate
+  type: concept
+  front: Why is a p95 from `histogram_quantile` only an estimate?
+  back: "It knows how many requests fell between two bucket edges and assumes they are spread evenly inside. Put edges near the latency you have a target for."
+  skills: [prometheus-metrics]
+- id: registry-per-app
+  type: concept
+  front: Why create a prom-client Registry per app instead of using the global one?
+  back: "Registering the same metric name twice on the global registry throws, which breaks tests that build the app more than once."
+  skills: [prometheus-metrics]

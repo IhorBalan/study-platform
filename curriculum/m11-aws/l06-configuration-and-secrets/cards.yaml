@@ -1,0 +1,63 @@
+- id: ssm-vs-secrets-manager
+  type: comparison
+  front: SSM Parameter Store vs Secrets Manager
+  back: "Parameter Store: hierarchical config, free standard tier, no rotation. Secrets Manager: paid per secret, built-in rotation and staging labels, for credentials."
+  skills: [aws-config-secrets]
+- id: securestring
+  type: term
+  front: SecureString (SSM)
+  back: "A parameter type encrypted with a KMS key. Read it with `WithDecryption: true` and a role allowed to `kms:Decrypt`."
+  skills: [aws-config-secrets]
+- id: no-decryption
+  type: concept
+  front: What does `GetParametersByPath` return for a SecureString when `WithDecryption` is not set?
+  back: "The ciphertext, which your app may then use as if it were the value."
+  skills: [aws-config-secrets]
+- id: by-path-pagination
+  type: concept
+  front: A service reads its parameters with one `GetParametersByPath` call. Why does it lose settings in production?
+  back: "A page holds at most 10 parameters. Follow `NextToken` until it is absent."
+  skills: [aws-config-secrets]
+- id: recursive-flag
+  type: concept
+  front: "Why is `/app/prod/feature/new-checkout` missing when reading the path `/app/prod/`?"
+  back: "Without `Recursive: true`, only direct children of the path are returned."
+  skills: [aws-config-secrets]
+- id: staging-labels
+  type: cloze
+  front: "Readers get the {{`AWSCURRENT`}} version of a secret by default; after rotation the old version is labelled {{`AWSPREVIOUS`}}."
+  back: "`AWSCURRENT`; `AWSPREVIOUS`"
+  skills: [aws-config-secrets]
+- id: rotation-steps
+  type: concept
+  front: What are the four steps of a Secrets Manager rotation?
+  back: "createSecret (store AWSPENDING), setSecret (change it in the database), testSecret, finishSecret (move AWSCURRENT)."
+  skills: [aws-config-secrets]
+- id: app-side-rotation
+  type: concept
+  front: What must an application do so a password rotation causes no outage?
+  back: "Cache the secret briefly, and on an authentication failure fetch it again once and reconnect."
+  skills: [aws-config-secrets]
+- id: fail-fast-nest
+  type: snippet
+  front: Make a NestJS app refuse to start when configuration from AWS is invalid.
+  back: |-
+    ```ts
+    providers: [{ provide: APP_CONFIG, useFactory: () => loadConfig() }] // throws before listen
+    ```
+  skills: [aws-config-secrets]
+- id: encode-password-url
+  type: concept
+  front: Why wrap a generated database password in `encodeURIComponent` when building a connection URL?
+  back: "Generated passwords contain characters such as `@`, `/` and `:`, which change how the URL is parsed."
+  skills: [aws-config-secrets]
+- id: ecs-secrets-injection
+  type: comparison
+  front: ECS `secrets` injection vs fetching secrets with the SDK
+  back: "Injection: values become env vars at task start, no code, but a rotation needs a restart. SDK: the app can refresh without a restart."
+  skills: [aws-config-secrets]
+- id: never-in-image
+  type: concept
+  front: Why must configuration and secrets never be baked into a container image?
+  back: "Anyone who can pull the image can read them, and one image should run in every environment unchanged."
+  skills: [aws-config-secrets]

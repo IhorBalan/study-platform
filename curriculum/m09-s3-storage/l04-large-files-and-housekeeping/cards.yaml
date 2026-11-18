@@ -1,0 +1,60 @@
+- id: interview-resumable-upload
+  type: concept
+  front: "Interview: a user's 2 GB upload keeps failing at 90%. How do you fix it?"
+  back: "Multipart upload with presigned part URLs. Parts upload in parallel and retry one at a time, and after a failure the client asks which parts exist (ListParts) and sends only the rest."
+  skills: [multipart-uploads]
+- id: multipart-steps
+  type: concept
+  front: What are the three calls of a multipart upload?
+  back: "`CreateMultipartUpload` (returns an UploadId), `UploadPart` per part (returns an ETag), `CompleteMultipartUpload` with every PartNumber and ETag in order."
+  skills: [multipart-uploads]
+- id: min-part-size
+  type: cloze
+  front: "Every multipart part except the last must be at least {{5 MiB}}, and an upload has at most {{10,000}} parts."
+  back: "5 MiB; 10,000"
+  skills: [multipart-uploads]
+- id: multipart-etag
+  type: concept
+  front: Why can you not compare a multipart object's ETag with the file's MD5?
+  back: "It is a hash of the part hashes with `-<number of parts>` appended, such as `\"1ff9...-3\"`."
+  skills: [multipart-uploads]
+- id: incomplete-uploads
+  type: concept
+  front: What happens to the parts of a multipart upload that is never completed or aborted?
+  back: "They stay stored and billed, invisible to ListObjectsV2. Abort on failure, and add an AbortIncompleteMultipartUpload lifecycle rule."
+  skills: [multipart-uploads, storage-operations]
+- id: lib-storage-upload
+  type: snippet
+  front: Upload a large stream from Node with 4 parts in flight.
+  back: "`await new Upload({ client: s3, params: { Bucket, Key, Body: stream }, queueSize: 4 }).done()` (from `@aws-sdk/lib-storage`)"
+  skills: [multipart-uploads]
+- id: etag-expose-header
+  type: concept
+  front: A browser uploads multipart parts to presigned URLs but cannot read their ETags. What is missing?
+  back: "The bucket's CORS rule must list `ETag` in `ExposeHeaders`."
+  skills: [multipart-uploads]
+- id: lifecycle-replaces
+  type: concept
+  front: What happens to existing rules when you call `PutBucketLifecycleConfiguration`?
+  back: "They are replaced. The call sets the whole configuration, so manage all rules in one place."
+  skills: [storage-operations]
+- id: noncurrent-expiration
+  type: concept
+  front: Which lifecycle rule should go with versioning, and why?
+  back: "`NoncurrentVersionExpiration`. Every old version is billed, and without the rule they pile up forever."
+  skills: [storage-operations]
+- id: object-lock
+  type: term
+  front: S3 Object Lock
+  back: "Write-once-read-many storage for object versions. Example: contracts in compliance mode cannot be deleted by anyone until their retention date."
+  skills: [storage-operations]
+- id: default-encryption
+  type: comparison
+  front: SSE-S3 vs SSE-KMS?
+  back: "SSE-S3 is the automatic default with S3-managed keys. SSE-KMS adds control over who may use the key and an audit trail, at a per-request KMS cost."
+  skills: [storage-operations]
+- id: r2-vs-s3
+  type: comparison
+  front: Cloudflare R2 vs AWS S3 for a download-heavy product?
+  back: "R2 charges no egress and speaks the S3 API, so downloads are much cheaper. S3 has more features and fits better if everything else runs on AWS."
+  skills: [storage-operations]

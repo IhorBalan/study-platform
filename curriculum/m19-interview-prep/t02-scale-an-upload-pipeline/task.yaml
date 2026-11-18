@@ -1,0 +1,17 @@
+title: "Mock design: scale an upload pipeline that hurts"
+type: text
+skills: [interview-system-design]
+hints:
+  - Walk one upload through the current handler and mark every step that holds memory, a CPU core, a database connection or a network call while the browser waits.
+  - "Ask what the browser actually needs before the 201: the file stored durably and a row to point at. Everything else can happen later."
+  - "Duplicates after a retry are an idempotency problem. What could the client send that identifies the upload?"
+  - "A row without thumbnails means the steps are not tied together. Give the photo a status and let a job move it forward."
+  - Galleries slowing down at upload peaks suggests a shared resource. Which ones do both paths use?
+rubric:
+  - { id: diagnosis, title: "Traces at least four of the five symptoms to a specific cause in the current handler (buffering 50 MB files, CPU-bound resizing on the event loop, synchronous email call, no idempotency on retries, no state tying the steps together) and names a measurement to confirm each", skill: interview-system-design, max: 4 }
+  - { id: direct-upload, title: "Moves the file bytes out of the API, for example presigned S3 uploads (multipart for large files), with the API only issuing the URL and recording the photo", skill: interview-system-design, max: 3 }
+  - { id: async-processing, title: "Moves resizing and email to background jobs triggered after the upload completes, with the photo carrying a status (for example pending, ready, failed) that the gallery page shows", skill: interview-system-design, max: 4 }
+  - { id: idempotency, title: "Prevents duplicate photos on retry with a client-generated id or idempotency key backed by a unique constraint, and makes the jobs themselves safe to run twice", skill: interview-system-design, max: 3 }
+  - { id: failure-handling, title: "Says how jobs retry with backoff, where permanently failed jobs go and who sees them, and that an email outage no longer affects uploads", skill: interview-system-design, max: 3 }
+  - { id: migration-steps, title: "Orders three to five changes so each is deployable alone, fixes at least one symptom, and keeps the old upload endpoint working until clients have moved", skill: interview-system-design, max: 4 }
+  - { id: right-sized, title: "Lists what it would not add yet (for example Kubernetes, a separate image service, Kafka) with the signal that would justify it, and keeps the result runnable by four engineers", skill: interview-system-design, max: 3 }

@@ -1,0 +1,17 @@
+title: "Incident: the customer paid but has no access"
+type: text
+skills: [webhook-handling, subscription-billing, payment-reconciliation, stripe-checkout]
+hints:
+  - Follow one payment from the click on "Upgrade" to the row your access check reads. Write down every hop where it can stop.
+  - What does Stripe's Dashboard show for each delivery to your endpoint, and what would each status code mean?
+  - Look closely at what changed in Tuesday's deploy. What does a JSON body parser do to the bytes a signature was computed over?
+  - "Some causes are not bugs: a payment that needs 3D Secure, a bank debit that is still processing. What status does the subscription have then?"
+  - "A good fix has three layers: repair this customer, stop it recurring, and notice the next time without waiting for an email."
+rubric:
+  - { id: causes, title: "Names at least four distinct causes that fit the scenario, including the body-parser change breaking signature verification, the handler acknowledging events it failed to process, linking the payment by email instead of an id, and a legitimately incomplete or processing subscription", skill: webhook-handling, max: 4 }
+  - { id: evidence, title: "For each cause, says what evidence confirms or rules it out: event deliveries and response codes in the Stripe Dashboard, the subscription and invoice status in Stripe, application logs and the local rows", skill: webhook-handling, max: 3 }
+  - { id: repair, title: "Repairs the affected customers safely: replays or re-fetches their subscriptions through the same idempotent handler rather than editing rows by hand, and finds every other affected customer, not just the one who wrote in", skill: payment-reconciliation, max: 3 }
+  - { id: webhook-fix, title: "Fixes the handler: verification over the raw body on that route only, a 5xx when processing fails, event ids stored in the same transaction as the effects, and the subscription fetched from Stripe so order does not matter", skill: webhook-handling, max: 4 }
+  - { id: linking, title: "Links Stripe objects to accounts by stored ids (client_reference_id or metadata on the session, the customer id on the account) and explains why matching by email fails", skill: stripe-checkout, max: 2 }
+  - { id: detection, title: "Adds detection: an alert on webhook failure rates or signature errors and a scheduled reconciliation between Stripe subscriptions and local entitlements, with what it reports", skill: payment-reconciliation, max: 3 }
+  - { id: access-policy, title: "States what access a customer should have while a subscription is incomplete or past_due, and what the success page should show while the webhook has not arrived yet", skill: subscription-billing, max: 2 }

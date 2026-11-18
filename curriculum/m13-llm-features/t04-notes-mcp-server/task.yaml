@@ -1,0 +1,26 @@
+title: A small MCP server for notes
+type: repo
+skills: [mcp-servers, llm-security]
+services: []
+runner: nest
+hints:
+  - "stdout carries the protocol. Anything you print with console.log breaks the handshake; use console.error."
+  - "`registerTool(name, { description, inputSchema, outputSchema, annotations }, handler)` takes a zod shape (an object of schemas) as inputSchema and validates arguments before your handler runs."
+  - "Return `structuredContent` that matches your outputSchema, and the same information as text in `content`."
+  - "`new ResourceTemplate('note://{name}', { list })` from '@modelcontextprotocol/sdk/server/mcp.js' gives you the name as a variable in the read callback."
+  - "Never build a path from a name you have not checked. Test names against a pattern such as /^[a-z0-9][a-z0-9-]{0,63}$/ first; that rules out '/', '..' and encoded tricks."
+  - "Throw from the resource read callback when a note does not exist. The client receives a protocol error and the server keeps running."
+criteria:
+  - { id: compiles, title: The project compiles with tsc }
+  - { id: handshake, title: "The server starts over stdio and identifies itself as \"notes\"" }
+  - { id: tool-definition, title: "search_notes is listed with a description, a schema that requires query, and a read-only hint" }
+  - { id: tool-search, title: "search_notes finds notes by text or name, case-insensitively, and honours limit" }
+  - { id: tool-validation, title: "Bad arguments are rejected without running the search, and the server keeps working" }
+  - { id: resources, title: "Every .md note is listed as note://<name> and can be read" }
+  - { id: path-safety, title: Resource names cannot reach files outside NOTES_DIR }
+rubric:
+  - { id: name-allowlist, title: "Note names are checked against one strict pattern in one place before any path is built, and reads are limited to NOTES_DIR (with a size cap)", skill: llm-security, max: 4 }
+  - { id: tool-contract, title: "The tool's description says when to use it, the schemas carry the limits, and results include both structuredContent and a readable text summary", skill: mcp-servers, max: 3 }
+  - { id: process-hygiene, title: "main.ts reads NOTES_DIR, fails clearly when it is missing, and writes logs only to stderr; createServer has no global state", skill: mcp-servers, max: 2 }
+  - { id: readme-injection, title: "README explains how note content can carry indirect prompt injection into the host and what would change for a write or delete tool (hints, confirmation, scope)", skill: llm-security, max: 3 }
+limits: { timeoutSeconds: 120 }

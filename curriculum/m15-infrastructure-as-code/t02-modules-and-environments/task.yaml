@@ -1,0 +1,27 @@
+title: From copy-paste to a module
+type: repo
+skills: [iac-modules-environments, iac-state, iac-team-practice]
+services: []
+runner: node
+hints:
+  - "Diff the two environment files first. Every value that differs becomes a module input; everything else is written once in the module."
+  - "Moving a resource into a module changes its address from `aws_sqs_queue.invoice_jobs` to `module.<call name>.aws_sqs_queue.<name in the module>`. Without a moved block the plan destroys the old one and creates a new one."
+  - "A module declares `required_providers` but never a `provider` block. The provider configuration is inherited from the root module that calls it."
+  - "OpenTofu 1.8 and later accept variables in a backend block, but literal values are the simplest here, and they are what the checks read."
+  - "Keep the tags exactly as they are now, or your first plan will show changes on every resource."
+criteria:
+  - { id: parses, title: "Every .tf file under envs/ and modules/ parses" }
+  - { id: module-defined, title: "A module under modules/ declares the bucket and the queues with typed inputs" }
+  - { id: module-has-no-provider, title: The module configures no provider and no backend }
+  - { id: envs-use-module, title: "Dev and prod both call the same module and declare no copies of its resources" }
+  - { id: moved-blocks, title: "Every existing resource is moved into the module, so nothing is destroyed" }
+  - { id: no-hardcoded-credentials, title: No access keys anywhere in the configuration }
+  - { id: remote-backend, title: Each environment has its own locked S3 backend }
+  - { id: prevent-destroy, title: The bucket in the module cannot be destroyed by a plan }
+rubric:
+  - { id: module-interface, title: "The module's inputs are exactly the values that differ between environments plus the environment name; each has a type and a description, and defaults are used only where they are safe", skill: iac-modules-environments, max: 4 }
+  - { id: no-op-plan, title: "Names, settings and tags produced by the module match the starter's values for both environments, so the first plan after the refactoring would show only moves", skill: iac-state, max: 3 }
+  - { id: migration-steps, title: "The README gives the order of operations per environment: migrate local state to the backend, plan, check that the plan shows only moves, apply, then delete the local state; and says what to do if the plan shows a destroy", skill: iac-state, max: 4 }
+  - { id: credentials, title: "The README or comments say where credentials come from instead (an assumed role, OIDC in CI, SSO on a laptop) and that the keys that were in the file must be revoked", skill: iac-team-practice, max: 2 }
+  - { id: layout, title: "Each environment directory is short (backend, provider, one module call, outputs, moved blocks) and the two differ only in their values", skill: iac-modules-environments, max: 2 }
+limits: { timeoutSeconds: 60 }

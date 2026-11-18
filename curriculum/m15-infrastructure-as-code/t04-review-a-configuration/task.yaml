@@ -1,0 +1,19 @@
+title: Review an OpenTofu pull request
+type: text
+skills: [iac-team-practice, iac-state, iac-workflow, iac-modules-environments]
+hints:
+  - "Read it three times: once for what is stored where (state, variables, parameters), once for who can do what (bucket policy, IAM), once for what a future change would do (count, versions, force_destroy)."
+  - "With `count`, an instance's address is its position in the list. Ask what happens to positions 1 and 2 when the second item is removed."
+  - "Everything OpenTofu knows about a resource is written to the state in plain text, including the value of an SSM parameter."
+  - "A link that only works for a while is a presigned URL. Module 9 covers them."
+rubric:
+  - { id: state-handling, title: "Flags the committed local state: no locking, conflicting copies on every branch, and every value in it (including the password) in git history; fix is an S3 backend with use_lockfile, encryption, restricted access, and removing the file from the repository", skill: iac-state, max: 3 }
+  - { id: secrets, title: "Flags the password as a variable default in code, without sensitive = true, and stored as a String parameter whose value is also in state; fix keeps it out of the code (SecureString created or rotated outside OpenTofu, or a write-only argument, or Secrets Manager) and the existing value is treated as leaked and rotated", skill: iac-team-practice, max: 3 }
+  - { id: versions, title: "Flags the missing required_version and provider version constraint and the missing committed lock file, with the risk that a new major provider version changes behaviour on someone's next init", skill: iac-modules-environments, max: 2 }
+  - { id: public-bucket, title: "Flags the disabled public access block and the bucket policy with Principal * as making every report public to anyone who guesses a key, and proposes private objects with short-lived presigned URLs (or a CDN with signed URLs) behind an authorisation check", skill: iac-team-practice, max: 3 }
+  - { id: destroy-safety, title: "Flags force_destroy = true on a production data bucket (a destroy or replacement deletes every report) and the lack of prevent_destroy and versioning", skill: iac-team-practice, max: 2 }
+  - { id: count-reindex, title: "Explains that removing email shifts archive from index 2 to 1, so the plan replaces jobs[1] and destroys jobs[2] (losing the archive queue's messages); fixes with for_each over a set and moved blocks from each jobs[n] to jobs[\"name\"]", skill: iac-workflow, max: 4 }
+  - { id: iam-wildcard, title: "Flags the Action * Resource * statement as giving the worker full control of the account (making the second statement pointless) and replaces it with the queue actions on the queue's ARN taken from the resource reference", skill: iac-team-practice, max: 3 }
+  - { id: hard-coded-values, title: "Flags at least two hard-coded values that should come from references or inputs: the account id and region in the ARN, the role referenced by name instead of a managed resource, the region in the provider, or prod in every name with no environment input", skill: iac-modules-environments, max: 2 }
+  - { id: tags, title: "Flags that nothing is tagged and proposes default_tags with at least environment, service and owner", skill: iac-modules-environments, max: 1 }
+  - { id: prioritised, title: "Orders findings by severity and names, with a reason, which must block the merge (at least the public bucket or the leaked secret and state handling) and which can be follow-ups", max: 2 }

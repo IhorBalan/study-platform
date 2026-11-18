@@ -1,0 +1,9 @@
+[
+  { "id": "ch_001", "object": "charge", "payment_intent": "pi_001", "amount": 4900, "amount_refunded": 0, "currency": "eur", "status": "succeeded", "created": 1793520000 },
+  { "id": "ch_002", "object": "charge", "payment_intent": "pi_002", "amount": 12000, "amount_refunded": 2000, "currency": "eur", "status": "succeeded", "created": 1793523600 },
+  { "id": "ch_003a", "object": "charge", "payment_intent": "pi_003", "amount": 990, "amount_refunded": 0, "currency": "usd", "status": "failed", "created": 1793527200 },
+  { "id": "ch_003b", "object": "charge", "payment_intent": "pi_003", "amount": 990, "amount_refunded": 0, "currency": "usd", "status": "succeeded", "created": 1793527260 },
+  { "id": "ch_004", "object": "charge", "payment_intent": "pi_004", "amount": 3500, "amount_refunded": 0, "currency": "jpy", "status": "succeeded", "created": 1793530800 },
+  { "id": "ch_005", "object": "charge", "payment_intent": "pi_005", "amount": 2500, "amount_refunded": 2500, "currency": "eur", "status": "succeeded", "created": 1793534400 },
+  { "id": "ch_006", "object": "charge", "payment_intent": "pi_006", "amount": 1500, "amount_refunded": 0, "currency": "eur", "status": "failed", "created": 1793538000 }
+]

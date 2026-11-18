@@ -1,0 +1,55 @@
+- id: like-limits
+  type: concept
+  front: "Why is `ilike '%term%'` a poor search implementation on a large table?"
+  back: "A B-tree cannot serve it, so it scans every row. It also has no stemming and no ranking."
+  skills: [postgres-full-text-search]
+- id: tsvector
+  type: term
+  front: tsvector
+  back: "A document as sorted, normalised lexemes with positions. `to_tsvector('english', 'running fast')` gives `'fast':2 'run':1`."
+  skills: [postgres-full-text-search]
+- id: match-operator
+  type: cloze
+  front: "`select * from articles where search {{...}} websearch_to_tsquery('english', $1)`"
+  back: "`@@`"
+  skills: [postgres-full-text-search]
+- id: websearch-to-tsquery
+  type: concept
+  front: Which function turns a user's search box input into a tsquery safely?
+  back: "`websearch_to_tsquery`. It understands quotes, OR and -, and never raises a syntax error."
+  skills: [postgres-full-text-search]
+- id: explicit-config
+  type: concept
+  front: Why pass the configuration (such as 'english') to every text search function?
+  back: "Otherwise the server default applies, and documents and queries stemmed with different configurations do not match."
+  skills: [postgres-full-text-search]
+- id: generated-tsvector
+  type: snippet
+  front: Add an indexed search column built from title and body.
+  back: "```sql\nalter table articles add column search tsvector generated always as\n  (to_tsvector('english', title || ' ' || body)) stored;\ncreate index on articles using gin (search);\n```"
+  skills: [postgres-full-text-search]
+- id: stored-not-virtual
+  type: concept
+  front: Why write STORED on a generated tsvector column in PostgreSQL 18?
+  back: "Generated columns are virtual by default in 18, and a virtual column cannot be indexed."
+  skills: [postgres-full-text-search]
+- id: setweight
+  type: concept
+  front: How do you make a title match rank above a body match?
+  back: "Label the parts with setweight (title 'A', body 'B') when building the tsvector. ts_rank weights A higher."
+  skills: [postgres-full-text-search]
+- id: ts-headline-cost
+  type: concept
+  front: Why call ts_headline only on the rows you return?
+  back: "It re-parses the original text for every row, which is slow. Apply it after LIMIT."
+  skills: [postgres-full-text-search]
+- id: trigram-vs-fts
+  type: comparison
+  front: pg_trgm vs full-text search
+  back: "Trigrams: spelling similarity and substrings, good for short fields and typos. Full-text: words, stems and ranking over prose."
+  skills: [postgres-full-text-search]
+- id: move-to-search-engine
+  type: concept
+  front: When is a dedicated search engine worth its cost over Postgres full-text search?
+  back: "When you need relevance tuning, typo-tolerant instant search, facets at scale, many languages or isolated search load."
+  skills: [postgres-full-text-search]

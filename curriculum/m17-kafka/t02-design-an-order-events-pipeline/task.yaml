@@ -1,0 +1,17 @@
+title: Design an order-events pipeline
+type: text
+skills: [kafka-partitions, kafka-consumer-groups, kafka-event-design]
+hints:
+  - Start with the dual write. If the service crashes between the database commit and the Kafka send, what is lost?
+  - "Ordering only exists inside one partition. Which value must be identical for all events that fulfilment has to see in order?"
+  - Partitions are hard to add to a keyed topic later. Size them for the growth, not for today.
+  - The committed offset is the next record to read. Count which records the new owner will read again.
+rubric:
+  - { id: outbox, title: "Uses a transactional outbox written in the same transaction as the order change, published by a relay or by CDC (Debezium), and explains why publishing directly after the commit can lose or invent events", skill: kafka-event-design, max: 3 }
+  - { id: topic-config, title: "Specifies replication factor 3, min.insync.replicas 2, acks=all with an idempotent producer, a time-based delete retention long enough for replay (days, not hours), and a partition count sized above today's need with a reason (growth, consumer parallelism, cost of adding partitions later)", skill: kafka-partitions, max: 4 }
+  - { id: key-ordering, title: "Keys records by order ID and states that order is guaranteed per order (per partition) but not across orders, and that adding partitions later would move keys", skill: kafka-partitions, max: 3 }
+  - { id: groups, title: "Uses one consumer group per consuming service (fulfilment, notifications, analytics), and states that each group's useful instances are capped by the partition count", skill: kafka-consumer-groups, max: 2 }
+  - { id: event-shape, title: "Lists an event with a unique event ID, type, order ID, occurred-at time and payload, and names a compatibility rule (for example BACKWARD in a Schema Registry, optional fields with defaults, no renames)", skill: kafka-event-design, max: 2 }
+  - { id: crash-walkthrough, title: "Crash walk-through is correct: the pod is presumed dead after the session timeout (or leaves on shutdown), a rebalance gives partitions 2 and 5 to other fulfilment instances, partition 2 resumes at offset 1,012, records 1,012 to 1,040 are processed again, and 1,041 onwards are processed for the first time in order", skill: kafka-consumer-groups, max: 4 }
+  - { id: idempotency, title: "Gives a concrete idempotency mechanism per side-effecting consumer: notifications dedupes on event ID (for example a processed_events table with a unique key, checked in the same transaction as recording the send), fulfilment checks state or event ID before packing; and states that exactly-once transactions do not cover emails or database writes", skill: kafka-consumer-groups, max: 4 }
+  - { id: analytics-catchup, title: "Explains that analytics resumes from its own committed offset (or is reset with kafka-consumer-groups.sh) without affecting other groups, and that retention shorter than the outage would have lost data", skill: kafka-consumer-groups, max: 2 }

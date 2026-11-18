@@ -1,0 +1,55 @@
+- id: partial-failure
+  type: term
+  front: Partial failure
+  back: "One part of a distributed system fails while the rest carries on, and no part knows the full state. Example: your call to a provider times out, but the provider did the work."
+  skills: [failure-handling]
+- id: timeout-outcomes
+  type: concept
+  front: A call to a payment provider times out. What may have happened on the other side?
+  back: "The request never arrived, the provider crashed before the work, it did the work and the response was lost, or it is still working."
+  skills: [failure-handling]
+- id: exactly-once
+  type: concept
+  front: "Interview: is exactly-once delivery possible over a network?"
+  back: "Not as delivery. You pick at-most-once or at-least-once. \"Exactly once\" in practice means at-least-once delivery plus a receiver that ignores duplicates."
+  skills: [failure-handling]
+- id: timeout-not-no
+  type: concept
+  front: Why must you treat a timed-out write as "maybe done" rather than "failed"?
+  back: "The remote side may have completed it. Retrying without idempotency can do it twice; giving up can leave it half done."
+  skills: [failure-handling]
+- id: deadline-vs-timeout
+  type: comparison
+  front: Per-call timeout vs request deadline
+  back: "A timeout bounds one call. A deadline is one budget for the whole request, and every call inside gets what is left, so retries cannot outlast the client."
+  skills: [failure-handling]
+- id: abort-signal-any
+  type: snippet
+  front: Give a `fetch` a 1 second timeout that also stops when the request's `deadline` signal aborts.
+  back: "`fetch(url, { signal: AbortSignal.any([deadline, AbortSignal.timeout(1_000)]) })`"
+  skills: [failure-handling]
+- id: fetch-error-names
+  type: concept
+  front: How do you tell a timeout, a caller abort and a network failure apart when `fetch` rejects?
+  back: "`error.name` is `TimeoutError` for `AbortSignal.timeout`, `AbortError` for `abort()`. A network failure is a `TypeError` with the reason in `error.cause`."
+  skills: [failure-handling]
+- id: abort-not-undo
+  type: concept
+  front: Does aborting a `fetch` stop the work on the server you called?
+  back: "No. It closes your socket and stops your waiting. The remote side may finish anyway."
+  skills: [failure-handling]
+- id: pg-timeouts
+  type: cloze
+  front: "In `pg`, `{{connectionTimeoutMillis}}` bounds the wait for a pooled client, and the server setting `{{statement_timeout}}` bounds a query."
+  back: "connectionTimeoutMillis; statement_timeout"
+  skills: [failure-handling]
+- id: timeout-value
+  type: concept
+  front: How do you pick a timeout value for a dependency?
+  back: "Measure. Start a little above its p99 latency under normal load, so only stuck calls are cut off, and keep the sum inside the caller's deadline."
+  skills: [failure-handling]
+- id: crash-between-steps
+  type: concept
+  front: Why can `try`/`finally` not fix a handler that charges a card and then writes the order?
+  back: "A `SIGKILL` or out-of-memory kill runs no more code. The fix has to be structural: repeatable steps and something that finishes or undoes the work later."
+  skills: [failure-handling]

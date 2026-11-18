@@ -1,0 +1,22 @@
+title: Find and fix a slow, leaking service
+type: repo
+skills: [node-diagnostics]
+services: []
+runner: node
+hints:
+  - "Measure before you read code. Run the service, send it traffic in a loop with curl or a small fetch script, and watch monitorEventLoopDelay and process.memoryUsage()."
+  - "node --cpu-prof start.mjs writes a .cpuprofile when the process exits (Ctrl+C). Open it in Chrome DevTools (Performance panel) or in VS Code and look for the widest frames under the request handler."
+  - "For memory, start with node --inspect start.mjs, open chrome://inspect, take a heap snapshot, send a few thousand requests with different query strings, take another, and use the Comparison view."
+  - "A cache key decides how many entries a cache can have. Ask what in the key is unbounded."
+  - "A Map remembers insertion order, which is enough for a small LRU: delete and re-set a key on every hit, and drop the first key when the map is too big."
+  - "Work that gives the same answer for every request belongs at start-up or behind a bounded cache, not on the request path."
+criteria:
+  - { id: responses-unchanged, title: "Pages, related products and 404s are exactly as before" }
+  - { id: loop-responsive, title: Serving related products does not block the event loop }
+  - { id: bounded-memory, title: The heap stops growing when many different pages are requested }
+rubric:
+  - { id: evidence-cpu, title: "README shows the CPU evidence: the tool used (--cpu-prof, --inspect or clinic), the hot function it pointed at, and a before and after number for event-loop delay or /related latency", skill: node-diagnostics, max: 4 }
+  - { id: evidence-memory, title: "README shows the memory evidence: heap snapshots compared (or heapUsed over time) and the retainer chain from the leaked strings to the Map that holds them", skill: node-diagnostics, max: 4 }
+  - { id: fix-quality, title: "The ranking is computed once (or cached per category) instead of per request, and the page cache has both a normalised key and a size bound with a stated reason for the bound", skill: node-diagnostics, max: 3 }
+  - { id: production-signals, title: "README names the metric and alert that would have caught each problem in production (for example event-loop lag p99 and heap used after GC trending up)", skill: node-diagnostics, max: 3 }
+limits: { timeoutSeconds: 120 }

@@ -1,0 +1,60 @@
+- id: interview-large-uploads
+  type: concept
+  front: "Interview: how would you let users upload large files?"
+  back: "Browser gets a presigned URL (multipart part URLs for big files) and uploads straight to S3. Type and size are limited in the signature, then checked again after upload (HEAD, magic bytes) and scanned before the file is served."
+  skills: [presigned-urls]
+- id: presigned-url-term
+  type: term
+  front: Presigned URL
+  back: "A URL carrying a SigV4 signature in its query string that allows one specific S3 request until it expires. Example: a 5-minute PUT to `users/42/9f1c.png`."
+  skills: [presigned-urls]
+- id: signature-covers
+  type: concept
+  front: What does a presigned URL's signature cover?
+  back: "Method, bucket and key, expiry, query parameters, and the headers listed in `X-Amz-SignedHeaders`. Not the content of the bytes."
+  skills: [presigned-urls]
+- id: content-type-not-signed
+  type: concept
+  front: "In SDK v3, does `ContentType` on a presigned `PutObjectCommand` stop other types from being uploaded?"
+  back: "Not by default: content-type is left out of the signature. Pass `signableHeaders: new Set(['content-type'])` to `getSignedUrl`."
+  skills: [presigned-urls]
+- id: empty-checksum
+  type: concept
+  front: Why might a presigned PUT URL from a recent SDK fail on real S3 for every non-empty upload?
+  back: "The SDK adds `x-amz-checksum-crc32` of the empty body. Create the client with `requestChecksumCalculation: 'WHEN_REQUIRED'`."
+  skills: [presigned-urls]
+- id: presign-put-snippet
+  type: snippet
+  front: Presign a 5-minute PUT that only accepts `image/png`.
+  back: "`getSignedUrl(s3, new PutObjectCommand({ Bucket, Key, ContentType: 'image/png' }), { expiresIn: 300, signableHeaders: new Set(['content-type']) })`"
+  skills: [presigned-urls]
+- id: put-vs-post
+  type: comparison
+  front: Presigned PUT vs presigned POST policy?
+  back: "PUT sends the raw body and signs exact headers. POST sends a form and its policy allows ranges and prefixes, such as `content-length-range` and `starts-with $Content-Type image/`."
+  skills: [presigned-urls]
+- id: max-expiry
+  type: cloze
+  front: "A SigV4 presigned URL can be valid for at most {{7 days}}, and less if the signing credentials expire sooner."
+  back: 7 days
+  skills: [presigned-urls]
+- id: complete-step
+  type: concept
+  front: What should the API check when the client says an upload is complete?
+  back: "That the key is the user's and was issued, that the object exists (HEAD), that size and type match the request, and that the first bytes match the type."
+  skills: [presigned-urls]
+- id: magic-bytes
+  type: term
+  front: Magic number (file signature)
+  back: "The fixed bytes a file format starts with, read via a ranged GET. Example: PDF starts with `%PDF-`, PNG with `89 50 4E 47`."
+  skills: [presigned-urls]
+- id: bucket-cors
+  type: concept
+  front: Uploads to a presigned URL work with curl but fail in the browser. What is missing?
+  back: "A CORS rule on the bucket that allows PUT from your app's origin and the `content-type` header."
+  skills: [presigned-urls]
+- id: scan-before-ready
+  type: concept
+  front: When should an uploaded document become visible to other users?
+  back: "Only after the checks and a malware scan pass. Until then it stays pending, ideally in a quarantine prefix that nothing serves."
+  skills: [presigned-urls]

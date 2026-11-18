@@ -1,0 +1,31 @@
+title: Send the order confirmation once
+type: repo
+skills: [transactional-email, payment-reconciliation]
+services: [postgres, mailpit]
+runner: nest
+hints:
+  - "Mailpit accepts plain SMTP without auth or TLS: nodemailer.createTransport({ host, port, secure: false })."
+  - "Claim first, send second: INSERT ... ON CONFLICT DO NOTHING on a key made of the email kind and the order id. Only the caller whose insert created a row sends."
+  - "Six simultaneous callers all try the insert. The losers block on the primary key until the winner commits, then insert nothing. Do not read first and insert later."
+  - "If sendMail throws, remove or release your claim before you rethrow, or the order can never be retried."
+  - "Intl.NumberFormat(...).resolvedOptions().maximumFractionDigits is 2 for EUR and 0 for JPY. Dividing by 100 is wrong for yen."
+  - "Template strings do not escape anything. Escape &, <, >, \" and ' in the HTML part; leave the text part as typed."
+  - "src/test/helpers.ts has a recording transport and a failing one, so your tests need no SMTP server."
+criteria:
+  - { id: compiles, title: The project compiles with tsc }
+  - { id: sends-over-smtp, title: "The confirmation reaches Mailpit with the right sender, recipient and subject" }
+  - { id: content, title: Text and HTML parts list the items and the total formatted from minor units }
+  - { id: escapes-html, title: The customer name is escaped in HTML and kept as typed in the text part }
+  - { id: once-per-order, title: A second call for the same order sends nothing and resolves "skipped" }
+  - { id: concurrent-sends, title: Six simultaneous calls for one order deliver one message }
+  - { id: retry-after-failure, title: "A failed send rejects, and a later call for the order sends it" }
+  - { id: orders-independent, title: Different orders to the same customer each get their own email }
+  - { id: own-tests, title: Your tests pass and catch a sendOrderConfirmation() that sends one order twice }
+rubric:
+  - { id: claim, title: "Once-per-order rests on a database constraint (a unique key claimed in one statement), not on a read followed by a write or on in-memory state", skill: transactional-email, max: 4 }
+  - { id: no-tx-during-send, title: "No database transaction or row lock is held while the SMTP call runs, and a failed send releases the claim", skill: transactional-email, max: 3 }
+  - { id: rendering, title: "Rendering is a pure function of the order: escaping is done in one helper, money stays in minor units until formatting, and the Message-ID is derived from the order id", skill: payment-reconciliation, max: 3 }
+  - { id: readme-gap, title: "README names the crash window between SMTP acceptance and recording the send, says whether the design prefers a rare duplicate or a rare missing email and why, and how a stuck claim would be handled", skill: transactional-email, max: 4 }
+  - { id: readme-production, title: "README says the function belongs in a queue worker fed by an outbox, and names the DNS setup (SPF, DKIM, DMARC) the sending domain needs", skill: transactional-email, max: 2 }
+  - { id: tests, title: "Own tests cover a repeat call, concurrent calls, a failed send followed by a retry, escaping and a zero-decimal currency", skill: transactional-email, max: 3 }
+limits: { timeoutSeconds: 120 }

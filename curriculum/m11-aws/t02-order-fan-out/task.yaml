@@ -1,0 +1,26 @@
+title: Fan out order events with SNS and SQS
+type: repo
+skills: [aws-fan-out, aws-iam]
+services: [aws]
+runner: nest
+hints:
+  - "Create the SQS client with `useQueueUrlAsEndpoint: false`. The emulator puts localhost in queue URLs, which is wrong inside the check sandbox."
+  - "SNS subscribes a queue by its ARN, not its URL. GetQueueAttributes with AttributeNames ['QueueArn'] gives you the ARN."
+  - "The emulator does not enforce queue policies, but real AWS drops deliveries without one. The checks read the policy you set."
+  - "Filter policies on message attributes only match attributes the publisher sets. A Number attribute is sent as a string with DataType 'Number'."
+  - "CreateTopic, CreateQueue and Subscribe with identical arguments return the existing resource. Subscribe with the same endpoint and different attributes fails."
+  - "Deleting a queue that does not exist throws. Make destroy tolerate resources that are already gone."
+criteria:
+  - { id: typechecks, title: tsc reports no type errors }
+  - { id: resources, title: "One topic and three queues with the agreed names, each queue subscribed once" }
+  - { id: queue-policy, title: "Each queue policy allows sqs:SendMessage from sns.amazonaws.com, only for this topic" }
+  - { id: raw-delivery, title: Consumers receive the published event as the body without the SNS envelope }
+  - { id: routing, title: "analytics gets every event, email paid and cancelled orders, fraud paid orders from 100000 cents" }
+  - { id: idempotent-provision, title: Provisioning twice returns the same resources and adds no subscriptions }
+  - { id: teardown, title: "destroyOrderEvents removes everything, and succeeds when it is already gone" }
+rubric:
+  - { id: routing-in-filters, title: "Routing lives entirely in the subscriptions' filter policies, declared once in one readable place; no consumer is expected to discard events", skill: aws-fan-out, max: 4 }
+  - { id: least-privilege-policy, title: "Each queue policy names one action, the queue's own ARN and an aws:SourceArn condition for the topic, with no wildcards", skill: aws-iam, max: 3 }
+  - { id: publisher-contract, title: "README states what publishers must set for the filters to work (attributes or body fields) and what happens if they do not", skill: aws-fan-out, max: 3 }
+  - { id: iac-and-eventbridge, title: "README explains why these resources belong in infrastructure as code rather than app start-up, and sketches the EventBridge equivalent (bus, rules, patterns, target permissions) with one reason to prefer either", skill: aws-fan-out, max: 4 }
+limits: { timeoutSeconds: 120 }

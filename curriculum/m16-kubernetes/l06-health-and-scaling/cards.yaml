@@ -1,0 +1,60 @@
+- id: interview-liveness-vs-readiness
+  type: comparison
+  front: "Interview: liveness vs readiness probes?"
+  back: "Readiness decides traffic: a failing Pod is removed from the Service but keeps running. Liveness decides restarts: a failing container is killed and restarted."
+  skills: [k8s-health-scaling]
+- id: startup-probe
+  type: concept
+  front: What problem does a startup probe solve?
+  back: "It holds off liveness and readiness until a slow-starting app is up, so liveness can stay strict without killing the app during boot."
+  skills: [k8s-health-scaling]
+- id: liveness-no-db
+  type: concept
+  front: "Interview: why should a liveness probe not check the database?"
+  back: "A database blip would fail liveness on every Pod at once and restart them all, turning a short dependency problem into a full outage."
+  skills: [k8s-health-scaling]
+- id: no-readiness
+  type: concept
+  front: What goes wrong during a rollout if a Deployment has no readiness probe?
+  back: "Pods count as ready as soon as the container starts, so traffic arrives before the app listens and those requests fail."
+  skills: [k8s-health-scaling]
+- id: termination-race
+  type: concept
+  front: Why can a Pod still receive requests after it gets SIGTERM?
+  back: "Endpoint removal and SIGTERM happen in parallel. Gateways and nodes may not have seen the removal yet when the process stops listening."
+  skills: [k8s-health-scaling]
+- id: prestop-sleep
+  type: snippet
+  front: Delay SIGTERM by 10 seconds so endpoint removal can spread first.
+  back: "`lifecycle: { preStop: { sleep: { seconds: 10 } } }` on the container, with `terminationGracePeriodSeconds` larger than the sleep plus drain time."
+  skills: [k8s-health-scaling]
+- id: grace-period
+  type: term
+  front: terminationGracePeriodSeconds
+  back: "Time from the start of termination (including `preStop`) until the kubelet sends SIGKILL. Default 30."
+  skills: [k8s-health-scaling]
+- id: node-sigterm
+  type: concept
+  front: "Interview: what should a Node API do on SIGTERM?"
+  back: "Stop accepting connections (`server.close()`), let in-flight requests finish, close idle keep-alives and pools, then exit before the grace period ends."
+  skills: [k8s-health-scaling]
+- id: exec-form-cmd
+  type: concept
+  front: Why start Node with `CMD ["node", "dist/main.js"]` and not `npm start`?
+  back: "So Node is PID 1 and receives SIGTERM. Wrappers and shell form may not pass the signal on, so every shutdown ends in SIGKILL."
+  skills: [k8s-health-scaling]
+- id: hpa-requests
+  type: concept
+  front: "An HPA targets `averageUtilization: 70` for CPU. 70% of what?"
+  back: "Of the containers' CPU requests. Without requests, CPU utilisation scaling cannot work."
+  skills: [k8s-health-scaling]
+- id: hpa-replicas-conflict
+  type: concept
+  front: Why remove `replicas` from a Deployment manifest that an HPA manages?
+  back: "Each apply would reset the replica count to the manifest's value, undoing the HPA's scaling until it reacts again."
+  skills: [k8s-health-scaling]
+- id: pdb
+  type: concept
+  front: What does a PodDisruptionBudget protect against, and what not?
+  back: "Voluntary evictions such as node drains and upgrades, by limiting how many Pods go at once. Not node crashes or app failures."
+  skills: [k8s-health-scaling]

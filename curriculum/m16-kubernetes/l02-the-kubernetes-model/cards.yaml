@@ -1,0 +1,55 @@
+- id: api-server
+  type: term
+  front: kube-apiserver
+  back: "The only entry point to a cluster. Every client and component reads and writes objects through it; it validates them and stores them in etcd."
+  skills: [k8s-architecture]
+- id: etcd
+  type: term
+  front: etcd
+  back: "The consistent key-value store that holds every Kubernetes object. Lose it without a backup and the cluster's state is gone."
+  skills: [k8s-architecture]
+- id: scheduler
+  type: concept
+  front: What does the kube-scheduler do, and what does it not do?
+  back: "It assigns Pods that have no node to a node, using resource requests and constraints. It does not start containers; the kubelet does."
+  skills: [k8s-architecture]
+- id: kubelet
+  type: term
+  front: kubelet
+  back: "The agent on every node. It starts the containers of Pods assigned to its node through the container runtime, runs their probes and reports status."
+  skills: [k8s-architecture]
+- id: spec-vs-status
+  type: comparison
+  front: "`spec` vs `status` on a Kubernetes object"
+  back: "`spec` is the desired state you write. `status` is the observed state the system writes."
+  skills: [k8s-architecture]
+- id: controller-loop
+  type: concept
+  front: What does a Kubernetes controller do?
+  back: "Watches one kind of object, compares desired state with the real state, takes a step to close the gap, and repeats forever."
+  skills: [k8s-architecture]
+- id: apply-chain
+  type: concept
+  front: "After `kubectl apply` of a Deployment, which components act, in order, before containers run?"
+  back: "API server stores it, Deployment controller creates a ReplicaSet, ReplicaSet controller creates Pods, scheduler assigns nodes, kubelets start containers."
+  skills: [k8s-architecture]
+- id: delete-pod-comes-back
+  type: concept
+  front: You delete a Pod owned by a Deployment. What happens?
+  back: "Its ReplicaSet sees one Pod missing and creates a replacement. Scale or delete the Deployment to really remove Pods."
+  skills: [k8s-architecture]
+- id: labels-selectors
+  type: concept
+  front: How does a Service know which Pods to send traffic to?
+  back: "By a label selector, such as `app: api`. Every ready Pod carrying those labels at that moment receives traffic."
+  skills: [k8s-architecture]
+- id: apply-not-done
+  type: concept
+  front: "Why is a successful `kubectl apply` not proof that a deploy worked?"
+  back: "It returns once the object is stored. Pods are created later. Wait with `kubectl rollout status` or `kubectl wait`."
+  skills: [k8s-architecture]
+- id: describe-first
+  type: snippet
+  front: Show a Pod's recent events, such as failed scheduling or image pulls.
+  back: "`kubectl describe pod <name>` (the Events section at the bottom), or `kubectl get events --sort-by=.lastTimestamp`."
+  skills: [k8s-architecture]

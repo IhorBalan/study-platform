@@ -1,13 +1,23 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
 
+/* Dark styles follow the class that lib/theme.ts puts on <html>, not the system directly. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
 }
 
+/* Before the script runs the browser follows the system; after it, the class decides. */
 html {
   color-scheme: light dark;
+}
+html.light {
+  color-scheme: light;
+}
+html.dark {
+  color-scheme: dark;
 }
 
 /* Long identifiers in lesson titles and cards must wrap, never widen the page. */
@@ -20,15 +30,13 @@ body {
   @apply bg-white text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100;
 }
 
-/* Shiki emits both themes as CSS variables; pick one by colour scheme. */
+/* Shiki emits both themes as CSS variables; pick one by theme. */
 .shiki,
 .shiki span {
   color: var(--shiki-light);
   background-color: transparent;
 }
-@media (prefers-color-scheme: dark) {
-  .shiki,
-  .shiki span {
-    color: var(--shiki-dark);
-  }
+.dark .shiki,
+.dark .shiki span {
+  color: var(--shiki-dark);
 }

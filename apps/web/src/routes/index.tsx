@@ -80,10 +80,12 @@ function OverallProgress({ modules }: { modules: ModuleSummary[] }) {
   );
 }
 
+// Told apart by shape as well as colour: full, half and empty.
 const statusDot = {
   done: 'bg-emerald-500',
-  in_progress: 'bg-amber-400',
-  not_started: 'bg-zinc-300 dark:bg-zinc-700',
+  in_progress:
+    'border-2 border-amber-500 bg-[linear-gradient(to_right,var(--color-amber-500)_50%,transparent_50%)]',
+  not_started: 'border-2 border-zinc-400 dark:border-zinc-500',
 } as const;
 
 const splitId = (id: string) => {
@@ -250,7 +252,7 @@ const statusText = {
 function StatusDot({ status }: { status: keyof typeof statusDot }) {
   return (
     <>
-      <span aria-hidden="true" className={`size-2 shrink-0 rounded-full ${statusDot[status]}`} />
+      <span aria-hidden="true" className={`size-2.5 shrink-0 rounded-full ${statusDot[status]}`} />
       <span className="sr-only">{statusText[status]}:</span>
     </>
   );

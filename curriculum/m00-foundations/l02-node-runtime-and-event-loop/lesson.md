@@ -23,7 +23,7 @@ A timer delay is therefore a minimum, not a promise. The callback runs when the 
 
 ## Microtasks
 
-Two more queues sit outside the phases: the `process.nextTick` queue and the promise microtask queue (`.then` callbacks and `await` continuations). Node drains both after every single callback, before the loop moves on. The `nextTick` queue goes first.
+Two more queues sit outside the phases: the `process.nextTick` queue and the promise microtask queue (`.then` callbacks and `await` continuations). Node drains both after every single callback, before the loop moves on. The `nextTick` queue goes first inside callbacks and in CommonJS code. In the top-level code of an ES module, promise callbacks run first, because the module itself runs as part of a promise job.
 
 ```ts
 import { readFile } from 'node:fs';

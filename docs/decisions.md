@@ -522,6 +522,10 @@ The Plan page was 3,800px tall on a desktop and 6,800px on a phone, because ever
 
 A lesson is up to 6,000px tall on a phone with nothing to say how long it is or what it holds (UX review, round 1, item 16). Under the title there is now "About N min read" (words divided by 200, code included, at least 1) and a closed "In this lesson" list of the `##` headings that jumps to each. The list is built in the browser from the lesson's Markdown (`lib/lessonOutline.ts`, unit tested), and a small rehype step gives the page's top-level `h2` elements the same ids in the same order, so the two cannot drift apart by wording. Ids are slugs of the heading text, so a link to a section can be shared.
 
+### D-141 · The theme choice lives in the browser, not in the database — 2026-11-18
+
+Settings has a Theme choice: same as the system (default), light or dark (UX review, round 1, item 18). It is stored in `localStorage` and applied by a class on `<html>`, because it belongs to a screen, not to the learner's study data: a laptop and a phone can differ, and it has no place in a backup. Tailwind's `dark:` variant and the code highlighting now follow that class instead of the system media query; with "same as the system" the class tracks the system live. The class is set before React renders, and until then the page uses the system colour scheme, so there is no white flash for the common case.
+
 ---
 
 ## Product direction

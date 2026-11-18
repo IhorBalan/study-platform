@@ -4,6 +4,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useState, type FormEvent } from 'react';
 import { Button, Field, Input, PageHeader, Select } from '../components/ui';
 import { api, ApiError } from '../lib/api';
+import { saveTheme, storedTheme, themes, type Theme } from '../lib/theme';
 
 export const Route = createFileRoute('/settings')({ component: SettingsPage });
 
@@ -12,6 +13,7 @@ function SettingsPage() {
   const settings = useQuery({ queryKey: ['settings'], queryFn: api.settings });
   // Only the fields the user has edited are kept locally; the rest come from the server.
   const [draft, setDraft] = useState<UpdateSettings>({});
+  const [theme, setTheme] = useState<Theme>(storedTheme);
 
   const save = useMutation({
     mutationFn: (values: UpdateSettings) => api.updateSettings(values),
@@ -132,6 +134,26 @@ function SettingsPage() {
           )}
         </div>
       </form>
+
+      <div className="mt-10 grid max-w-md gap-4 border-t border-zinc-200 pt-6 dark:border-zinc-800">
+        <h2 className="text-lg font-semibold">Appearance</h2>
+        <Field label="Theme" hint="Applies at once and is remembered in this browser only.">
+          <Select
+            value={theme}
+            onChange={(e) => {
+              const next = e.target.value as Theme;
+              setTheme(next);
+              saveTheme(next);
+            }}
+          >
+            {themes.map((t) => (
+              <option key={t} value={t}>
+                {t === 'system' ? 'Same as the system' : t === 'light' ? 'Light' : 'Dark'}
+              </option>
+            ))}
+          </Select>
+        </Field>
+      </div>
     </section>
   );
 }

@@ -4,6 +4,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouteError } from './components/RouteError';
 import './index.css';
+import { startTheme } from './lib/theme';
 import { routeTree } from './routeTree.gen';
 
 const queryClient = new QueryClient({
@@ -22,6 +23,8 @@ declare module '@tanstack/react-router' {
     router: typeof router;
   }
 }
+
+startTheme();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

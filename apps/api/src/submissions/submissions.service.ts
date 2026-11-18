@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { schema } from '@study/db';
 import type { CreateSubmission, SubmissionDto } from '@study/shared';
 import { asc, desc, eq, inArray } from 'drizzle-orm';
@@ -11,6 +11,8 @@ const { submissions, verificationRuns, checkResults } = schema;
 
 @Injectable()
 export class SubmissionsService {
+  private readonly logger = new Logger(SubmissionsService.name);
+
   constructor(
     @InjectDb() private readonly db: Database,
     private readonly curriculum: CurriculumService,
@@ -49,7 +51,22 @@ export class SubmissionsService {
       return { submissionId: submission.id, runId: run.id };
     });
 
-    if (runId) await this.queue.enqueueChecks({ runId });
+    if (runId) {
+      try {
+        await this.queue.enqueueChecks({ runId });
+      } catch (error) {
+        // The run is already saved. Without a job behind it, it would wait for ever.
+        this.logger.error(`Could not queue checks for run ${runId}`, error);
+        await this.db
+          .update(verificationRuns)
+          .set({
+            status: 'error',
+            error: 'The checks could not be queued. Submit again.',
+            finishedAt: new Date(),
+          })
+          .where(eq(verificationRuns.id, runId));
+      }
+    }
 
     const [created] = await this.load([submissionId]);
     if (!created) throw new Error('submission disappeared');

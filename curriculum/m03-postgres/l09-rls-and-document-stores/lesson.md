@@ -18,14 +18,14 @@ alter table projects enable row level security;
 alter table projects force row level security;
 
 create policy tenant_isolation on projects
-  using (tenant_id = current_setting('app.tenant_id', true)::bigint)
-  with check (tenant_id = current_setting('app.tenant_id', true)::bigint);
+  using (tenant_id = nullif(current_setting('app.tenant_id', true), '')::bigint)
+  with check (tenant_id = nullif(current_setting('app.tenant_id', true), '')::bigint);
 ```
 
 - `using` filters which existing rows a query can see, update or delete.
 - `with check` validates rows being inserted or updated, so a tenant cannot write a row for another tenant.
 - With RLS enabled and no matching policy, a role sees **no rows**. The default is deny.
-- `current_setting('app.tenant_id', true)` reads a custom setting; the `true` returns `NULL` instead of raising an error when it is not set, so the policy matches nothing.
+- `current_setting('app.tenant_id', true)` reads a custom setting. The `true` returns `NULL` instead of raising an error when the setting was never defined. On a pooled connection where an earlier transaction set it, the setting reads as an empty string afterwards, and casting `''` to `bigint` would raise an error. `nullif(..., '')` turns that into `NULL` too. Either way the policy matches nothing.
 
 Who is exempt matters more than the policy itself:
 

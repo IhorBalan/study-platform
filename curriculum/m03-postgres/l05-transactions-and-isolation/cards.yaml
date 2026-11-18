@@ -21,7 +21,7 @@
 - id: isolation-anomalies
   type: comparison
   front: "Read Committed vs Repeatable Read vs Serializable in Postgres: which anomalies remain? (interview)"
-  back: "RC: non-repeatable reads and phantoms. RR: write skew only. Serializable: none."
+  back: "RC: non-repeatable reads, phantoms, and lost updates in read-modify-write. RR: serialization anomalies such as write skew. Serializable: none."
   skills: [transactions-isolation]
 - id: read-committed-snapshot
   type: concept

@@ -63,11 +63,12 @@ export function exportFolder(
     git.stderr.on('data', (c: Buffer) => (stderr += c.toString()));
     tar.stderr.on('data', (c: Buffer) => (stderr += c.toString()));
     git.stdout.pipe(tar.stdin);
-    let gitCode: number | null = null;
-    git.on('close', (code) => (gitCode = code));
     git.on('error', (e) => (stderr += e.message));
     tar.on('error', (e) => (stderr += e.message));
-    tar.on('close', (tarCode) => {
+    // The two processes can finish in either order, so wait for both exit codes.
+    const exited = (child: typeof git | typeof tar) =>
+      new Promise<number | null>((done) => child.on('close', done));
+    void Promise.all([exited(git), exited(tar)]).then(([gitCode, tarCode]) => {
       resolve(gitCode === 0 && tarCode === 0 ? null : stderr.trim() || 'git archive failed');
     });
   });

@@ -230,3 +230,33 @@ Decisions made while building are appended below.
 
 ### D-082 · "Today" for review limits is the machine's local day — Accepted, 2026-11-18
 - **Why:** the platform runs on the learner's own computer, so local midnight is the natural boundary. UTC would move the boundary to mid-evening or mid-morning.
+
+### D-083 · New core module 13, "LLM features in a backend", placed after observability — Accepted, 2026-11-18
+- **Source:** the market research found that LLM integration is now a common line in fullstack postings. The request to make it core and place it after observability came through the project coordinator, not from Ihor directly, so this is the first thing to confirm.
+- **Covers:** provider SDKs, streaming, tool calling, RAG with pgvector, evaluating output, prompt injection, MCP.
+- **Cost:** one more M-sized core module. Practice uses the learner's Claude plan or a local model, so still no API key.
+- **Alternatives:** optional module (skippable without breaking later tasks); leave it out.
+- **Revisit if:** you would rather it be optional. That is a one-word change in `module.yaml` and the spec table.
+
+### D-084 · Optional module 19, "Interview prep", and interview questions mapped into every module — Accepted, 2026-11-18
+- **Source:** `docs/interview-questions.md`, requested through the coordinator.
+- **Chosen:** high-frequency questions become cards tagged `interview` in the module they belong to, scenario questions become written tasks, and the interview-only formats (mock design, take-home, code review, behavioural stories, light algorithms) live in an optional last module.
+- **Alternatives:** a single separate question bank (would repeat lesson content and be reviewed out of context).
+
+### D-085 · Curriculum widened with small-team tools and missing topics — Accepted, 2026-11-18
+- **Source:** section 5 of `docs/market-research-fullstack-backend.md` and the coverage gaps in the interview research, requested through the coordinator.
+- **Added as lessons inside existing modules:** framework landscape (Express, Hono, Next.js route handlers); real-time with WebSockets and SSE; tRPC; passkeys; multi-tenancy; build or buy for auth (Better Auth, managed providers); hosted jobs (Inngest or Trigger.dev); full-text search; zero-downtime migrations and deploys; Node performance diagnosis; transactional email with Mailpit; Vitest to Jest mapping; Confluent's Kafka client in place of `kafkajs`.
+- **Optional because they need an outside account or are off the main path:** Sentry, deploying to Railway or Fly, MongoDB, Row-Level Security.
+- **Cost:** about 14 more lessons. No new always-on service: Mailpit is tiny and pgvector is an extension in the lab Postgres.
+
+### D-086 · Modules renumbered: 13 is the LLM module, old 13 to 17 become 14 to 18 — Accepted, 2026-11-18
+- **Why:** numbers follow the recommended order. Only modules 0 to 2 are authored, so nothing on disk moves.
+- **Note:** the interview research file still uses the old numbers. The spec, section 5.1, has the mapping.
+
+### D-087 · The linter skips the `curriculum` folder — Accepted, 2026-11-18
+- **Why:** starter files are unfinished on purpose (unused parameters, empty bodies), which the linter reports as errors.
+- **Safeguard:** curriculum quality is checked another way: `pnpm curriculum:check` validates structure, and every check must pass against the reference solution.
+
+### D-088 · Lost database connections are logged, not fatal — Accepted, 2026-11-18
+- **Found by:** the QA pass. The API exited when Postgres restarted, and the dev watcher did not bring it back.
+- **Chosen:** the pool reports the error and opens a new connection on the next query. Confirmed by restarting Postgres under a running API.

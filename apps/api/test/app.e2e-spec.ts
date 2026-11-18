@@ -586,6 +586,8 @@ describe('API (e2e, real Postgres)', () => {
       const after = await http().get('/api/review/queue').expect(200);
       expect(after.body.cards.map((c: { id: string }) => c.id)).not.toContain(card.id);
       expect(after.body.counts.reviewedToday).toBe(1);
+      // The card just graded is the only one scheduled, so it is the next one due.
+      expect(after.body.nextDue).toBe(res.body.due);
     });
 
     it('survives a second review of the same card (stored state round-trips)', async () => {

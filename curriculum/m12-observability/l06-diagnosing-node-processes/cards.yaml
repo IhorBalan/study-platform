@@ -19,7 +19,8 @@
   back: |
     ```sh
     node --cpu-prof --cpu-prof-dir=./profiles start.mjs
-    # send traffic, Ctrl+C, open the .cpuprofile in DevTools or VS Code
+    # needs process.on('SIGINT', () => process.exit(0)) in start.mjs,
+    # or Ctrl+C kills Node before the .cpuprofile is written
     ```
   skills: [node-diagnostics]
 - id: flame-graph-axes

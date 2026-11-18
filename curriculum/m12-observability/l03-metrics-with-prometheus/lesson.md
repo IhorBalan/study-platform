@@ -67,7 +67,7 @@ Count the cost before adding a label: routes × methods × statuses × instances
 
 ## Percentiles from histograms
 
-Averages hide what users feel. If 99 requests take 50 ms and one takes 5 s, the mean is about 100 ms and looks fine, while one user in a hundred waits five seconds. Use percentiles: the **p50** (median) is the typical request, the **p95** and **p99** are the slow tail. A user who loads a page that makes 20 requests is likely to hit at least one p99 request, so the tail matters more than it seems.
+Averages hide what users feel. If 99 requests take 50 ms and one takes 5 s, the mean is about 100 ms and looks fine, while one user in a hundred waits five seconds. Use percentiles: the **p50** (median) is the typical request, the **p95** and **p99** are the slow tail. A user who loads a page that makes 20 requests has about a one-in-five chance (18%) of hitting at least one p99 request, and at 100 requests it is 63%, so the tail matters more than it seems.
 
 In PromQL:
 

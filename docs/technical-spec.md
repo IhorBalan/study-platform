@@ -70,7 +70,7 @@ Browser ──HTTP──> api ──SQL──> platform Postgres <──SQL─�
 Rules:
 
 - Only the bridge has the Docker socket and the Claude login.
-- The worker reaches the bridge at `host.docker.internal` in full mode and `localhost` in dev mode. The bridge binds to `127.0.0.1`, checks a shared secret from `.env`, and accepts only two operations: run a check suite for a task at a commit, and run a Claude review for a prompt.
+- The worker reaches the bridge at `host.docker.internal` in full mode and `localhost` in dev mode. The bridge binds to `127.0.0.1`, checks a shared secret from `.env`, and accepts only three operations: run a check suite for a task at a commit, run a Claude review for a prompt, and tell which commit of the lab repository a name stands for (read-only).
 - Sandboxes join `lab-net` only. That network is `internal: true`, so there is no internet and no route to the platform database.
 - If the bridge is not running, the platform still works: lessons, flashcards, text answers and copy-paste review need nothing from it.
 

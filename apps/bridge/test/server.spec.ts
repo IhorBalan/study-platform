@@ -14,6 +14,7 @@ describe('bridge server', () => {
   let base: string;
   let close: () => Promise<void>;
   const calls: unknown[] = [];
+  const lookups: unknown[] = [];
   let healthReads = 0;
   let reviewsRunning = 0;
   let mostReviewsAtOnce = 0;
@@ -49,6 +50,10 @@ describe('bridge server', () => {
           costUsd: null,
           durationMs: 1,
         };
+      },
+      resolve: async (repo, commitSha) => {
+        lookups.push({ repo, commitSha });
+        return 'b'.repeat(40);
       },
       run: async (_config, task, request) => {
         calls.push({ task: task.id, request });
@@ -135,6 +140,26 @@ describe('bridge server', () => {
     expect(res.status).toBe(200);
     expect(((await res.json()) as RunChecksResponse).status).toBe('passed');
     expect(calls).toContainEqual({ task: taskId, request: { taskId, repoPath: '/tmp/lab' } });
+  });
+
+  it('resolves a commit without starting anything', async () => {
+    const before = calls.length;
+    const res = await fetch(`${base}/commits/resolve`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${SECRET}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ repoPath: '/tmp/lab', commitSha: 'abc1234' }),
+    });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ commitSha: 'b'.repeat(40) });
+    expect(lookups).toEqual([{ repo: '/tmp/lab', commitSha: 'abc1234' }]);
+    expect(calls).toHaveLength(before);
+
+    const bad = await fetch(`${base}/commits/resolve`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${SECRET}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ repoPath: '/tmp/lab', commitSha: 'HEAD; rm -rf /' }),
+    });
+    expect(bad.status).toBe(400);
   });
 
   it('reuses a health answer for a short while', async () => {

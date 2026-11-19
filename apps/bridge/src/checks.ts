@@ -122,6 +122,20 @@ function failure(
 }
 
 /**
+ * The full id of a commit in the lab repository, or of the latest commit when
+ * none is named. Null when the repository or the commit does not exist.
+ */
+export async function resolveCommit(repo: string, commitSha?: string): Promise<string | null> {
+  if (!path.isAbsolute(repo)) return null;
+  const revision = `${commitSha ?? 'HEAD'}^{commit}`;
+  const resolved = await exec('git', ['-C', repo, 'rev-parse', '--verify', '--quiet', revision], {
+    timeoutMs: 10_000,
+  });
+  const sha = resolved.stdout.trim();
+  return resolved.code === 0 && /^[0-9a-f]{40,64}$/.test(sha) ? sha : null;
+}
+
+/**
  * Exports the task folder at one commit and runs the task's hidden check suite
  * against it inside a locked-down container.
  */
@@ -143,11 +157,8 @@ export async function runChecks(
     return failure(`The lab repository was not found at ${repo}.`, startedAt);
   }
 
-  const revision = `${request.commitSha ?? 'HEAD'}^{commit}`;
-  const resolved = await exec('git', ['-C', repo, 'rev-parse', '--verify', '--quiet', revision], {
-    timeoutMs: 10_000,
-  });
-  if (resolved.code !== 0) {
+  const sha = await resolveCommit(repo, request.commitSha);
+  if (!sha) {
     return failure(
       request.commitSha
         ? `Commit ${request.commitSha} was not found in the lab repository.`
@@ -155,7 +166,6 @@ export async function runChecks(
       startedAt,
     );
   }
-  const sha = resolved.stdout.trim();
 
   const folder = task.id;
   const exists = await exec('git', ['-C', repo, 'cat-file', '-e', `${sha}:${folder}`], {

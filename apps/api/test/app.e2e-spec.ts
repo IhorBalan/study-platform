@@ -29,6 +29,8 @@ describe('API (e2e, real Postgres)', () => {
     app: undefined as unknown as NestExpressApplication,
     bridgeReplies: [],
     bridgeDelayMs: 0,
+    resolvedCommit: undefined,
+    commitLookups: [],
     http: () => request(ctx.app.getHttpServer()),
     makeDue: async (cardId) => {
       await ctx.app
@@ -65,6 +67,20 @@ describe('API (e2e, real Postgres)', () => {
               ),
             );
           }, ctx.bridgeDelayMs);
+        });
+        return;
+      }
+      if (
+        req.method === 'POST' &&
+        req.url === '/commits/resolve' &&
+        ctx.resolvedCommit !== undefined
+      ) {
+        const chunks: Buffer[] = [];
+        req.on('data', (chunk: Buffer) => chunks.push(chunk));
+        req.on('end', () => {
+          ctx.commitLookups.push(JSON.parse(Buffer.concat(chunks).toString('utf8')));
+          res.writeHead(200, { 'content-type': 'application/json' });
+          res.end(JSON.stringify({ commitSha: ctx.resolvedCommit }));
         });
         return;
       }

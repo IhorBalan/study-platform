@@ -44,6 +44,47 @@ export function submissionsTests(ctx: E2eContext): void {
       expect(list.body.submissions).toHaveLength(1);
     });
 
+    it('pins "latest commit" to the commit that is latest when the answer is submitted', async () => {
+      const pinned = 'f'.repeat(40);
+      await ctx.http().patch('/api/settings').send({ labRepoPath: '/tmp/lab' }).expect(200);
+      ctx.resolvedCommit = pinned;
+      try {
+        const latest = await ctx
+          .http()
+          .post('/api/tasks/m00-demo/t02-code/submissions')
+          .send({ type: 'repo' })
+          .expect(201);
+        expect(latest.body.commitSha).toBe(pinned);
+        expect(ctx.commitLookups.at(-1)).toEqual({ repoPath: '/tmp/lab' });
+
+        // A short id is stored in full as well.
+        const short = await ctx
+          .http()
+          .post('/api/tasks/m00-demo/t02-code/submissions')
+          .send({ type: 'repo', commitSha: 'fffffff' })
+          .expect(201);
+        expect(short.body.commitSha).toBe(pinned);
+        expect(ctx.commitLookups.at(-1)).toEqual({ repoPath: '/tmp/lab', commitSha: 'fffffff' });
+
+        // A commit the repository does not have stays as typed; the check run reports it.
+        ctx.resolvedCommit = null;
+        const unknown = await ctx
+          .http()
+          .post('/api/tasks/m00-demo/t02-code/submissions')
+          .send({ type: 'repo', commitSha: 'deadbeef' })
+          .expect(201);
+        expect(unknown.body.commitSha).toBe('deadbeef');
+
+        const db = ctx.app.get<Database>(DB);
+        for (const made of [latest, short, unknown]) {
+          await db.delete(schema.submissions).where(eq(schema.submissions.id, made.body.id));
+        }
+      } finally {
+        ctx.resolvedCommit = undefined;
+        await ctx.http().patch('/api/settings').send({ labRepoPath: null }).expect(200);
+      }
+    });
+
     it('reports a run whose checks could not be queued, so it does not wait for ever', async () => {
       const enqueue = vi
         .spyOn(ctx.app.get(QueueService), 'enqueueChecks')

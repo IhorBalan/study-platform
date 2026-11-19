@@ -6,6 +6,7 @@ import { CurriculumService } from '../curriculum/curriculum.service.js';
 import { InjectDb, type Database } from '../database/database.module.js';
 import { QueueService } from '../queue/queue.service.js';
 import { SubmissionReviewService } from '../review/review.service.js';
+import { CommitResolver } from './commit-resolver.service.js';
 
 const { submissions, verificationRuns, checkResults } = schema;
 
@@ -18,6 +19,7 @@ export class SubmissionsService {
     private readonly curriculum: CurriculumService,
     private readonly queue: QueueService,
     private readonly reviews: SubmissionReviewService,
+    private readonly commits: CommitResolver,
   ) {}
 
   async create(taskId: string, input: CreateSubmission): Promise<SubmissionDto> {
@@ -28,12 +30,19 @@ export class SubmissionsService {
       );
     }
 
+    // Pin "latest" to a commit now. If that is not possible, keep what was typed:
+    // the check run resolves it later and reports what is wrong.
+    const commitSha =
+      input.type === 'repo'
+        ? ((await this.commits.resolve(input.commitSha)) ?? input.commitSha ?? null)
+        : null;
+
     const { submissionId, runId } = await this.db.transaction(async (tx) => {
       const [submission] = await tx
         .insert(submissions)
         .values(
           input.type === 'repo'
-            ? { taskId, type: 'repo', folder: taskId, commitSha: input.commitSha ?? null }
+            ? { taskId, type: 'repo', folder: taskId, commitSha }
             : { taskId, type: 'text', body: input.body },
         )
         .returning({ id: submissions.id });

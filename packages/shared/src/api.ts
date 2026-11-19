@@ -388,6 +388,20 @@ export const RunChecksResponse = z.object({
 });
 export type RunChecksResponse = z.infer<typeof RunChecksResponse>;
 
+export const ResolveCommitRequest = z.object({
+  /** Absolute path of the learner's lab repository on the host. */
+  repoPath: z.string().min(1),
+  /** Omitted means the latest commit on the checked-out branch. */
+  commitSha: CommitSha.optional(),
+});
+export type ResolveCommitRequest = z.infer<typeof ResolveCommitRequest>;
+
+export const ResolveCommitResponse = z.object({
+  /** The full commit id, or null when the repository or the commit was not found. */
+  commitSha: z.string().nullable(),
+});
+export type ResolveCommitResponse = z.infer<typeof ResolveCommitResponse>;
+
 export const RunReviewRequest = z.object({
   taskId: z.string().regex(/^m\d{2}-[a-z0-9-]+\/t\d{2}-[a-z0-9-]+$/),
   /** Needed for code tasks: Claude reads the task folder exported at this commit. */

@@ -82,6 +82,33 @@ Examples:
 
 Interviewers asking "when would you use Lambda instead of a long-running service?" want this reasoning: short, event-driven, spiky or rare work goes to Lambda; long, steady, stateful or connection-heavy work goes to a container. Saying that the first version of a product can run entirely on one container service, and that Lambda is added for specific events, also shows you will not over-engineer.
 
+## A typical small-team AWS layout
+
+"How would you deploy this API on AWS?" expects a picture of the network as well as the compute. This is the usual one:
+
+```text
+              internet
+                 |
+        +--------+---------------------------- VPC ---+
+        |  public subnets (one per zone)              |
+        |    load balancer (ALB)      NAT gateway     |
+        |        |                        ^           |
+        |  private subnets (one per zone) |           |
+        |    ECS tasks (the API, workers) +           |
+        |        |                                    |
+        |    RDS Postgres                             |
+        +---------------------------------------------+
+```
+
+- A **VPC** is your private network in one region. It is cut into **subnets**, each in one availability zone. Use at least two zones so one failing zone does not take the service down.
+- A subnet is **public** when its route table sends internet traffic to an internet gateway, and **private** when it does not. Only the load balancer sits in public subnets. Tasks and the database sit in private ones, so nothing on the internet can open a connection to them.
+- A **security group** is the firewall around one resource. It is stateful: allow a request in and the reply goes out automatically. A rule can name another security group as the source, which gives the standard chain: the load balancer accepts 443 from anywhere, the tasks accept their port only from the load balancer's group, and the database accepts 5432 only from the tasks' group.
+- A **network ACL** is a filter on a whole subnet. It is stateless (replies need their own rule) and can deny. Most teams leave ACLs open and do the work in security groups.
+- Tasks in private subnets still need to reach out: to pull images, call Stripe, send logs. A **NAT gateway** in a public subnet gives them outbound access. It bills by the hour and per gigabyte, so one per zone is a visible line on a small bill; staging often runs with one.
+- **VPC endpoints** keep traffic to AWS services off the NAT. Gateway endpoints for S3 and DynamoDB cost nothing. Interface endpoints (SQS, ECR, Secrets Manager, CloudWatch Logs) bill by the hour each, so add them where the traffic or a security rule justifies it.
+
+A Lambda that talks to RDS must be attached to the VPC, and then it has no internet access unless it goes through the NAT or an endpoint. It also brings a connection problem: every concurrent invocation opens its own database connection, and a burst of a few hundred exhausts Postgres. **RDS Proxy** sits between them and shares a small pool of real connections. A long-running Fargate service with its own pool does not need it.
+
 ## Common mistakes
 
 - Running the whole NestJS monolith in Lambda by default and then fighting cold starts and connection limits.

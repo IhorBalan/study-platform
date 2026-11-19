@@ -40,3 +40,23 @@ body {
 .dark .shiki span {
   color: var(--shiki-dark);
 }
+
+/*
+ * On touch screens a target should be at least 24px tall (WCAG 2.2, target size).
+ * Links that stand alone in a list or heading, disclosure summaries and small
+ * buttons are one line of text, 16 to 22px. Links inside a sentence are exempt
+ * and stay as they are.
+ */
+@media (pointer: coarse) {
+  main :is(dd, dt, h2, h3) > a:only-child,
+  main li > a {
+    display: inline-block;
+    padding-block: 0.25rem;
+  }
+  main summary {
+    padding-block: 0.375rem;
+  }
+  main button {
+    min-height: 1.5rem;
+  }
+}

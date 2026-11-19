@@ -9,6 +9,7 @@ import type { Config } from './config.js';
 import { exec, TailBuffer } from './exec.js';
 import { readResults, watchFolderSize, type ReportedResult } from './results.js';
 import { prepareServices } from './services.js';
+import { CHECK_LABEL } from './sweep.js';
 
 const RUNNER_IMAGES = { node: 'study-runner-node', nest: 'study-runner-nest' } as const;
 const DEFAULT_MEMORY_MB = { node: 512, nest: 1024 } as const;
@@ -208,6 +209,8 @@ export async function runChecks(
         'run',
         '--name',
         name,
+        '--label',
+        CHECK_LABEL,
         '--network',
         config.LAB_NETWORK,
         '--memory',

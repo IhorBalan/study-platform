@@ -16,12 +16,12 @@
 - id: plan-vs-apply-role
   type: comparison
   front: Plan role vs apply role in CI
-  back: "The plan role is read-only and pull requests from the repository may assume it; it can still read the state, so keep secrets out of state. The apply role can change resources and trusts only main in an approved environment."
+  back: "The plan role is read-only and pull requests from the repository may assume it; it can still read the state, so keep secrets out of state. The apply role can change resources and trusts only the prod environment, which GitHub restricts to main and to approved runs."
   skills: [iac-team-practice]
 - id: oidc-sub-claim
   type: concept
   front: How does an AWS role make sure only the prod deploy job of one repository can assume it?
-  back: "Its trust policy requires the OIDC token's `sub` claim to equal, for example, `repo:acme/orders:environment:prod`."
+  back: "Its trust policy requires the OIDC token's `sub` claim to equal, for example, `repo:acme/orders:environment:prod`. The GitHub environment must also allow only `main` to deploy and require reviewers, because any job that declares the environment gets that claim."
   skills: [iac-team-practice]
 - id: plan-json-policy
   type: concept

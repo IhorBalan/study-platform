@@ -14,11 +14,12 @@ Status values: **Accepted** (in use), **Proposed** (a design rule for code not w
 - **Alternatives:** 3 days (`4320`). I tried it: today's lockfile has 30+ packages younger than that, so it would block the build thread's work.
 - **Revisit:** raise to 3 days once the stack settles and versions change less often.
 
-### S-002 · Release-age exclusions are temporary and must be removed — Temporary, expires 2026-11-19
+### S-002 · Release-age exclusions are temporary and must be removed — Superseded by D-109, 2026-11-19
 - **Context:** the build excluded `vitest@5.1.1`, `turbo@2.11.12`, `@tanstack/react-query@5.108.0` and their sub-packages, published 3 to 21 hours before install.
 - **Checked:** all twelve have SLSA provenance from their projects' CI and no install scripts, so they are kept.
 - **Rule:** an exclusion needs a reason here and is removed as soon as the version is older than the window. These can all go after 2026-11-19 08:00 UTC.
 - **Revisit:** if exclusions keep appearing, pin the previous version instead of excluding the new one.
+- **Outcome:** the build thread removed every exclusion on 2026-11-18 and pinned `turbo` 2.11.11 and `vitest` 5.1.0 instead. The rule is now "no exclusions at all" (D-109).
 
 ### S-003 · `trustPolicy: no-downgrade` and `blockExoticSubdeps: true` — Accepted, 2026-11-18
 - **Why:** refuses a version published with weaker evidence (no provenance or trusted publisher) than earlier versions of the same package, which is the usual signature of a stolen token. Blocks transitive dependencies from git URLs or tarballs, which skip registry checks.
@@ -56,19 +57,33 @@ Status values: **Accepted** (in use), **Proposed** (a design rule for code not w
 
 ## Sandbox, bridge and Claude CLI (design rules for steps not built yet)
 
-### S-010 · The Lambda emulator never gets the raw Docker socket — Proposed, 2026-11-18
+### S-010 · The Lambda emulator never gets the raw Docker socket — Accepted for now (no Lambda profile exists), 2026-11-19
 - **Rule:** in the `lambda` profile, Floci talks to Docker through a filtering socket proxy (for example `wollomatic/socket-proxy` with an allow-list) that refuses bind mounts, `privileged`, host networking and added capabilities. Floci joins a separate `lab-lambda-net` that only Lambda tasks' sandboxes join. The Floci image is pinned by digest.
 - **Why:** the sandboxes' network reaches Floci's unauthenticated API, and whoever controls a raw socket is root on the Docker host, which on macOS mounts `/Users`.
 - **Alternatives:** Docker-in-Docker (needs `privileged`, same problem); no Lambda practice (loses a core topic); run Lambda through the bridge (more bridge code).
+- **Status 2026-11-19:** the lab Floci service has no Docker socket and Lambda is taught without it. This rule applies if a Lambda profile is ever added.
 
-### S-011 · How the bridge runs the Claude CLI — Proposed, 2026-11-18
+### S-011 · How the bridge runs the Claude CLI — Accepted, implemented 2026-11-18 (D-100)
 - **Rule:** `claude -p` with `--setting-sources user`, `--strict-mcp-config --mcp-config '{"mcpServers":{}}'`, `--allowedTools "Read,Grep,Glob"`, `--disallowedTools "Bash,Edit,Write,WebFetch,WebSearch"`, the export directory as the only working directory, and never `--dangerously-skip-permissions`. Strip `.claude/`, `.mcp.json` and `CLAUDE.md` from the export before the run.
 - **Why:** in non-interactive mode the CLI loads project settings from the working directory without asking. Hooks in `.claude/settings.json` run shell commands on the host, outside the sandbox.
 
-### S-012 · Bridge input and transport rules — Proposed, 2026-11-18
+### S-012 · Bridge input and transport rules — Accepted, implemented 2026-11-18 (D-095)
 - **Rule:** spawn processes with `execFile` and argument arrays, never a shell. `commitSha` must match `^[0-9a-f]{40}$`; the folder must resolve inside the lab repo; put `--` before paths. Compare the shared secret with `crypto.timingSafeEqual`. Reject requests that carry an `Origin` header, and requests whose `Host` is not `127.0.0.1:<port>` or `localhost:<port>`. Generate the secret on first run instead of shipping `change-me`.
 - **Why:** blocks argument injection into `git archive` and `docker run`, path traversal, timing attacks on the secret, and browser-based DNS-rebinding requests.
 
-### S-013 · Pin container images by digest — Proposed, 2026-11-18
+### S-013 · Pin container images by digest — Accepted, implemented 2026-11-18 (D-105)
 - **Rule:** `node:24-alpine@sha256:…`, `postgres:18-alpine@sha256:…`, and the same for every lab image, bumped deliberately.
 - **Why:** a tag can point at a different image tomorrow. Not done in this PR because Docker Hub rate-limited the digest lookup.
+
+## Re-checks
+
+### S-014 · The runner image's npm lockfile gets the same release-age rule — Accepted, 2026-11-19
+- **Found by:** the 2026-11-19 re-check. The `nest` runner lockfile grew from 135 to 286 packages (AWS SDK, AI SDK, Stripe, BullMQ, OpenTelemetry and others). pnpm's `minimumReleaseAge` does not apply to it, and `standardwebhooks@1.3.0` was about 19 hours old when it was locked.
+- **Checked:** all 152 new runner packages and 20 new workspace packages come from the npm registry with integrity hashes, the young ones (`bullmq`, `hono`, `@hono/node-server`, `@anthropic-ai/sdk`, `@smithy/core`, `standardwebhooks`) all have SLSA provenance from their projects' CI, no names look like typosquats, and both audits report nothing new. The only new install script (`msgpackr-extract`) is an optional native speed-up that `--ignore-scripts` skips.
+- **Chosen:** `scripts/check-npm-lock.mjs`, run in the `supply-chain` CI job. It fails when an entry is not from the npm registry, has no integrity hash, or is younger than 24 hours.
+- **Alternatives:** install the runner packages with pnpm (would need a second pnpm project inside the image); npm's own release-age option (not available in the npm that ships with Node 24).
+
+### S-015 · Re-check findings that need no change — 2026-11-19
+- **Deprecated, not risky:** `prom-client` (renamed to `@prometheus-io/client`), `@opentelemetry/sdk-trace-base` and `-node` (merged into `@opentelemetry/sdk-trace`), `node-abort-controller`. Worth moving when those lessons are next edited, so learners meet the current names.
+- **Bridge spot check:** processes start without a shell, the commit is resolved to a full hex id, the secret comparison is constant-time, `Host` and `Origin` are checked, and the Claude CLI flags and stripped files match S-011.
+- **Low, accepted:** the bridge runs `git` inside the learner's lab repository, so that repository's `.git/config` is honoured. The commands used (`rev-parse`, `cat-file`, `archive`) do not run configured hooks or `fsmonitor`, and the learner is the only author.

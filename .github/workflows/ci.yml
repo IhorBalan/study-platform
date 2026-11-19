@@ -56,3 +56,5 @@ jobs:
       - run: pnpm audit --audit-level high
       - run: npm audit --package-lock-only --audit-level high
         working-directory: infra/docker/runner-nest
+      # npm has no release-age setting, so the runner image's lockfile gets the same rules here.
+      - run: node scripts/check-npm-lock.mjs infra/docker/runner-nest/package-lock.json

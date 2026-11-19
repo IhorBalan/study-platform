@@ -67,7 +67,7 @@ A database already has a log: Postgres writes every change to its write-ahead lo
 
 ## A first look at the code
 
-The examples in this module use Confluent's official Node client, `@confluentinc/kafka-javascript`. It wraps librdkafka (the C client) and offers a promise-based API that follows the shape of the older KafkaJS library. Configuration keys use librdkafka's dotted names.
+The examples in this module use Confluent's official Node client, `@confluentinc/kafka-javascript`. It wraps librdkafka (the C client) and offers a promise-based API that follows the shape of the older KafkaJS library. Configuration keys use librdkafka's dotted names. Many tutorials and older codebases still use KafkaJS itself. It has had no release since early 2023, so new projects should not start on it; the similar API makes moving off it a small job.
 
 Publish an event:
 

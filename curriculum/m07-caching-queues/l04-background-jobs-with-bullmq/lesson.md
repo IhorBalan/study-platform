@@ -84,7 +84,7 @@ A worker holds a **lock** on each active job and renews it while the handler run
 An idempotent handler gives the same outcome when it runs twice:
 
 - Use a natural key: `INSERT ... ON CONFLICT (order_id) DO NOTHING`, or an upsert.
-- Record what you did: `SET sent:<orderId> 1 NX EX <days>` before or after the side effect, and check it first.
+- Record what you did with `SET sent:<orderId> 1 NX EX <days>`, and know what the position of that line means. Recorded **before** the side effect, a crash or a failed send after the `SET` loses the email for good (at most once). Recorded **after**, two runs that overlap can both send (at least once). The usual pattern uses both: take a short claim key with a TTL before sending and release it if the send fails, write the `sent` marker after, and rely on the next point to cover a crash between the two.
 - Pass an idempotency key to the provider (Stripe, most email APIs accept one), so a repeat call is dropped on their side.
 - Prefer "set the state to X" over "add 1".
 

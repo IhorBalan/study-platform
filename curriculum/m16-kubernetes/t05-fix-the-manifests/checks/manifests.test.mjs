@@ -6,6 +6,8 @@ import { test } from 'node:test';
 import { parseAll } from './yaml.mjs';
 
 const dir = path.resolve(process.env.SUBMISSION_DIR ?? '.');
+const IMAGE = 'ghcr.io/acme/catalog';
+const BUILD = '8c1f4d2'; // from the brief: the commit SHA of the current build
 const DRAIN_SECONDS = 20; // from the brief: the app needs up to 20 s to finish its requests
 
 let cached;
@@ -87,15 +89,19 @@ test('service-port: the Service sends traffic to a port the container listens on
   assert.ok(servicePorts.some((sp) => sp.port === 80), 'Keep the Service on port 80: the route in front of it points there');
 });
 
-test('pinned-image: the image has an immutable tag or a digest, not latest', () => {
+test('pinned-image: the image is pinned to the current build, by its commit SHA or a digest', () => {
   for (const c of containers()) {
     const image = String(c.image ?? '');
     const name = image.split('/').at(-1);
-    const digest = name.includes('@sha256:');
-    const tag = name.includes(':') ? name.split(':').at(-1) : '';
+    const digest = /@sha256:[0-9a-f]{64}$/.test(name);
+    const tag = !name.includes('@') && name.includes(':') ? name.split(':').at(-1) : '';
+    assert.ok(!name.includes('@') || digest, `${c.name}: the image ${show(image)} has a digest that is not sha256 followed by 64 hex characters`);
     assert.ok(digest || tag !== '', `${c.name}: the image ${show(image)} has no tag, which means latest`);
-    assert.ok(digest || tag !== 'latest', `${c.name}: the image tag is latest. Pin a version such as the commit SHA.`);
+    assert.ok(digest || tag !== 'latest', `${c.name}: the image tag is latest. Pin the build by its commit SHA.`);
   }
+  const image = String(app().image ?? '');
+  assert.ok(image.startsWith(`${IMAGE}:`) || image.startsWith(`${IMAGE}@`), `Keep the image ${IMAGE}. Found: ${show(image)}`);
+  assert.ok(image.includes('@') || image === `${IMAGE}:${BUILD}`, `The image tag must be the commit SHA of the current build, ${BUILD}. A branch name or a version that someone can push again is not pinned. Found: ${show(image)}`);
 });
 
 const CPU_UNITS = { '': 1, m: 1e-3 };

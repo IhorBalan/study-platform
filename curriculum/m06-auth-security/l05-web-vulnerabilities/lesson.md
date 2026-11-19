@@ -11,7 +11,7 @@ Most serious web vulnerabilities come down to one mistake: data from outside is 
 | --- | --- | --- |
 | A01 | Broken Access Control | CSRF, SSRF (now part of A01) and the BOLA of lesson 4 |
 | A02 | Security Misconfiguration | |
-| A03 | Software Supply Chain Failures | |
+| A03 | Software Supply Chain Failures | Dependencies and install scripts |
 | A04 | Cryptographic Failures | |
 | A05 | Injection | SQL and command injection, and XSS |
 | A06 | Insecure Design | |
@@ -121,6 +121,22 @@ await db.query('UPDATE users SET name = $1 WHERE id = $2', [input.name, user.id]
 ```
 
 The mirror image is **excessive data exposure**: `SELECT *` or `RETURNING *` sent straight to the client leaks `password_hash`, internal flags and other users' emails. Name the columns, or map rows to a response type.
+
+## Supply chain: the code you did not write (A03)
+
+A Node service runs hundreds of packages written by strangers, and `npm install` gives each of them two chances to act: when it is installed (lifecycle scripts such as `postinstall` run with your user's rights) and when it is imported. In September 2025 the Shai-Hulud worm used exactly this. A hijacked package's install script stole npm and GitHub tokens from the machine, then used them to publish infected versions of the victim's own packages. Nobody typed a wrong package name; an ordinary install of an ordinary dependency was enough.
+
+The defence is a short list of habits, none of them clever:
+
+- **Commit the lockfile and install from it.** `npm ci` or `pnpm install --frozen-lockfile` installs exactly the recorded versions and fails if `package.json` disagrees. A plain `npm install` in CI can pull a version nobody reviewed.
+- **Do not run install scripts by default.** pnpm 10 and later skip dependency scripts unless the package is on an allow-list in `pnpm-workspace.yaml`; with npm, set `ignore-scripts=true` in `.npmrc`. Allow the few packages that need a build step (`esbuild`, native modules) by name.
+- **Wait before installing a new release.** Most hijacked versions are found and removed within hours. pnpm's `minimumReleaseAge` (in minutes) refuses anything younger; this repository sets it to one day.
+- **Update through reviewed pull requests.** Dependabot or Renovate opens one for each update, so a version change is a diff someone reads and CI tests, and not a side effect of another change.
+- **Audit, and know the limit.** `npm audit` and `pnpm audit` compare the lockfile with known advisories. They find old vulnerabilities; they cannot see a malicious version published an hour ago.
+- **Prefer packages with provenance.** A package published with npm provenance, through trusted publishing from CI, carries a signed statement of the repository and workflow that built it, and no long-lived publish token exists to steal.
+- **Keep secrets away from installs.** A CI job that only installs and tests needs no deploy keys. Pin GitHub Actions by commit SHA for the same reason: a tag can be moved to new code (module 14, lesson 2).
+
+This repository's `supply-chain` CI job is a working example: it installs with `--frozen-lockfile --ignore-scripts` and fails on any high or critical advisory.
 
 ## The common thread
 

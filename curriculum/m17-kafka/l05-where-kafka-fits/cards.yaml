@@ -13,16 +13,6 @@
   front: When is a Postgres table the best queue?
   back: "When the job must commit atomically with your data and volume is modest. Workers claim rows with `FOR UPDATE SKIP LOCKED`."
   skills: [kafka-vs-queues]
-- id: sns-sqs-fanout
-  type: concept
-  front: How do several services each receive every message on AWS without Kafka?
-  back: "Publish to an SNS topic with one SQS queue subscribed per service."
-  skills: [kafka-vs-queues]
-- id: sqs-fifo-ordering
-  type: cloze
-  front: "SQS FIFO queues keep order per {{message group ID}}."
-  back: message group ID
-  skills: [kafka-vs-queues]
 - id: sqs-no-replay
   type: concept
   front: Which Kafka capability does SQS lack entirely?

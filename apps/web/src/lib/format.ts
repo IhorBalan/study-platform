@@ -11,9 +11,9 @@ export function untilLabel(iso: string, now = Date.now()): string {
   return `${(days / 365).toFixed(1)} y`;
 }
 
-/** "1 h 20 min", "12 min", "under a minute". */
+/** "1 h 20 min", "12 min", "<1 min". Short on purpose: it sits in tiles and table cells. */
 export function durationLabel(seconds: number): string {
-  if (seconds < 60) return seconds === 0 ? '0 min' : 'under a minute';
+  if (seconds < 60) return seconds === 0 ? '0 min' : '<1 min';
   const minutes = Math.round(seconds / 60);
   if (minutes < 60) return `${minutes} min`;
   const hours = Math.floor(minutes / 60);

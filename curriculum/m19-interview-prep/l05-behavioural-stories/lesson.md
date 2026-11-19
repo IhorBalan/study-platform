@@ -51,6 +51,27 @@ Prompt: "Tell me about a production incident or a bug you caused."
 
 Notice the shape: short context, a lot of specific action, a result with a follow-on, and an honest lesson. It also bridges the frontend background towards the role.
 
+## Your 60-second pitch
+
+Almost every screen opens with "Tell me about yourself". It is not small talk. For a frontend developer applying to a backend-heavy role it is the answer that decides how the rest of the call is heard, because the interviewer's unspoken question is "why should I believe this person can do backend work?". Answer it before they ask.
+
+A pitch has four parts and takes about a minute:
+
+1. **Now.** Your role and what you build, in one sentence.
+2. **Backend evidence.** Two concrete things you have done on the server side, with a number or an outcome where you have one.
+3. **Why the move.** What pulls you towards backend work. Keep it positive and specific.
+4. **What you want next.** One sentence that matches the role you are talking about.
+
+A worked example:
+
+> I'm a frontend developer with five years in React, most recently on a booking product used by about 200 clinics. Over the last year more of my work has been on the server: I wrote our Next.js route handlers and the webhook that syncs payments, and I tracked a slow dashboard down to an N+1 query and fixed it with the backend team, which cut the page from four seconds to under one. I found I enjoy that side more, the data model, the failure cases, what happens under load, so I have been building it up deliberately: a NestJS and Postgres service with tests, queues and a deployment pipeline. I'm looking for a role where I own features end to end, API and data included, and your team's size is the reason I applied.
+
+Write yours down, then say it aloud until it stops sounding written. Do not recite your CV in order, and do not apologise for the frontend years: they are why you understand what an API's consumer needs.
+
+### The salary question
+
+Recruiter screens often ask "What are your salary expectations?". Decide your answer before the call. Either give a range you have researched for the role, level and location, with the bottom of the range a number you would accept, or ask for theirs first: "What is the range for this position?" is a normal question and many companies will answer it. Do not name a number you made up on the spot, and do not anchor on your current salary if you are changing role.
+
 ## Building a story bank
 
 You need six to eight stories that together cover the common prompts. One good story usually answers two or three questions from different angles. The common prompts at startups:

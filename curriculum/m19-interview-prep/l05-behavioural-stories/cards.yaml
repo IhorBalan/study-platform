@@ -53,3 +53,13 @@
   front: 'Interview: "How do you use AI coding tools, and how do you check their output?" What makes a good answer?'
   back: Be specific about what you use them for, then how you verify (read every diff, tests that fail when it is wrong, run it). Vague enthusiasm or denial both read badly.
   skills: [interview-behavioural]
+- id: pitch-shape
+  type: concept
+  front: 'Interview: "Tell me about yourself." What are the four parts of a 60-second pitch for a frontend developer moving to backend?'
+  back: Your role now, two concrete pieces of backend evidence (with a number), why you are moving (positive and specific), and what you want next, matched to the role.
+  skills: [interview-behavioural]
+- id: salary-question
+  type: concept
+  front: 'Recruiter screen: "What are your salary expectations?" What are the two sound ways to answer?'
+  back: Give a researched range for the role, level and location whose lower end you would accept, or ask for their range first. Never an improvised number.
+  skills: [interview-behavioural]

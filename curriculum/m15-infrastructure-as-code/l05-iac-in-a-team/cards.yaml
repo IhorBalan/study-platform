@@ -16,7 +16,7 @@
 - id: plan-vs-apply-role
   type: comparison
   front: Plan role vs apply role in CI
-  back: "The plan role is read-only and any pull request may assume it. The apply role can change resources and trusts only main in an approved environment."
+  back: "The plan role is read-only and pull requests from the repository may assume it; it can still read the state, so keep secrets out of state. The apply role can change resources and trusts only main in an approved environment."
   skills: [iac-team-practice]
 - id: oidc-sub-claim
   type: concept

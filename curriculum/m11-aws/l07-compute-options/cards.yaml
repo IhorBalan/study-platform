@@ -5,7 +5,7 @@
   skills: [aws-compute]
 - id: nest-on-aws
   type: concept
-  front: Where does a NestJS API with a Postgres pool usually run on AWS, and why?
+  front: Where does a NestJS API with a Postgres pool usually run on AWS?
   back: "ECS on Fargate behind a load balancer: a long-running container that pools connections and serves many requests at once."
   skills: [aws-compute]
 - id: fargate-term

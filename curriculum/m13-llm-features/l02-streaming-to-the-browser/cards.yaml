@@ -40,8 +40,8 @@
   skills: [llm-streaming]
 - id: backpressure
   type: concept
-  front: "Interview: what is backpressure, and how does it reach the model provider in a Node stream proxy?"
-  back: "A slow consumer making the producer wait. When `res.write()` returns false you await `drain`, the loop stops pulling parts, and the SDK stops reading from the provider."
+  front: "Interview: how does backpressure from a slow browser reach the model provider in a Node stream proxy?"
+  back: "When `res.write()` returns false you await `drain`, the loop stops pulling parts, and the SDK stops reading from the provider."
   skills: [llm-streaming]
 - id: retry-after-tokens
   type: concept

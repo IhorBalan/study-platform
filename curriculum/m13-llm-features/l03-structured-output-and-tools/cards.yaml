@@ -15,8 +15,8 @@
   skills: [llm-structured-output]
 - id: repair-once
   type: concept
-  front: What goes into a repair call for invalid model output, and how many repairs should you allow?
-  back: "The original messages, the invalid answer and the validation errors by field. Allow one; after that, fail with a domain error."
+  front: How many repair calls should you allow for invalid model output?
+  back: "One, sending the original messages, the invalid answer and the validation errors by field. After that, fail with a domain error."
   skills: [llm-structured-output]
 - id: repair-not-transport
   type: concept

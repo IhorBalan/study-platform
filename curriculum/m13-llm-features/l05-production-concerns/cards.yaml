@@ -50,8 +50,8 @@
   skills: [llm-production]
 - id: log-prompts-safely
   type: concept
-  front: What should an LLM feature log by default, and what only deliberately?
-  back: "By default: feature, model, tokens, finish reason, latency, prompt version. Full prompts only in a restricted store with retention limits, redacted."
+  front: What should an LLM feature log by default?
+  back: "Feature, model, tokens, finish reason, latency and prompt version. Full prompts only deliberately: in a restricted store with retention limits, redacted."
   skills: [llm-production, llm-security]
 - id: minimise-pii
   type: concept

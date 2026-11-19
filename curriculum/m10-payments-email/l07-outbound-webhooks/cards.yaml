@@ -25,8 +25,8 @@
   skills: [outbound-webhooks]
 - id: outbound-retry-policy
   type: concept
-  front: Which responses count as a successful webhook delivery, and what is special about 410?
-  back: "Only 2xx. Redirects, 4xx, 5xx and timeouts are retried with backoff and jitter; 410 Gone means disable the endpoint."
+  front: Which responses from a receiver count as a successful webhook delivery?
+  back: "Only 2xx. Redirects, other 4xx, 5xx and timeouts are retried with backoff and jitter, and 410 Gone means disable the endpoint."
   skills: [outbound-webhooks]
 - id: outbound-rotation
   type: concept

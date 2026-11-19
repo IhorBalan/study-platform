@@ -40,8 +40,8 @@
   skills: [slo-alerting]
 - id: low-traffic-alerts
   type: concept
-  front: Why are error-ratio alerts unreliable for a low-traffic endpoint, and what helps?
-  back: "One failure in ten requests is 10%. Require a minimum request rate, alert on counts, or add a synthetic check that sends steady traffic."
+  front: How do you make an error-ratio alert reliable for a low-traffic endpoint?
+  back: "Require a minimum request rate, alert on counts, or add a synthetic check that sends steady traffic. Otherwise one failure in ten requests reads as 10%."
   skills: [slo-alerting]
 - id: runbook-contents
   type: concept

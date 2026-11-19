@@ -30,8 +30,8 @@
   skills: [aws-fan-out]
 - id: subscribe-idempotent
   type: concept
-  front: What happens when setup code calls SNS `Subscribe` again with the same endpoint and attributes? And with different attributes?
-  back: "Same attributes: it returns the existing subscription. Different attributes: it fails; use `SetSubscriptionAttributes`."
+  front: "Setup code calls SNS `Subscribe` again for an existing endpoint, with different attributes. What happens?"
+  back: "It fails; change attributes with `SetSubscriptionAttributes`. With the same attributes the call is idempotent and returns the existing subscription."
   skills: [aws-fan-out]
 - id: eventbridge-envelope
   type: concept

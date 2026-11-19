@@ -3,7 +3,7 @@ title: The most-asked backend questions
 skills: [interview-core-questions]
 ---
 
-A handful of questions come up in loop after loop, across companies and across rounds: the event loop, isolation levels, pagination, rate limiting, webhooks, a latency spike after a deploy. The core modules teach each of them in depth. This short lesson is about answering them under interview conditions, and its deck collects the most-asked ones that are not already in an earlier module's deck, as a warm-up you can run the morning of an interview.
+A handful of questions come up in loop after loop, across companies and across rounds: the event loop, isolation levels, pagination, rate limiting, webhooks, a latency spike after a deploy. The core modules teach each of them in depth. This short lesson is about answering them under interview conditions, and its deck collects the most-asked ones as a warm-up you can run the morning of an interview. A few of its cards repeat facts from earlier decks on purpose, phrased the way an interviewer asks them.
 
 ## The shape of a good short answer
 
@@ -39,7 +39,7 @@ Say the steps out loud even when you think you know the answer. The interviewer 
 
 ## Where the rest lives
 
-The decks of earlier modules already ask many of the high-frequency questions with an "Interview:" prefix: sessions vs JWTs, SQL injection, XSS and CSRF, caching and stampedes, lost updates, the outbox pattern, Kubernetes probes, Kafka delivery guarantees. Run those decks too. This lesson's deck adds the most-asked questions that cut across modules:
+The decks of earlier modules already ask many of the high-frequency questions with an "Interview:" prefix: sessions vs JWTs, SQL injection, XSS and CSRF, caching and stampedes, lost updates, the outbox pattern, Kubernetes probes, Kafka delivery guarantees. Run those decks too. This lesson's deck is a mixed review of the most-asked questions that cut across modules:
 
 | Topic | Taught in |
 | --- | --- |

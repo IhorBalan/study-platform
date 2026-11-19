@@ -31,7 +31,7 @@
 - id: status-400-vs-422
   type: comparison
   front: "`400` vs `422`"
-  back: "`400`: the request is malformed, for example the JSON does not parse. `422`: it parses, but the content breaks a rule, for example a required field is missing."
+  back: "`400`: the request is malformed, for example the JSON does not parse. `422`: it parses, but the content is invalid. APIs differ on where schema errors such as a missing field go (Nest answers `400`), so pick one rule and document it."
   skills: [http-semantics]
 
 - id: no-cache-vs-no-store

@@ -15,7 +15,7 @@ Choose a messaging tool for three workloads at one company and defend each choic
 1. For each workload, **pick one** of: a Postgres table used as a queue, BullMQ, SQS (with SNS if you need it), or Kafka (self-hosted or managed). Name the deciding property of the workload.
 2. For each choice, name **one alternative you rejected** and the concrete reason.
 3. For workload 2, state the **key**, how the forecasting service gets **three months of history**, and what the team must operate or pay for that it does not today.
-4. For workload 3, explain how you make sure a supplier **never receives the same reorder twice**, even when your worker retries after a timeout.
+4. For workload 3, explain how you make sure a supplier **never receives the same reorder twice**, even when your worker retries after a timeout. Say also what you do with a supplier whose endpoint gives you no way to make a second attempt safe.
 5. Say what would have to change about the company or its traffic for you to choose **differently for workload 2**.
 
 ## What is assessed

@@ -172,7 +172,7 @@ test('pagination: following nextCursor returns every ticket once in order, the l
   assert.equal(exact.pages, 3, `12 tickets with limit 4 are 3 pages, but the walk took ${exact.pages}. The last full page must have nextCursor null.`);
   assert.equal(page(listTickets, [], {}, 'an empty list').nextCursor, null, 'An empty list has no next page');
 
-  const junk = ['garbage!!', Buffer.from('hello').toString('base64url'), Buffer.from('{"a":1}').toString('base64url'), 42];
+  const junk = ['', 'garbage!!', Buffer.from('hello').toString('base64url'), Buffer.from('{"a":1}').toString('base64url'), 42];
   for (const cursor of junk) {
     expectThrow(() => listTickets(tickets, { cursor }), ValidationError, `cursor ${JSON.stringify(cursor)}`);
   }
@@ -268,7 +268,7 @@ test('http-api: GET /tickets reads the query string, returns 200 with items and 
   assert.equal(cursor, null, 'Walking GET /tickets with limit=3 never reached a page with nextCursor null');
   assert.deepEqual(seen, expectedOrder(tickets, 'priority', 'open'), 'Walking GET /tickets?status=open&sort=priority&limit=3 must return every open ticket once, in order');
 
-  for (const query of ['limit=0', 'limit=101', 'limit=abc', 'limit=10abc', 'limit=1.5', 'limit=-3', 'status=done', 'sort=title', 'cursor=garbage!!']) {
+  for (const query of ['limit=0', 'limit=101', 'limit=abc', 'limit=10abc', 'limit=1.5', 'limit=-3', 'limit=1e1', 'limit=', 'limit=%205', 'limit=0x10', 'status=done', 'status=OPEN', 'sort=title', 'sort=%2Bpriority', 'cursor=garbage!!', 'cursor=']) {
     const res = await get(query);
     assert.equal(res.status, 400, `GET /tickets?${query}: expected 400, got ${res.status}`);
     assert.match(res.headers.get('content-type') ?? '', /^application\/problem\+json/, `GET /tickets?${query}: the error must be application/problem+json`);

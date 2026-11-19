@@ -8,14 +8,14 @@ Keep `ValidationError`. `listTickets(tickets, { status, sort, limit, cursor } = 
 
 - **`status`**: when given, keep only tickets in that status. Anything but the three statuses is a `ValidationError`.
 - **`sort`**: `createdAt`, `-createdAt`, `priority` or `-priority`; a leading `-` means descending. The default is `-createdAt`. Ties are broken by `id` in the same direction. Anything else is a `ValidationError`.
-- **`limit`**: a whole number from 1 to 100. The default is 20. Anything else is a `ValidationError`.
-- **`cursor`**: the `nextCursor` of the previous page, used with the same `status` and `sort`. The page starts right after the last ticket of that page. `nextCursor` is a non-empty string while more tickets follow, and `null` on the last page. The format is yours. A value that is not one of your cursors is a `ValidationError`.
+- **`limit`**: a whole number from 1 to 100, passed as a number (the string `'10'` is invalid here; turning query text into a number belongs in `server.mjs`). The default is 20. Anything else is a `ValidationError`.
+- **`cursor`**: the `nextCursor` of the previous page, used with the same `status` and `sort`. The page starts right after the last ticket of that page. `nextCursor` is a non-empty string while more tickets follow, and `null` on the last page. The format is yours. A value that is not one of your cursors, the empty string included, is a `ValidationError`.
 
 Pages must stay correct when the list changes between two calls: a ticket created or deleted in the meantime, including the last ticket of the previous page, causes no skipped and no repeated ticket.
 
 ## server.mjs
 
-`createApp(tickets)` returns an unstarted `node:http` server. `GET /tickets?status=&sort=&limit=&cursor=` answers `200` with `{ items, nextCursor }`. Invalid input answers `400` with an RFC 9457 problem document (`Content-Type: application/problem+json`, with `title` and `status`). `limit=10abc` is invalid. Unknown parameters are ignored.
+`createApp(tickets)` returns an unstarted `node:http` server. `GET /tickets?status=&sort=&limit=&cursor=` answers `200` with `{ items, nextCursor }` as `application/json`. Invalid input answers `400` with an RFC 9457 problem document (`Content-Type: application/problem+json`, with `title` and `status`). In the query, `limit` is decimal digits only: `limit=10abc`, `limit=1e1` and an empty `limit=` are invalid, and so is an empty `cursor=`. Unknown parameters are ignored.
 
 ## Tests and NOTES.md
 

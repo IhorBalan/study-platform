@@ -53,3 +53,8 @@
   front: What should still work after `FLUSHALL` on a cache?
   back: "Everything. A cache is a copy; it may be slower, but nothing may be lost or broken."
   skills: [cache-strategies]
+- id: cache-error-is-a-miss
+  type: concept
+  front: What should a cache-aside read do when the cache throws or times out?
+  back: "Treat it as a miss and load from the database. It needs a catch and a short command timeout, or a cache outage becomes an outage of the feature."
+  skills: [cache-strategies]

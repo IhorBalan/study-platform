@@ -237,8 +237,12 @@ function CardList({
       ) : (
         <ul className="mt-2 divide-y divide-zinc-200 rounded-lg border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
           {cards.map((card) => (
-            <li key={card.id} className="flex flex-wrap items-start justify-between gap-3 p-3">
-              <div className="min-w-0 flex-1 text-sm">
+            <li
+              key={card.id}
+              // On a phone the buttons go under the text, so the text gets the full width.
+              className="flex flex-col gap-3 p-3 sm:flex-row sm:items-start sm:justify-between"
+            >
+              <div className="min-w-0 text-sm sm:flex-1">
                 <div className="break-words [&_p]:font-medium">
                   <Markdown compact>{listFront(card)}</Markdown>
                 </div>

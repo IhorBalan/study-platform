@@ -58,3 +58,18 @@
   front: When should an uploaded document become visible to other users?
   back: "Only after the checks and a malware scan pass. Until then it stays pending, ideally in a quarantine prefix that nothing serves."
   skills: [presigned-urls]
+- id: s3-event-pipeline
+  type: concept
+  front: How does a worker learn that a file was uploaded straight to S3?
+  back: "The bucket sends an `s3:ObjectCreated:*` event notification, usually to an SQS queue. The worker reads the queue, checks and processes the object, then marks the file ready."
+  skills: [presigned-urls]
+- id: s3-events-at-least-once
+  type: concept
+  front: S3 event notifications can arrive twice or out of order. What must the worker do?
+  back: "Be idempotent: change the status only `where status = 'pending'` and write output to a key derived from the source. For order, compare the `sequencer` of events for the same key."
+  skills: [presigned-urls]
+- id: s3-event-loop
+  type: concept
+  front: A worker writes thumbnails into the prefix that triggers it. What happens?
+  back: "Each thumbnail raises a new event, so the worker triggers itself in a loop. Write results to another prefix or bucket."
+  skills: [presigned-urls]

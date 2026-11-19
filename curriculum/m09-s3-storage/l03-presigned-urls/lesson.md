@@ -117,6 +117,28 @@ For images, the strongest check is to **decode and re-encode** them in a worker 
 
 Never allow SVG or HTML uploads that are later served inline from your own domain: both can carry scripts. Serving user files from the bucket's own domain or a separate one, with `Content-Disposition: attachment` for documents, limits the damage.
 
+## A processing pipeline on S3 events
+
+"Design a file upload and processing pipeline" is a standard system design prompt. The usual answer puts a queue between the bucket and the workers:
+
+```text
+browser --PUT--> S3 bucket --s3:ObjectCreated:*--> SQS queue --> worker
+                                                                   |
+                 files row: pending -> ready / rejected  <---------+
+```
+
+The bucket sends an **event notification** for each new object. The destination can be an SQS queue, an SNS topic, a Lambda function or EventBridge. A queue is the common choice for heavy work: it holds events while workers are busy or down, retries failures, and moves messages that keep failing to a dead-letter queue. The queue needs a policy that lets the S3 service send to it, limited to your bucket.
+
+The worker does what step 3 did, plus the slow parts: check the object, scan it, re-encode or make thumbnails, then set the row to `ready`.
+
+Three properties of these events shape the worker:
+
+- **At least once.** The same event can arrive twice, so the worker must be idempotent. Make the status change conditional (`update files set status = 'ready' where id = $1 and status = 'pending'`) and write results to a key derived from the source key, so a second run overwrites the same output.
+- **No ordering.** Two writes to one key can arrive in either order. Each event record has a `sequencer` value; for the same key, the larger one is the later event. With versioning on, use the `versionId` from the event to read exactly the object the event is about.
+- **Encoded keys.** The key in the event is URL-encoded (a space arrives as `+`). Decode it before calling S3.
+
+Write results to a different prefix or bucket than the one that triggers the event. A worker that writes thumbnails back into the watched prefix triggers itself in a loop, and the bill shows it first.
+
 ## Common mistakes
 
 - Setting `ContentType` on the command and assuming it is enforced. Check `X-Amz-SignedHeaders` in the URL.

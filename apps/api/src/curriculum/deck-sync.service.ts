@@ -27,9 +27,11 @@ export class DeckSyncService implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
-    const { updated, added } = await this.sync();
-    if (updated > 0 || added > 0) {
-      this.logger.log(`Lesson cards brought up to date: ${updated} corrected, ${added} added`);
+    const { updated, added, retagged } = await this.sync();
+    if (updated > 0 || added > 0 || retagged > 0) {
+      this.logger.log(
+        `Lesson cards brought up to date: ${updated} corrected, ${added} added, ${retagged} with new skills`,
+      );
     }
   }
 
@@ -82,9 +84,10 @@ export class DeckSyncService implements OnApplicationBootstrap {
   /**
    * Corrects the text of lesson cards that changed in the files, and adds cards
    * that were written for a lesson after the learner finished it.
-   * A card the learner edited is theirs and is not touched.
+   * A card the learner edited keeps its text. Skills are not the learner's to
+   * edit, so every lesson card follows the files there.
    */
-  async sync(now = new Date()): Promise<{ updated: number; added: number }> {
+  async sync(now = new Date()): Promise<{ updated: number; added: number; retagged: number }> {
     return this.db.transaction(async (tx) => {
       const current = new Map(
         this.curriculum
@@ -116,6 +119,39 @@ export class DeckSyncService implements OnApplicationBootstrap {
         updated++;
       }
 
+      const owned = await tx
+        .select({ id: cards.id, key: cards.sourceKey })
+        .from(cards)
+        .where(and(eq(cards.source, 'lesson'), isNotNull(cards.sourceKey)));
+      const linked = new Map<string, string[]>();
+      if (owned.length > 0) {
+        const links = await tx
+          .select()
+          .from(cardSkills)
+          .where(
+            inArray(
+              cardSkills.cardId,
+              owned.map((c) => c.id),
+            ),
+          );
+        for (const link of links) {
+          linked.set(link.cardId, [...(linked.get(link.cardId) ?? []), link.skillId]);
+        }
+      }
+      let retagged = 0;
+      for (const row of owned) {
+        const card = current.get(row.key ?? '');
+        if (!card) continue;
+        const have = (linked.get(row.id) ?? []).toSorted();
+        const want = [...new Set(card.skills)].toSorted();
+        if (have.length === want.length && have.every((id, i) => id === want[i])) continue;
+        await tx.delete(cardSkills).where(eq(cardSkills.cardId, row.id));
+        if (want.length > 0) {
+          await tx.insert(cardSkills).values(want.map((skillId) => ({ cardId: row.id, skillId })));
+        }
+        retagged++;
+      }
+
       const done = await tx
         .select({ lessonId: lessonProgress.lessonId })
         .from(lessonProgress)
@@ -131,7 +167,7 @@ export class DeckSyncService implements OnApplicationBootstrap {
         const lesson = lessons.get(lessonId);
         if (lesson) added += await this.addDeck(tx, lesson, now);
       }
-      return { updated, added };
+      return { updated, added, retagged };
     });
   }
 }

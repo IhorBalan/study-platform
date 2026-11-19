@@ -49,7 +49,7 @@ Opening paragraph: what this is and why it matters, in two or three sentences.
 
 Rules for lesson text:
 
-- **Original and concise.** 500–900 words. Explain the idea, show one worked example, name the common mistakes. Do not copy documentation.
+- **Original and concise.** Aim for 800–1,500 words of prose, not counting code blocks. Above about 1,800, split the lesson. Explain the idea, show one worked example, name the common mistakes. Do not copy documentation.
 - **Written for this learner:** a strong React and TypeScript developer with basic backend knowledge. Compare with frontend concepts where it helps. Do not explain what a function or a Promise is.
 - **Plain language.** Short sentences, active voice, British or American spelling used consistently within a lesson. No filler, no hype.
 - **Code blocks** have a language tag (`ts`, `sql`, `sh`, `yaml`, `dockerfile`, `http`, `json`). Keep them short and runnable. TypeScript examples are ESM and target Node 24+.

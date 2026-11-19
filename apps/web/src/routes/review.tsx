@@ -65,17 +65,21 @@ function ReviewPage() {
       if (!cardId) throw new Error('no card');
       return api.submitReview(cardId, grade, Date.now() - shownAt.current);
     },
-    onSuccess: (_result, grade) => {
-      if (card) setLastGraded({ id: card.id, grade });
+    onSuccess: (result, grade) => {
+      if (card) setLastGraded({ id: card.id, reviewId: result.reviewId, grade });
       void queryClient.invalidateQueries({ queryKey: ['plan'] });
       return queryClient.invalidateQueries({ queryKey: ['review-queue'] });
     },
   });
 
   // The grade most recently given on this page, which can still be taken back.
-  const [lastGraded, setLastGraded] = useState<{ id: string; grade: Grade } | null>(null);
+  const [lastGraded, setLastGraded] = useState<{
+    id: string;
+    reviewId: string;
+    grade: Grade;
+  } | null>(null);
   const undo = useMutation({
-    mutationFn: (id: string) => api.undoReview(id),
+    mutationFn: (last: { id: string; reviewId: string }) => api.undoReview(last.id, last.reviewId),
     onSuccess: () => {
       setLastGraded(null);
       setRevealedId(null);
@@ -86,7 +90,7 @@ function ReviewPage() {
 
   const { mutate, isPending } = submit;
   const { mutate: undoMutate, isPending: undoPending } = undo;
-  const lastGradedId = lastGraded?.id;
+
   const onKey = useCallback(
     (event: KeyboardEvent) => {
       if (isPending || event.metaKey || event.ctrlKey || event.altKey) return;
@@ -96,8 +100,8 @@ function ReviewPage() {
       )
         return;
       // By physical key, so it works in any keyboard layout.
-      if (event.code === 'KeyZ' && lastGradedId && !undoPending) {
-        undoMutate(lastGradedId);
+      if (event.code === 'KeyZ' && lastGraded && !undoPending) {
+        undoMutate(lastGraded);
         return;
       }
       if (!cardId) return;
@@ -109,7 +113,7 @@ function ReviewPage() {
       const match = revealed && grades.find((g) => g.key === event.key);
       if (match) mutate(match.grade);
     },
-    [cardId, isPending, revealed, mutate, lastGradedId, undoPending, undoMutate],
+    [cardId, isPending, revealed, mutate, lastGraded, undoPending, undoMutate],
   );
   useEffect(() => {
     window.addEventListener('keydown', onKey);
@@ -251,7 +255,7 @@ function ReviewPage() {
             type="button"
             className="font-medium underline disabled:opacity-50"
             disabled={undo.isPending}
-            onClick={() => undo.mutate(lastGraded.id)}
+            onClick={() => undo.mutate(lastGraded)}
           >
             Undo
           </button>{' '}

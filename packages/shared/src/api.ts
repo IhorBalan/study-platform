@@ -235,8 +235,25 @@ export type SubmitReview = z.infer<typeof SubmitReview>;
 export const SubmitReviewResponse = z.object({
   state: CardState,
   due: z.string(),
+  /** Names this grade, so that an undo can say exactly which one it takes back. */
+  reviewId: z.string(),
 });
 export type SubmitReviewResponse = z.infer<typeof SubmitReviewResponse>;
+
+export const UndoReview = z.object({
+  /**
+   * The grade to take back. When given, the undo is refused unless it is still the
+   * card's latest grade, so a repeated request cannot take back the grade before it.
+   */
+  reviewId: z.string().uuid().optional(),
+});
+export type UndoReview = z.infer<typeof UndoReview>;
+
+export const UndoReviewResponse = z.object({
+  state: CardState,
+  due: z.string(),
+});
+export type UndoReviewResponse = z.infer<typeof UndoReviewResponse>;
 
 export const Editor = z.enum(['vscode', 'cursor', 'none']);
 export type Editor = z.infer<typeof Editor>;

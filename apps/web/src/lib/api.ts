@@ -18,6 +18,7 @@ import {
   SubmissionDto,
   SubmissionListResponse,
   SubmitReviewResponse,
+  UndoReviewResponse,
   TaskDetail,
   type CardStatus,
   type CreateCard,
@@ -100,8 +101,8 @@ export const api = {
       body: { grade, answerMs },
     }),
 
-  undoReview: (cardId: string) =>
-    request(`/review/${cardId}/undo`, SubmitReviewResponse, { method: 'POST', body: {} }),
+  undoReview: (cardId: string, reviewId: string) =>
+    request(`/review/${cardId}/undo`, UndoReviewResponse, { method: 'POST', body: { reviewId } }),
 
   cards: (status?: CardStatus) =>
     request(`/cards${status ? `?status=${status}` : ''}`, CardListResponse),

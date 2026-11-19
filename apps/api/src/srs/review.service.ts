@@ -6,6 +6,7 @@ import type {
   ReviewQueueResponse,
   SubmitReview,
   SubmitReviewResponse,
+  UndoReviewResponse,
 } from '@study/shared';
 import { CardState } from '@study/shared';
 import { and, asc, count, desc, eq, gt, gte, like, lte, min, ne, sql } from 'drizzle-orm';
@@ -226,16 +227,20 @@ export class ReviewService {
         lastReviewAt: before.lastReviewAt?.toISOString() ?? null,
         fsrs: before.fsrs,
       };
-      await tx.insert(reviews).values({
-        cardId,
-        grade: input.grade,
-        stateBefore,
-        reviewedAt: now,
-        answerMs: input.answerMs ?? null,
-        mode: 'self',
-        fsrsLog: log,
-        scheduleBefore,
-      });
+      const [review] = await tx
+        .insert(reviews)
+        .values({
+          cardId,
+          grade: input.grade,
+          stateBefore,
+          reviewedAt: now,
+          answerMs: input.answerMs ?? null,
+          mode: 'self',
+          fsrsLog: log,
+          scheduleBefore,
+        })
+        .returning({ id: reviews.id });
+      if (!review) throw new Error('review was not saved');
       await tx
         .update(cardSchedules)
         .set({
@@ -250,15 +255,16 @@ export class ReviewService {
         })
         .where(eq(cardSchedules.cardId, cardId));
 
-      return { state: next.state, due: next.due.toISOString() };
+      return { state: next.state, due: next.due.toISOString(), reviewId: review.id };
     });
   }
 
   /**
    * Takes back the card's latest grade: removes that review and puts the schedule
    * back exactly as it was. Only a grade from the last few minutes can be undone.
+   * With `reviewId`, only that grade: a second request for it finds it gone.
    */
-  async undo(cardId: string, now = new Date()): Promise<SubmitReviewResponse> {
+  async undo(cardId: string, reviewId?: string, now = new Date()): Promise<UndoReviewResponse> {
     return this.db.transaction(async (tx) => {
       // Same lock as a grade, so an undo and a grade of one card cannot interleave.
       const [schedule] = await tx
@@ -274,6 +280,9 @@ export class ReviewService {
         .orderBy(desc(reviews.reviewedAt))
         .limit(1);
       if (!last) throw new ConflictException('This card has no grade to undo.');
+      if (reviewId && last.id !== reviewId) {
+        throw new ConflictException('This grade was already undone, or the card was graded again.');
+      }
       if (now.getTime() - last.reviewedAt.getTime() > UNDO_WINDOW_MS) {
         throw new ConflictException(
           'This grade is more than 10 minutes old and can no longer be undone.',

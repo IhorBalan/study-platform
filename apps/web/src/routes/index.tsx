@@ -3,6 +3,7 @@ import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from '@ta
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { SetupPanel } from '../components/SetupPanel';
 import { api } from '../lib/api';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { reviewEstimate } from '../lib/format';
 
 const planQuery = queryOptions({ queryKey: ['plan'], queryFn: api.plan });
@@ -19,6 +20,7 @@ export const Route = createFileRoute('/')({
 
 function PlanPage() {
   const { data } = useSuspenseQuery(planQuery);
+  useDocumentTitle('Plan');
 
   return (
     <section>

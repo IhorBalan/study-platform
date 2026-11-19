@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Markdown } from '../../components/Markdown';
 import { NotesBox } from '../../components/NotesBox';
 import { api } from '../../lib/api';
+import { useDocumentTitle } from '../../lib/useDocumentTitle';
 import { lessonOutline, readingMinutes } from '../../lib/lessonOutline';
 import { useScrollMemory } from '../../lib/useScrollMemory';
 import { useStudySession } from '../../lib/useStudySession';
@@ -29,6 +30,7 @@ function LessonPage() {
   const queryClient = useQueryClient();
   const outline = useMemo(() => lessonOutline(lesson.markdown), [lesson.markdown]);
   useStudySession('lesson', id);
+  useDocumentTitle(lesson.title);
   useScrollMemory(id);
   const doneButton = useRef<HTMLButtonElement>(null);
   const completed = useRef<HTMLSpanElement>(null);

@@ -17,6 +17,9 @@ services:
       WEB_ORIGIN: http://localhost:8080
       BRIDGE_URL: http://host.docker.internal:${BRIDGE_PORT:-4100}
       BRIDGE_SECRET: ${BRIDGE_SECRET:?Run "pnpm dev" once, or "node scripts/ensure-env.mjs", to create .env}
+      # The learner's time zone, passed in by scripts/full-up.mjs. Without it the
+      # container runs in UTC and "today" ends at the wrong hour.
+      TZ: ${TZ:-UTC}
     depends_on:
       platform-db: { condition: service_healthy }
     read_only: true
@@ -41,6 +44,7 @@ services:
       DATABASE_URL: postgres://study:study@platform-db:5432/study
       BRIDGE_URL: http://host.docker.internal:${BRIDGE_PORT:-4100}
       BRIDGE_SECRET: ${BRIDGE_SECRET:?Run "pnpm dev" once, or "node scripts/ensure-env.mjs", to create .env}
+      TZ: ${TZ:-UTC}
     depends_on:
       api: { condition: service_healthy }
     read_only: true

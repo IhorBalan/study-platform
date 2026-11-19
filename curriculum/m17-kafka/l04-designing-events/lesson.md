@@ -69,18 +69,18 @@ Compaction suits state ("the profile is now X"). It is wrong for events where ev
 
 ## The dual-write problem
 
-Here is the bug in most first Kafka integrations:
+Module 8, lesson 4 covered this bug. With Kafka it is the most common first integration:
 
 ```ts
 await db.insert(orders).values(order);      // 1. commit to Postgres
 await producer.send({ topic: 'orders.events', messages: [event] }); // 2. publish
 ```
 
-If the process dies between 1 and 2, or Kafka is unreachable, the order exists and the event never does. Reversing the order is no better: the event announces an order that a failed transaction never saved. You cannot make two systems commit atomically from application code.
+If the process dies between 1 and 2, or Kafka is unreachable, the order exists and the event never does, and reversing the two is no better.
 
 ## The outbox pattern
 
-Write the event to a table **in the same database transaction** as the change. A separate process publishes it afterwards.
+The fix is the same outbox as in module 8: write the event to a table **in the same database transaction** as the change, and let a separate process publish it. What is new here is the shape of the table, which uses the column names Debezium's outbox router expects, and the question of how rows reach Kafka in order.
 
 ```sql
 CREATE TABLE outbox (

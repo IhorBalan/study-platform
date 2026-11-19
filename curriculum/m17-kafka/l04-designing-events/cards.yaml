@@ -38,16 +38,6 @@
   front: "To delete a key from a compacted topic, write a {{tombstone: that key with a `null` value}}."
   back: "tombstone: that key with a `null` value"
   skills: [kafka-event-design]
-- id: dual-write
-  type: concept
-  front: What goes wrong when a handler commits to Postgres and then calls `producer.send`?
-  back: "A crash or Kafka outage between the two leaves a saved change with no event. The two systems cannot commit atomically."
-  skills: [kafka-event-design]
-- id: outbox-pattern
-  type: term
-  front: Transactional outbox
-  back: "Insert the event into an `outbox` table in the same transaction as the change; a relay or CDC publishes it later. Example: Debezium's outbox router."
-  skills: [kafka-event-design]
 - id: debezium-postgres
   type: concept
   front: How does Debezium read changes from Postgres?

@@ -125,6 +125,7 @@ function ReviewPage() {
     },
     onSuccess: (result, grade) => {
       if (card) setLastGraded({ id: card.id, reviewId: result.reviewId, grade });
+      setUndone(false);
       void queryClient.invalidateQueries({ queryKey: ['plan'] });
       return queryClient.invalidateQueries({ queryKey: ['review-queue'] });
     },
@@ -136,10 +137,13 @@ function ReviewPage() {
     reviewId: string;
     grade: Grade;
   } | null>(null);
+  // Said once after an undo, so a screen reader hears that the grade is gone.
+  const [undone, setUndone] = useState(false);
   const undo = useMutation({
     mutationFn: (last: { id: string; reviewId: string }) => api.undoReview(last.id, last.reviewId),
     onSuccess: () => {
       setLastGraded(null);
+      setUndone(true);
       setRevealedId(null);
       void queryClient.invalidateQueries({ queryKey: ['plan'] });
       return queryClient.invalidateQueries({ queryKey: ['review-queue'] });
@@ -322,22 +326,30 @@ function ReviewPage() {
         </div>
       )}
 
-      {lastGraded && (
-        <p role="status" className="mt-4 text-center text-sm text-zinc-600 dark:text-zinc-300">
-          Last card graded {grades.find((g) => g.grade === lastGraded.grade)?.label}.{' '}
-          <button
-            type="button"
-            className="font-medium underline disabled:opacity-50"
-            disabled={undo.isPending}
-            onClick={() => undo.mutate(lastGraded)}
-          >
-            Undo
-          </button>{' '}
-          <span className="text-xs text-zinc-500 pointer-coarse:hidden dark:text-zinc-400">
-            (key Z)
-          </span>
-        </p>
-      )}
+      {/* Always in the page: a status that appears together with its text is often not read out. */}
+      <p
+        role="status"
+        className="mt-4 text-center text-sm text-zinc-600 empty:mt-0 dark:text-zinc-300"
+      >
+        {lastGraded ? (
+          <>
+            Last card graded {grades.find((g) => g.grade === lastGraded.grade)?.label}.{' '}
+            <button
+              type="button"
+              className="font-medium underline disabled:opacity-50"
+              disabled={undo.isPending}
+              onClick={() => undo.mutate(lastGraded)}
+            >
+              Undo
+            </button>{' '}
+            <span className="text-xs text-zinc-500 pointer-coarse:hidden dark:text-zinc-400">
+              (key Z)
+            </span>
+          </>
+        ) : undone ? (
+          'The last grade was undone. The card is back.'
+        ) : null}
+      </p>
       {undo.isError && (
         <p role="alert" className="mt-2 text-center text-sm text-red-600 dark:text-red-400">
           Could not undo: {undo.error.message}

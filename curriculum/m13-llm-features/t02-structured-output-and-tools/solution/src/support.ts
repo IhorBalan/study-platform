@@ -126,6 +126,7 @@ export async function runSupportAgent(
 ): Promise<{ text: string; steps: number; refunds: string[] }> {
   const maxSteps = options.maxSteps ?? 5;
   const refunds: string[] = [];
+  let refundClaimed = false;
 
   /** Loads an order only if it belongs to the signed-in customer. */
   const ownOrder = async (orderId: string) => {
@@ -154,14 +155,24 @@ export async function runSupportAgent(
       inputSchema: z.object({ orderId: OrderId, amountCents: z.number().int().positive() }),
       execute: async ({ orderId, amountCents }) => {
         // The model only proposes. These rules decide, whatever the prompt said.
-        if (refunds.length > 0) return { error: 'refund_limit_reached' };
-        const order = await ownOrder(orderId);
-        if (!order) return { error: 'order_not_found' };
-        if (order.status !== 'delivered') return { error: 'refund_not_allowed', reason: `order is ${order.status}` };
-        if (amountCents > order.totalCents) return { error: 'refund_not_allowed', reason: 'amount exceeds order total' };
-        const { refundId } = await deps.refund(order.id, amountCents);
-        refunds.push(refundId);
-        return { refundId, amountCents };
+        // The one refund is claimed before the first await. Two refundOrder calls in one
+        // step run at the same time, and a check that waits first would let both through.
+        if (refundClaimed) return { error: 'refund_limit_reached' };
+        refundClaimed = true;
+        let issued = false;
+        try {
+          const order = await ownOrder(orderId);
+          if (!order) return { error: 'order_not_found' };
+          if (order.status !== 'delivered') return { error: 'refund_not_allowed', reason: `order is ${order.status}` };
+          if (amountCents > order.totalCents) return { error: 'refund_not_allowed', reason: 'amount exceeds order total' };
+          const { refundId } = await deps.refund(order.id, amountCents);
+          issued = true;
+          refunds.push(refundId);
+          return { refundId, amountCents };
+        } finally {
+          // A refused or failed refund gives the claim back.
+          if (!issued) refundClaimed = false;
+        }
       },
     }),
   };

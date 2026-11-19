@@ -66,7 +66,7 @@ Use at least two roles per account:
 }
 ```
 
-A pull request from a branch cannot assume the prod apply role, so it cannot change prod however its workflow file is edited.
+The claim alone is half of the control. GitHub puts `environment:prod` in the subject of any job that declares `environment: prod`, and a branch can edit its workflow to declare it. What ties the role to `main` is the environment's own settings in GitHub: a deployment branch rule that allows only `main`, and required reviewers. With both in place, a job from another branch never starts in the `prod` environment, so it never gets a token with that subject.
 
 "Read-only" is weaker than it sounds for the plan role. It can read the state, and lesson 3 showed that state holds every secret in plain text, so anyone who can open a pull request and edit the workflow can run `tofu state pull`. A plan also runs code: providers and data sources such as `external` execute during it. Treat the plan role as "can read everything the state can", and limit the damage:
 

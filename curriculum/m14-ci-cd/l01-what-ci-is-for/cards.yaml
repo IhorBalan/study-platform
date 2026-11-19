@@ -22,8 +22,8 @@
   skills: [ci-pipeline-design]
 - id: cache-key-lockfile
   type: concept
-  front: What must a dependency cache key include, and why?
-  back: A hash of the lockfile (plus OS and runtime where it matters), so the cache is replaced exactly when the dependencies change.
+  front: What must a dependency cache key include?
+  back: "A hash of the lockfile (plus OS and runtime where it matters), so the cache is replaced exactly when the dependencies change."
   skills: [ci-pipeline-design]
 - id: frozen-lockfile
   type: term

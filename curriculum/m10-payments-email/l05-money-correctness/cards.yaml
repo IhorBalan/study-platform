@@ -10,8 +10,8 @@
   skills: [payment-reconciliation]
 - id: pg-bigint-string
   type: concept
-  front: "What does the `pg` driver return for a `bigint` column, and why does it matter for money?"
-  back: "A string, because a JS number cannot hold every 64-bit integer. Adding two of them concatenates: convert before summing."
+  front: "What goes wrong when you add two `bigint` money columns read through the `pg` driver?"
+  back: "They concatenate. `pg` returns `bigint` as a string, because a JS number cannot hold every 64-bit integer. Convert before summing."
   skills: [payment-reconciliation]
 - id: format-money
   type: snippet

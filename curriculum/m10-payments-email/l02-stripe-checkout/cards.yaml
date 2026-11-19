@@ -40,8 +40,8 @@
   skills: [stripe-checkout]
 - id: session-expiry
   type: concept
-  front: How long does a Checkout Session live by default, and what tells you it lapsed?
-  back: "24 hours, shorter if you set `expires_at`. Stripe then sends `checkout.session.expired`, your cue to release stock."
+  front: Which event tells you a Checkout Session lapsed unpaid?
+  back: "`checkout.session.expired`, sent after 24 hours by default (sooner if you set `expires_at`). It is your cue to release stock."
   skills: [stripe-checkout]
 - id: checkout-idempotency
   type: concept

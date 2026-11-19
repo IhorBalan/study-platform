@@ -1,6 +1,6 @@
 - id: three-kinds-of-slow
   type: concept
-  front: "Every route slow, lag high, CPU at one core: what kind of problem, and which tool?"
+  front: "Every route is slow, event loop lag is high and CPU sits at one core. What kind of problem is it?"
   back: "Synchronous work blocking the main thread. Record a CPU profile and look for the widest frames under the handler."
   skills: [node-diagnostics]
 - id: waiting-not-blocking

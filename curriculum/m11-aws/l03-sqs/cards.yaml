@@ -38,7 +38,7 @@
   skills: [aws-sqs]
 - id: dlq-redrive
   type: concept
-  front: What moves a message to an SQS dead-letter queue, and what must the worker do?
+  front: What moves a message to an SQS dead-letter queue?
   back: "The source queue's redrive policy, after `maxReceiveCount` receives. The worker only has to not delete failed messages."
   skills: [aws-sqs]
 - id: dlq-alarm

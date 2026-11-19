@@ -1,7 +1,7 @@
 - id: llm-call-shape
   type: concept
-  front: What does a chat model API call send, and what does it return?
-  back: "It sends instructions, the whole message history and settings (model, output cap, tools). It returns the next assistant turn, a stop reason and token usage."
+  front: What does a chat model API call return?
+  back: "The next assistant turn, a stop reason and token usage. You sent instructions, the whole message history and settings, because the API keeps no state."
   skills: [llm-api-basics]
 - id: stateless-history
   type: concept
@@ -20,8 +20,8 @@
   skills: [llm-api-basics]
 - id: token-cost-shape
   type: concept
-  front: "Interview: how is an LLM call billed, and which side is more expensive?"
-  back: "Per million input tokens and per million output tokens. Output costs several times more than input, so long answers dominate the bill."
+  front: "Interview: which side of an LLM call costs more, input or output tokens?"
+  back: "Output, by several times per million tokens, so long answers dominate the bill."
   skills: [llm-api-basics]
 - id: latency-shape
   type: concept

@@ -25,8 +25,8 @@
   skills: [subscription-billing]
 - id: trial-will-end
   type: concept
-  front: "When does `customer.subscription.trial_will_end` fire by default, and what do you do with it?"
-  back: "Three days before the trial ends. Remind the customer before the first charge, which prevents surprise disputes."
+  front: "What is `customer.subscription.trial_will_end` for?"
+  back: "Reminding the customer before the first charge, which prevents surprise disputes. It fires three days before the trial ends."
   skills: [subscription-billing]
 - id: proration-behaviors
   type: comparison

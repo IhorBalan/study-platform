@@ -97,17 +97,20 @@ Deploying from CI needs a deploy token (`fly tokens create deploy`) stored as a 
 
 ```yaml
 deploy:
-  needs: verify
+  needs: build # the image job of lesson 3, with `outputs: digest`
   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
   runs-on: ubuntu-latest
   environment: production
   steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-    - uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1 # v1
-    - run: flyctl deploy --remote-only
+    - uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1 # v1.6
+    - run: flyctl deploy --image "ghcr.io/acme/shop-api@$DIGEST"
       env:
+        DIGEST: ${{ needs.build.outputs.digest }}
         FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 ```
+
+`--image` deploys the image CI already built and tested, by digest, which keeps the "build once" rule of lesson 3. The shorter `flyctl deploy --remote-only` builds again on Fly's builder from the checked-out source. That is fine for a first deploy, but what runs in production is then not the image your tests ran against. For the digest to reach this job, the build job declares it as a job output: `outputs: { digest: ${{ steps.build.outputs.digest }} }`.
 
 To roll back, list earlier images with `fly releases --image` and deploy one again with `fly deploy --image <image>`. Like every image rollback, it does not touch the database.
 

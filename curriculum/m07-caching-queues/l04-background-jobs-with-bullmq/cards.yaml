@@ -23,11 +23,6 @@
   front: "BullMQ's exponential backoff waits {{delay × 2^(attempt − 1)}}: 1 s, 2 s, 4 s for a 1 s delay."
   back: "delay × 2^(attempt − 1)"
   skills: [background-jobs]
-- id: jitter-why
-  type: concept
-  front: Why add jitter to retry backoff?
-  back: "Jobs that failed together in an outage would otherwise all retry in the same instant and fail again."
-  skills: [background-jobs]
 - id: unrecoverable-error
   type: snippet
   front: Fail a BullMQ job at once, without using its remaining attempts.

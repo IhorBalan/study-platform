@@ -113,9 +113,9 @@ Note that the job holds a transaction open while it runs. For long jobs, use a l
 
 ## Distributed locks and fencing tokens
 
-You can also lock in Valkey with `SET lock:export <owner> NX PX 30000`. Any lock with an expiry has the problem lesson 3's lease had: a process that pauses (a long garbage collection, a frozen container) can lose its lock without knowing, while a second process takes it, and both then write.
+Module 7, lesson 6 covered locks in Valkey and why any lock with an expiry can fail: a paused process loses its lock without knowing, a second process takes it, and both write. It also gave the fix, a **fencing token**: a number that only increases with each grant, which the protected resource checks so that it rejects the older holder.
 
-The robust answer is a **fencing token**: each grant of the lock comes with a number that only increases, and the resource being protected rejects writes carrying an older number than one it has already seen. If that sounds familiar, it is a version column. Locks reduce how often two writers collide; the conditional write at the resource is what makes the collision harmless. When the resource is your Postgres, a conditional update often makes the external lock unnecessary.
+Seen from this lesson, a fencing token is a version column. Locks reduce how often two writers collide; the conditional write at the resource is what makes the collision harmless. When the resource is your Postgres, a conditional update often makes the external lock unnecessary.
 
 ## Deadlocks, once more
 

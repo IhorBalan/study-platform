@@ -28,11 +28,6 @@
   front: Why is a long max-age wrong for prices even if you invalidate Valkey on change?
   back: "Browsers and CDNs keep their copy for the whole max-age. Deleting a Valkey key does not reach them."
   skills: [cache-strategies]
-- id: no-cache-vs-no-store
-  type: comparison
-  front: "`Cache-Control: no-cache` vs `no-store`"
-  back: "no-cache may store but must revalidate before each reuse (cheap with an ETag and 304). no-store must not store at all."
-  skills: [cache-strategies]
 - id: private-directive
   type: concept
   front: "Why must a per-user response carry `Cache-Control: private`?"

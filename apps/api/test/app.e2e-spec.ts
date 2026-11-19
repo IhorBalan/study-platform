@@ -948,6 +948,13 @@ describe('API (e2e, real Postgres)', () => {
       expect(second).toMatchObject({ front: 'Q2', status: 'active', source: 'lesson' });
       expect(await decks.sync()).toEqual({ updated: 0, added: 0 });
 
+      // Saving the same text again is not an edit: corrections still arrive.
+      await http()
+        .patch(`/api/cards/${first.id}`)
+        .send({ type: first.type, front: 'Q1', back: first.back })
+        .expect(200);
+      expect((await card('c1'))?.editedAt).toBeNull();
+
       // A card the learner reworded, and one they deleted, are left alone.
       await http().patch(`/api/cards/${first.id}`).send({ front: 'My wording' }).expect(200);
       await http().delete(`/api/cards/${second?.id}`).expect(204);

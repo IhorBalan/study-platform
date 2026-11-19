@@ -69,12 +69,15 @@ export class CardsService {
   }
 
   async update(id: string, patch: UpdateCard): Promise<CardDto> {
-    await this.get(id);
+    const current = await this.get(id);
     if (Object.keys(patch).length > 0) {
       // Once the learner has changed the text, the card is theirs: a later
-      // correction in the curriculum must not overwrite it.
+      // correction in the curriculum must not overwrite it. A form that sends
+      // every field back unchanged is not an edit.
       const textChanged =
-        patch.type !== undefined || patch.front !== undefined || patch.back !== undefined;
+        (patch.type !== undefined && patch.type !== current.type) ||
+        (patch.front !== undefined && patch.front !== current.front) ||
+        (patch.back !== undefined && patch.back !== current.back);
       await this.db
         .update(cards)
         .set(textChanged ? { ...patch, editedAt: new Date() } : patch)

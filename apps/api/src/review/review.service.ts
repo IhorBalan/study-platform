@@ -221,6 +221,11 @@ export class SubmissionReviewService implements OnModuleInit {
         'The host bridge refused the request. Restart "pnpm dev" so the platform and the bridge use the same secret, or use copy and paste.',
       );
     }
+    if (res.status === 409) {
+      throw new BridgeProblem(
+        'Another review is running. Try again in a few minutes, or use copy and paste.',
+      );
+    }
     if (!res.ok) {
       throw new BridgeProblem(
         `The host bridge answered with an error (${res.status}). Try again, or use copy and paste.`,

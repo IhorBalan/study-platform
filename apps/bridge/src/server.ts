@@ -105,8 +105,10 @@ export function createBridgeServer({
   // One sandbox at a time keeps memory use predictable on a laptop.
   const inTurn = oneAtATime();
   // One review at a time too: each starts a Claude process, and several at once
-  // would compete for the same account limits. Reviews do not wait for sandboxes.
-  const reviewInTurn = oneAtATime();
+  // would compete for the same account limits. A second request is refused
+  // instead of queued: the API stops waiting after a few minutes, and a review
+  // that started after that would spend the learner's plan on a result nobody stores.
+  let reviewRunning = false;
 
   // The web app asks for the health every 30 seconds per open task page, and each
   // answer costs four child processes. A short memory keeps that to one set.
@@ -171,8 +173,14 @@ export function createBridgeServer({
       }
       const task = tasks.get(parsed.data.taskId);
       if (!task) return problem(res, 404, 'Not Found', `Unknown task ${parsed.data.taskId}.`);
-      const result: RunReviewResponse = await reviewInTurn(() => review(config, task, parsed.data));
-      return send(res, 200, result);
+      if (reviewRunning) return problem(res, 409, 'Conflict', 'Another review is running');
+      reviewRunning = true;
+      try {
+        const result: RunReviewResponse = await review(config, task, parsed.data);
+        return send(res, 200, result);
+      } finally {
+        reviewRunning = false;
+      }
     }
 
     return problem(res, 404, 'Not Found');

@@ -574,6 +574,10 @@ A lesson's deck is copied into the database when the lesson is completed (D-077:
 
 `AppModule` listed every controller and provider itself, so nothing said which feature may use which (code review R10). There is now one module per feature: `SettingsModule`, `SrsModule`, `PlanModule`, `StatsModule`, `NotesModule` and `SubmissionsModule` (submissions, the checks queue and Claude review). Each exports only what others use, and the imports form a line without cycles: Stats uses Plan, Plan uses Srs, Srs uses Settings. `WeakSkillsService` moved from `stats/` to `srs/`, because grading a card calls it and Stats only reads from it; leaving it in Stats would have made the two modules import each other. Config, the database and the curriculum stay global. It is a pure refactor, and it makes the platform's own code an example of what the NestJS modules lesson teaches.
 
+### D-154 · The bridge refuses a second review instead of queuing it — 2026-11-19
+
+Reviews were queued on the bridge so that only one Claude process runs at a time. A post-merge review found the flaw: a queued review can wait up to 6 minutes and then run for 6 more, while the API stops waiting after 8 and marks the run failed, so Claude would still run and spend the learner's plan on a result nobody stores. The bridge now answers a review request with 409 while another review is running, and the API shows "Another review is running. Try again in a few minutes, or use copy and paste." Considered: dropping queued jobs whose request has closed and raising the API timeout, which keeps the queue but adds two moving parts for a single-learner tool where two reviews at once is rare. Sandbox checks stay queued, because the worker waits 20 minutes and a pile-up is unlikely.
+
 ---
 
 ## Product direction

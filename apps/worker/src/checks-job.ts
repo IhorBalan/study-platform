@@ -1,5 +1,5 @@
 import { schema, type Database } from '@study/db';
-import { and, eq } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 import { BridgeUnavailableError, type RunChecksOnBridge } from './bridge-client.js';
 
 const { submissions, verificationRuns, checkResults, settings } = schema;
@@ -118,4 +118,26 @@ export async function failInterruptedRuns(db: Database): Promise<number> {
     .where(and(eq(verificationRuns.stage, 'checks'), eq(verificationRuns.status, 'running')))
     .returning({ id: verificationRuns.id });
   return failed.length;
+}
+
+/**
+ * Sends a job again for every check run that is still waiting.
+ *
+ * A run row and its job live in different places, and the job can be lost while
+ * the row stays: a backup leaves the queue's tables out, so after a restore a
+ * waiting run has no job, and nothing would ever pick it up. Call this once at
+ * start-up. A run whose job still exists gets a second one, which is harmless:
+ * a job claims its run only while the run is waiting.
+ */
+export async function resendWaitingRuns(
+  db: Database,
+  send: (runId: string) => Promise<unknown>,
+): Promise<number> {
+  const waiting = await db
+    .select({ id: verificationRuns.id })
+    .from(verificationRuns)
+    .where(and(eq(verificationRuns.stage, 'checks'), eq(verificationRuns.status, 'queued')))
+    .orderBy(asc(verificationRuns.createdAt));
+  for (const run of waiting) await send(run.id);
+  return waiting.length;
 }

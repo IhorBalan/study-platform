@@ -2,7 +2,7 @@ import { createDatabase } from '@study/db';
 import { CHECKS_QUEUE, ChecksJob } from '@study/shared';
 import { PgBoss } from 'pg-boss';
 import { createBridgeClient } from './bridge-client.js';
-import { failInterruptedRuns, processChecksJob } from './checks-job.js';
+import { failInterruptedRuns, processChecksJob, resendWaitingRuns } from './checks-job.js';
 import { loadConfig } from './config.js';
 
 const config = loadConfig();
@@ -20,6 +20,12 @@ const interrupted = await failInterruptedRuns(db);
 if (interrupted > 0) {
   console.log(`[worker] marked ${interrupted} run(s) interrupted by a restart as failed`);
 }
+
+// The same options the API uses when it queues a run.
+const resent = await resendWaitingRuns(db, (runId) =>
+  boss.send(CHECKS_QUEUE, { runId } satisfies ChecksJob, { retryLimit: 0 }),
+);
+if (resent > 0) console.log(`[worker] queued ${resent} waiting run(s) again`);
 
 await boss.work(CHECKS_QUEUE, async (jobs) => {
   for (const job of jobs) {

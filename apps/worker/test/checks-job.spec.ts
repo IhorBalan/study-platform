@@ -4,7 +4,7 @@ import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testconta
 import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { BridgeUnavailableError, type RunChecksOnBridge } from '../src/bridge-client.js';
-import { failInterruptedRuns, processChecksJob } from '../src/checks-job.js';
+import { failInterruptedRuns, processChecksJob, resendWaitingRuns } from '../src/checks-job.js';
 
 const { modules, tasks, submissions, verificationRuns, checkResults, settings } = schema;
 const TASK = 'm00-demo/t02-code';
@@ -171,5 +171,42 @@ describe('checks job (real Postgres)', () => {
 
     // Nothing is left to fail on the next start.
     expect(await failInterruptedRuns(handle.db)).toBe(0);
+  });
+
+  it('sends a job again for every run that is still waiting, and only for those', async () => {
+    const set = (id: string, values: Partial<typeof verificationRuns.$inferInsert>) =>
+      handle.db.update(verificationRuns).set(values).where(eq(verificationRuns.id, id));
+    // Earlier tests may have left runs waiting: settle them first.
+    await handle.db
+      .update(verificationRuns)
+      .set({ status: 'error' })
+      .where(eq(verificationRuns.status, 'queued'));
+    const first = await queueRun();
+    const second = await queueRun();
+    const done = await queueRun();
+    const review = await queueRun();
+    await set(done, { status: 'passed' });
+    await set(review, { stage: 'review' });
+
+    const sent: string[] = [];
+    const count = await resendWaitingRuns(handle.db, async (runId) => {
+      sent.push(runId);
+    });
+    expect(count).toBe(2);
+    expect(sent.toSorted()).toEqual([first, second].toSorted());
+
+    // A run that is sent twice is still checked once.
+    let calls = 0;
+    const runOnBridge: RunChecksOnBridge = async () => {
+      calls++;
+      return passing;
+    };
+    await handle.db
+      .insert(settings)
+      .values({ id: 1, labRepoPath: '/lab' })
+      .onConflictDoUpdate({ target: settings.id, set: { labRepoPath: '/lab' } });
+    await processChecksJob({ db: handle.db, runOnBridge }, first);
+    await processChecksJob({ db: handle.db, runOnBridge }, first);
+    expect(calls).toBe(1);
   });
 });

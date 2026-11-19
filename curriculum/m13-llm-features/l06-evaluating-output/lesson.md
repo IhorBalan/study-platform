@@ -30,7 +30,8 @@ test('invalid output gets one repair call that names the field', async () => {
   });
   const result = await triageTicket(model, 'The export button crashes the app.');
   assert.equal(result.attempts, 2);
-  assert.match(JSON.stringify(model.doGenerateCalls[1].prompt), /priority/);
+  // The last message is the repair request. The invalid answer before it names the field anyway.
+  assert.match(JSON.stringify(model.doGenerateCalls[1].prompt.at(-1)), /priority/);
 });
 ```
 

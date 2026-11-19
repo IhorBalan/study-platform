@@ -8,11 +8,6 @@
   front: What can a Postgres job queue such as pg-boss do that BullMQ cannot?
   back: "Enqueue a job in the same transaction as your data change, so both commit or neither does."
   skills: [durable-workflows]
-- id: skip-locked
-  type: concept
-  front: Why do Postgres job queues take jobs with `FOR UPDATE SKIP LOCKED`?
-  back: "Each worker locks a different row and skips rows others have locked, so many workers run in parallel without blocking."
-  skills: [durable-workflows]
 - id: pg-queue-cost
   type: concept
   front: What does a job queue in your main Postgres cost?

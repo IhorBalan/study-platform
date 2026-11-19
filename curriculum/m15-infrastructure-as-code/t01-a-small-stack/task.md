@@ -21,4 +21,10 @@ The checks do not run OpenTofu. If you have it installed, run `pnpm lab up aws`,
 
 ## What is checked
 
-The checks parse your `.tf` files and look at their structure: the blocks, their arguments and the references between them. Attribute order, file names and formatting do not matter. The review then looks at your settings and your README.
+The checks parse your `.tf` files and look at their structure: the blocks, their arguments and the references between them. Attribute order, file names and formatting do not matter. The review then looks at your settings and your README:
+
+- The dead-letter queue keeps messages longer than the jobs queue, `maxReceiveCount` is between 3 and 10, and the README gives the reason for both.
+- The lifecycle rule handles what versioning leaves behind (noncurrent versions or delete markers) and abandoned multipart uploads, and it depends on the versioning resource.
+- Variables have descriptions and at least one `validation` block. A variable has a default only where a default is safe, so `environment` has none.
+- The README says which provider settings exist only for the emulator and what changes for a real account, including where the credentials come from.
+- Files are split by purpose, references replace repeated names, and no TODOs or commented-out blocks are left.

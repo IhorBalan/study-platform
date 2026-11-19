@@ -214,6 +214,12 @@ function SettingsPage() {
           <code className="font-mono">pnpm dev</code> makes one when it starts if the newest is more
           than a day old. Run <code className="font-mono">pnpm backup</code> to make one now.
         </p>
+        <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+          Backups are files in the <code className="font-mono">backups</code> folder of the
+          platform. To go back to one, stop <code className="font-mono">pnpm dev</code> and run{' '}
+          <code className="font-mono">pnpm restore backups/&lt;file&gt;</code>. Your current data is
+          saved first, so a restore can be undone.
+        </p>
       </div>
     </section>
   );

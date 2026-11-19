@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { addLocalDays, localDayKeys, startOfLocalDay } from './time.js';
+import { addLocalDays, localDayKey, localDayKeys, startOfLocalDay } from './time.js';
 
 describe('local days across a daylight saving change', () => {
   const before = process.env.TZ;
@@ -44,5 +44,24 @@ describe('local days across a daylight saving change', () => {
   it('keeps midnight at midnight', () => {
     const next = addLocalDays(startOfLocalDay(new Date(2027, 2, 27, 12)), 2);
     expect([next.getDate(), next.getHours()]).toEqual([29, 0]);
+  });
+});
+
+describe('the local day far from UTC', () => {
+  const before = process.env.TZ;
+  beforeAll(() => {
+    process.env.TZ = 'America/New_York';
+  });
+  afterAll(() => {
+    if (before === undefined) delete process.env.TZ;
+    else process.env.TZ = before;
+  });
+
+  it('keeps an evening in New York on the same day, although UTC is already tomorrow', () => {
+    // 21:30 on 18 November in New York is 02:30 on 19 November in UTC.
+    const evening = new Date('2027-11-19T02:30:00Z');
+    expect(localDayKey(evening)).toBe('2027-11-18');
+    // Local midnight is 05:00 UTC, so the limits reset then and not at 19:00 local.
+    expect(startOfLocalDay(evening).toISOString()).toBe('2027-11-18T05:00:00.000Z');
   });
 });

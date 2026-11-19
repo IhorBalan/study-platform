@@ -618,6 +618,13 @@ D-161 removed only leftovers older than 30 minutes, so that a running `pnpm curr
 
 D-160 suspends a card whose key left the files and remembers the key, so a card the learner resumes is not suspended twice. The remembered key also kept the card suspended for ever if the key came back, for example after a removal was reverted. The sync now makes such a card active again and forgets the key. It tells the cases apart by the row: a card the learner deleted has a remembered key but no row, and a card the learner suspended has a row but no remembered key. One case is knowingly not covered: a card that was retired, resumed and then suspended by the learner would be made active if its key returned.
 
+### D-165 · Full mode runs in the host's time zone — 2026-11-19
+- **Problem:** found in code review 05. The API and worker containers ran in UTC, so in full mode "today" for review limits, streaks and Stats was the UTC day. That breaks D-082. `pnpm dev` was not affected.
+- **Chosen:** `pnpm full:up` now runs `scripts/full-up.mjs`, which reads the host's time zone and passes it to Compose as `TZ` for the API and the worker. A `TZ` already set in the shell wins.
+- **Why not in `.env`:** a stored zone would stay behind when the laptop travels. Reading it on every start follows the machine.
+- **Limit:** a running stack keeps the zone it started with until the next `pnpm full:up`.
+- **Not verified:** a full start here. The image build cannot reach the npm registry in this environment. Checked instead: Compose resolves `TZ` for both services, and the `node:24-alpine` base image follows `TZ` without extra packages.
+
 ---
 
 ## Product direction

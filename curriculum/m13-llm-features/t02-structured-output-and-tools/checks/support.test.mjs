@@ -129,7 +129,13 @@ test('triage-repair: invalid output gets exactly one repair call that shows the 
   assert.equal(model.doGenerateCalls.length, 2, `Expected 2 model calls, got ${model.doGenerateCalls.length}`);
   const repair = promptText(model.doGenerateCalls[1]);
   assert.ok(repair.includes('super-urgent'), 'The repair call must include the invalid answer, so the model can see what it got wrong.');
-  assert.ok(repair.includes('priority'), 'The repair call must name the field that failed validation ("priority").');
+  // The invalid answer itself contains the word "priority", and so may the instructions.
+  // Naming the field means one mention more than those.
+  const mentions = (s) => s.split('priority').length - 1;
+  assert.ok(
+    mentions(repair) > mentions(promptText(model.doGenerateCalls[0])) + mentions(invalid),
+    'The repair call must name the field that failed validation ("priority"). Showing the invalid answer again is not enough: say which field is wrong.',
+  );
   assert.ok(repair.includes('Ticket #4471'), 'The repair call must still include the original ticket.');
 
   const notJson = scripted([text('Sure! Here is the triage: category billing'), text(JSON.stringify(VALID))]);

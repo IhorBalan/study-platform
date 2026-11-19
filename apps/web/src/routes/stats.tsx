@@ -237,7 +237,7 @@ function Table({ caption, head, rows }: { caption: string; head: string[]; rows:
         <thead>
           <tr className="border-b border-zinc-200 text-xs text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
             {head.map((h, i) => (
-              <th key={i} scope="col" className="py-1 pr-4 font-normal">
+              <th key={i} scope="col" className="py-1 pr-4 font-normal whitespace-nowrap">
                 {h}
               </th>
             ))}
@@ -252,7 +252,11 @@ function Table({ caption, head, rows }: { caption: string; head: string[]; rows:
                     {cell}
                   </th>
                 ) : (
-                  <td key={j} className="py-1.5 pr-4 text-zinc-600 dark:text-zinc-300">
+                  <td
+                    key={j}
+                    // Numbers stay on one line; on a phone the name column wraps instead.
+                    className="py-1.5 pr-4 whitespace-nowrap text-zinc-600 dark:text-zinc-300"
+                  >
                     {cell}
                   </td>
                 ),

@@ -14,7 +14,7 @@ criteria:
   - { id: parses, title: "The manifests are readable and hold one Deployment, Service, HorizontalPodAutoscaler and PodDisruptionBudget" }
   - { id: selectors, title: "The Deployment, the Service and the PodDisruptionBudget all select the Pods of the template" }
   - { id: service-port, title: The Service sends traffic to a port the container listens on }
-  - { id: pinned-image, title: "The image has an immutable tag or a digest, not latest" }
+  - { id: pinned-image, title: "The image is pinned to the current build, by its commit SHA or a digest" }
   - { id: resources, title: Every container requests CPU and memory and has a memory limit }
   - { id: probes, title: "Readiness asks /readyz, and liveness does not depend on the database" }
   - { id: non-root, title: runAsNonRoot comes with a numeric non-zero runAsUser }

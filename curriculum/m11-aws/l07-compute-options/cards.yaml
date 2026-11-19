@@ -53,3 +53,33 @@
   front: How can an SQS worker for a NestJS app run on ECS without a second codebase?
   back: "As a second ECS service from the same image, started with a different command and its own task role."
   skills: [aws-compute]
+- id: public-vs-private-subnet
+  type: comparison
+  front: Public subnet vs private subnet
+  back: "A public subnet's route table sends internet traffic to an internet gateway; a private subnet's does not. The load balancer goes in public subnets, tasks and the database in private ones."
+  skills: [aws-compute]
+- id: sg-vs-nacl
+  type: comparison
+  front: Security group vs network ACL
+  back: "A security group protects one resource, is stateful and only allows. A network ACL filters a whole subnet, is stateless and can deny. Most rules live in security groups."
+  skills: [aws-compute]
+- id: sg-chain
+  type: concept
+  front: Which source should the database's security group allow on port 5432?
+  back: "The security group of the application tasks, not an IP range. Then only those tasks can connect, however their addresses change."
+  skills: [aws-compute]
+- id: nat-gateway-why
+  type: concept
+  front: What is a NAT gateway for, and why watch it on the bill?
+  back: "It lets resources in private subnets open outbound connections to the internet. It bills by the hour and per gigabyte, per gateway."
+  skills: [aws-compute]
+- id: vpc-endpoint-why
+  type: concept
+  front: What does a VPC endpoint change for traffic to S3 or SQS?
+  back: "The traffic stays inside the AWS network instead of going out through the NAT gateway. Gateway endpoints (S3, DynamoDB) are free; interface endpoints bill by the hour."
+  skills: [aws-compute]
+- id: rds-proxy-lambda
+  type: concept
+  front: Why put RDS Proxy between Lambda and Postgres?
+  back: "Each concurrent invocation opens its own connection, so a burst exhausts the database. The proxy shares a small pool of real connections."
+  skills: [aws-compute]

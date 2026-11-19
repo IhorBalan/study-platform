@@ -21,7 +21,7 @@ Lessons 3 to 7 cover every rule you need. You do not need a cluster. If you have
 
 ## What is checked
 
-The checks read your YAML and never talk to a cluster. They look at: selectors against the Pod labels, the Service's target port, the image tag, resource requests and the memory limit, the paths of the probes, `runAsNonRoot` with a numeric user, `replicas` against the autoscaler, what the disruption budget allows, and the grace period against the preStop sleep plus the 20 seconds above.
+The checks read your YAML and never talk to a cluster. They look at: selectors against the Pod labels, the Service's target port, the image tag, resource requests and the memory limit (present, in sensible units, request not above limit), the paths of the probes, `runAsNonRoot` with a numeric user, `replicas` against the autoscaler, what the disruption budget allows, and the grace period against the preStop sleep plus the 20 seconds above.
 
 The checks read plain YAML: mappings, lists, strings and numbers, with `[..]` and `{..}` on one line. Do not use anchors or aliases.
 

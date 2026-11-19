@@ -1,0 +1,28 @@
+title: Fix the manifests before they ship
+type: repo
+skills: [k8s-workloads, k8s-networking, k8s-config, k8s-health-scaling, k8s-delivery]
+services: []
+runner: node
+hints:
+  - "Start with the labels. Three objects select Pods: the Deployment, the Service and the PodDisruptionBudget. Write down the Pod labels and compare each selector with them."
+  - "Follow one request: Service port, targetPort, container port. Then follow one probe the same way."
+  - "Ask of each probe what happens to all Pods at once when PostgreSQL is slow for 30 seconds."
+  - "With an image that ends in `USER node`, the kubelet cannot prove that the user is not root. What does it need instead of a name?"
+  - "Add up what happens after a Pod is told to stop: the preStop sleep first, then the time the app needs. Compare the sum with the grace period."
+  - "With `minAvailable` equal to the number of replicas, how many Pods may a node drain evict?"
+criteria:
+  - { id: parses, title: "The manifests are readable and hold one Deployment, Service, HorizontalPodAutoscaler and PodDisruptionBudget" }
+  - { id: selectors, title: "The Deployment, the Service and the PodDisruptionBudget all select the Pods of the template" }
+  - { id: service-port, title: The Service sends traffic to a port the container listens on }
+  - { id: pinned-image, title: "The image has an immutable tag or a digest, not latest" }
+  - { id: resources, title: Every container requests CPU and memory and has a memory limit }
+  - { id: probes, title: "Readiness asks /readyz, and liveness does not depend on the database" }
+  - { id: non-root, title: runAsNonRoot comes with a numeric non-zero runAsUser }
+  - { id: hpa-owns-replicas, title: "The autoscaler targets the Deployment, and the Deployment sets no replicas" }
+  - { id: pdb-allows-eviction, title: The disruption budget leaves at least one Pod free to be evicted }
+  - { id: graceful-shutdown, title: The grace period covers the preStop sleep and the time the app needs to drain }
+rubric:
+  - { id: consequences, title: "NOTES.md names each problem and what it would have done in the cluster in concrete terms (rejected by the API server, no endpoints, CreateContainerConfigError, all Pods restarted during a database blip, drains that hang, requests killed on deploy), not only that it was wrong", skill: k8s-workloads, max: 4 }
+  - { id: values-with-reasons, title: "The chosen numbers are defensible and explained: memory request and limit that fit a Node process, no CPU limit or a reason for one, a grace period derived from the preStop sleep plus drain time, probe periods and thresholds that do not flap", skill: k8s-health-scaling, max: 3 }
+  - { id: minimal-diff, title: "The fix changes what is wrong and leaves the rest alone: names, namespace, ports and the rolling update strategy are kept, and anything left for later (for example readOnlyRootFilesystem) is listed with a reason instead of silently added or ignored", skill: k8s-delivery, max: 3 }
+limits: { timeoutSeconds: 60 }

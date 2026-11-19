@@ -652,6 +652,13 @@ D-160 suspends a card whose key left the files and remembers the key, so a card 
 - **What stays:** keyboard use of every page (focus order, visible focus, shortcuts on Review), readable contrast, and the semantic HTML and status regions that exist. They cost nothing to keep and they serve keyboard use too.
 - **Revisit:** if the platform is ever shared with other learners.
 
+### D-206 · A Kubernetes task with checked manifests, read by our own YAML reader — 2026-11-19
+
+- **Decision:** The Kubernetes module gets a fifth task, "Fix the manifests before they ship". The learner repairs ten planted defects in `k8s/*.yaml`, and ten static checks read the files: selectors, target port, image tag, resources, probe paths, non-root user, replicas against the autoscaler, the disruption budget and the grace period. No cluster is involved.
+- **Why:** All four tasks of the module were text, so the most testable rules it teaches were only ever graded by a rubric (content review round 4).
+- **The YAML reader:** the check sandbox has no YAML library and no network, and a rebuilt runner image cannot be tried in the build environment. The checks therefore carry a small reader (`checks/yaml.mjs`) for the YAML that manifests use. It rejects anchors, aliases, tags and multi-line flow collections with a message, and the brief says so. It reads every YAML block in the module's lessons and tasks.
+- **Revisit:** if a learner's valid YAML is rejected, add the `yaml` package to the runner image and drop the reader.
+
 ---
 
 ## Product direction

@@ -4,6 +4,7 @@ import { Link } from '@tanstack/react-router';
 import { useState, type FormEvent } from 'react';
 import { api } from '../lib/api';
 import { Markdown } from './Markdown';
+import { nothingToReview } from '../lib/nothingToReview';
 import { ReviewPanel } from './ReviewPanel';
 import { Button, Input } from './ui';
 
@@ -243,7 +244,8 @@ function SubmissionCard({ submission, open }: { submission: SubmissionDto; open:
           </ul>
         )}
 
-        <ReviewPanel submission={submission} />
+        {/* Without the code there is nothing for Claude to read. A review that exists stays visible. */}
+        {(submission.review || !nothingToReview(run)) && <ReviewPanel submission={submission} />}
 
         {submission.body && (
           // The answer box promises Markdown, so the saved answer is shown as Markdown too.

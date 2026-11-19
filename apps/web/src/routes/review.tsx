@@ -193,16 +193,28 @@ function ReviewPage() {
       {!card ? (
         <div className="rounded-lg border border-dashed border-zinc-300 p-8 text-center dark:border-zinc-700">
           <p className="font-medium">
-            {moduleId
-              ? 'Nothing due in this module right now.'
-              : counts.reviewedToday > 0
-                ? `Done for now: ${counts.reviewedToday} ${counts.reviewedToday === 1 ? 'card' : 'cards'} reviewed today.`
-                : 'Nothing due right now.'}
+            {queue.data.reviewLimitReached
+              ? `Daily review limit reached: ${counts.reviewedToday} cards reviewed today.`
+              : moduleId
+                ? 'Nothing due in this module right now.'
+                : counts.reviewedToday > 0
+                  ? `Done for now: ${counts.reviewedToday} ${counts.reviewedToday === 1 ? 'card' : 'cards'} reviewed today.`
+                  : 'Nothing due right now.'}
           </p>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            {queue.data.nextDue
-              ? `The next card is due ${untilDue(queue.data.nextDue)}.`
-              : 'Finish a lesson to add its cards, or add your own under Manage cards.'}
+            {queue.data.reviewLimitReached ? (
+              <>
+                Cards you have seen before come back tomorrow. To go on today, raise the limit in{' '}
+                <Link to="/settings" className="underline">
+                  Settings
+                </Link>
+                .
+              </>
+            ) : queue.data.nextDue ? (
+              `The next card is due ${untilDue(queue.data.nextDue)}.`
+            ) : (
+              'Finish a lesson to add its cards, or add your own under Manage cards.'
+            )}
           </p>
           {moduleId ? (
             <Link to="/review" className="mt-4 inline-block text-sm font-medium underline">

@@ -206,6 +206,25 @@ export function spacedRepetitionTests(ctx: E2eContext): void {
       await ctx.http().patch('/api/settings').send({ newCardsPerDay: 10 }).expect(200);
     });
 
+    it('says when the daily limit for seen cards is used up', async () => {
+      const before = await ctx.http().get('/api/review/queue').expect(200);
+      expect(before.body.reviewLimitReached).toBe(false);
+      const settings = await ctx.http().get('/api/settings').expect(200);
+
+      // A card was already reviewed a second time today, which uses up a limit of one.
+      await ctx.http().patch('/api/settings').send({ reviewsPerDay: 1 }).expect(200);
+      const res = await ctx.http().get('/api/review/queue').expect(200);
+      expect(res.body.reviewLimitReached).toBe(true);
+      expect(res.body.counts.due).toBe(0);
+      expect(res.body.cards.every((c: { state: string }) => c.state === 'new')).toBe(true);
+
+      await ctx
+        .http()
+        .patch('/api/settings')
+        .send({ reviewsPerDay: settings.body.reviewsPerDay })
+        .expect(200);
+    });
+
     it('does not let a suspended card be reviewed', async () => {
       const list = await ctx.http().get('/api/cards?status=active').expect(200);
       const target = list.body.cards.find((c: { state: string }) => c.state === 'new');

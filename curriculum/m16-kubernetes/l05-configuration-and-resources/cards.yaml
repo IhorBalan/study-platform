@@ -58,3 +58,13 @@
   front: Is a namespace a strong isolation boundary?
   back: "No. Pods in different namespaces share nodes and, by default, the network. Use separate clusters for strong isolation."
   skills: [k8s-config]
+- id: pod-aws-credentials
+  type: concept
+  front: How does a Pod on EKS call S3 without an access key?
+  back: "Its ServiceAccount is linked to an IAM role (EKS Pod Identity, or the older IRSA). The AWS SDK picks up short-lived credentials for that role automatically, so no key is stored in a Secret."
+  skills: [k8s-config]
+- id: service-account
+  type: term
+  front: ServiceAccount
+  back: "The identity a Pod runs as. RBAC grants it rights on the Kubernetes API, and a cloud provider can map it to a cloud role. Example: `serviceAccountName: api` in the Pod template."
+  skills: [k8s-config]

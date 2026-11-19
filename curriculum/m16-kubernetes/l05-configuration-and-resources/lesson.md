@@ -3,7 +3,7 @@ title: "Configuration: ConfigMaps, Secrets, resources and namespaces"
 skills: [k8s-config]
 ---
 
-The same image should run in staging and production. What differs is configuration, secrets and how much CPU and memory each copy gets. This lesson covers how Kubernetes delivers config and secrets to a container, what a Secret really protects (less than its name suggests), how resource requests and limits work, and how namespaces divide a cluster.
+The same image should run in staging and production. What differs is configuration, secrets and how much CPU and memory each copy gets. This lesson covers how Kubernetes delivers config and secrets to a container, what a Secret really protects (less than its name suggests), how a Pod gets cloud credentials without one, how resource requests and limits work, and how namespaces divide a cluster.
 
 ## ConfigMaps
 
@@ -84,6 +84,28 @@ containers:
 Never write the value as a literal (`env: [{ name: DATABASE_URL, value: "postgres://..." }]`) in the Deployment. It ends up in git, in `kubectl get deploy -o yaml` for anyone with read access to Deployments, and in CI logs.
 
 Mounting a Secret as files instead of env vars has two advantages: values are not visible in the process environment that crash reporters and child processes inherit, and rotated values reach running Pods. Env vars are simpler and fine for most APIs, as long as your logger never dumps `process.env`.
+
+## Cloud credentials without a Secret: workload identity
+
+The API needs to read from S3. The tempting answer is a Secret holding an AWS access key. That key never expires, works from anywhere, and is exactly the kind of long-lived credential modules 11 and 15 taught you to avoid. Kubernetes has a better building block.
+
+Every Pod runs as a **ServiceAccount**, an identity inside the cluster (`default` if you name none). It has two uses. Inside the cluster, RBAC `Role` and `RoleBinding` objects grant a ServiceAccount rights on the Kubernetes API, such as reading ConfigMaps; most application Pods need none. Outside the cluster, a cloud provider can trust that identity and exchange it for a cloud role.
+
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: api
+  namespace: shop
+---
+# in the Deployment's Pod template
+spec:
+  serviceAccountName: api
+```
+
+On EKS, **EKS Pod Identity** links a ServiceAccount to an IAM role with one association (cluster, namespace, ServiceAccount, role). An agent on each node hands the Pod short-lived credentials for that role, and the AWS SDK picks them up through its default credential chain, so the application code contains no key and no special setup. The older mechanism, **IRSA** (IAM Roles for Service Accounts), does the same job by annotating the ServiceAccount with a role ARN and trusting the cluster's OIDC issuer; you will still meet it in many clusters. GKE and AKS call their versions Workload Identity.
+
+The result is the same least-privilege shape as everywhere else in the course: one role per workload, only the permissions it needs, credentials that expire in hours, and nothing to leak from git or `kubectl get secret`. Give each workload its own ServiceAccount; Pods that share the `default` one share whatever it is allowed to do.
 
 ## Resource requests and limits
 

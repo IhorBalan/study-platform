@@ -14,6 +14,8 @@ When data changes, the cached copy must go. You have two options after writing t
 
 Prefer deleting. Updating looks fresher, but it races. Two admins save the same product a few milliseconds apart: A's database write lands first, then B's, but B's cache `SET` lands before A's. The database holds B's version and the cache holds A's, until the TTL ends. Deleting has no such ordering problem, because the next read always loads what the database holds now.
 
+Delete **after the transaction commits**, not inside it. A `DEL` sent before `COMMIT` lets a concurrent reader miss, load the old row (the new one is not visible yet) and put it back in the cache, where it stays until the TTL ends. If the process can crash between the commit and the delete, the TTL bounds the damage; when that is not good enough, drive invalidation from the outbox or change data capture (module 8).
+
 Find **every** write path. The admin form calls `invalidate()`, but the nightly CSV import, the migration script and the support team's SQL console do not. A short TTL is the safety net for the paths you missed.
 
 ## The race that deleting does not fix

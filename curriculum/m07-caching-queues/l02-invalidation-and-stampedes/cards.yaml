@@ -58,3 +58,8 @@
   front: "A cache key must include {{every input that changes the result}}, such as user, tenant, locale and currency."
   back: "every input that changes the result"
   skills: [cache-strategies]
+- id: invalidate-after-commit
+  type: concept
+  front: Why must cache invalidation run after COMMIT, not inside the transaction?
+  back: "Before the commit, a concurrent reader misses, loads the old row and caches it again. The stale copy then lives until the TTL ends."
+  skills: [cache-invalidation]

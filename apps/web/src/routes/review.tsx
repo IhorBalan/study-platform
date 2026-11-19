@@ -7,6 +7,7 @@ import { Button, PageHeader, Select } from '../components/ui';
 import { api } from '../lib/api';
 import { lessonParams, reviewEstimate, untilLabel } from '../lib/format';
 import { useStudySession } from '../lib/useStudySession';
+import { waitForNextDue } from '../lib/reviewWait';
 
 /** "in 14 hours", "in 3 days": how long until a moment in the future. */
 function untilDue(iso: string): string {
@@ -47,7 +48,13 @@ function ReviewPage() {
   const queue = useQuery({
     queryKey: ['review-queue', moduleId ?? null],
     queryFn: () => api.reviewQueue(moduleId),
+    // A card graded Again comes back within minutes. While the queue is empty and
+    // the next card is that close, ask again when it is due, so it appears by
+    // itself and the learner does not have to reload.
+    refetchInterval: (query) => waitForNextDue(query.state.data),
   });
+  // Read here so that each refetch renders again and "due in ..." stays current.
+  void queue.dataUpdatedAt;
   // Remember which card was revealed, so the next card starts hidden without a reset.
   const [revealedId, setRevealedId] = useState<string | null>(null);
   const shownAt = useRef(0);

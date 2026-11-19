@@ -3,11 +3,6 @@
   front: Authentication vs authorisation
   back: "Authentication establishes who the caller is. Authorisation decides whether that caller may do this action to this resource now."
   skills: [access-control]
-- id: 401-vs-403
-  type: comparison
-  front: 401 vs 403
-  back: "401: no valid credentials, the server does not know who you are. 403: it knows who you are and refuses."
-  skills: [access-control]
 - id: rbac-vs-abac
   type: comparison
   front: "Interview: RBAC vs ABAC?"

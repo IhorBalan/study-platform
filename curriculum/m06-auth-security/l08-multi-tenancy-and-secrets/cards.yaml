@@ -22,16 +22,6 @@
       USING (tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid);
     ```
   skills: [tenant-isolation]
-- id: set-config-local
-  type: concept
-  front: "Why set the tenant with `set_config('app.tenant_id', $1, true)` inside a transaction?"
-  back: "The true makes it transaction-local. A session-level SET would stay on the pooled connection and leak into the next request."
-  skills: [tenant-isolation]
-- id: rls-bypass
-  type: concept
-  front: Which database roles are not restricted by an RLS policy?
-  back: "Superusers, roles with BYPASSRLS, and the table owner unless FORCE ROW LEVEL SECURITY is set."
-  skills: [tenant-isolation]
 - id: secrets-where
   type: concept
   front: "Interview: how do you manage application secrets?"

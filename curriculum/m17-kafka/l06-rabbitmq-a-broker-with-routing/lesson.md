@@ -133,7 +133,12 @@ const conn = await connect(process.env.AMQP_URL ?? 'amqp://localhost', {
     },
   },
 });
+// Recovery re-emits connection errors here. With no 'error' listener, the first
+// heartbeat timeout would end the process before the reconnect could happen.
+conn.on('error', (err) => console.warn('RabbitMQ connection error', err.message));
 conn.on('disconnect', (err) => console.warn('RabbitMQ disconnected', err.message));
+// Recovery gave up: exit so the orchestrator restarts the process.
+conn.on('reconnect-failed', () => process.exit(1));
 ```
 
 The retry queue from the previous section (`email.orders.retry`, bound to `orders.dlx`) is declared the same way. The handler acknowledges, retries or parks:

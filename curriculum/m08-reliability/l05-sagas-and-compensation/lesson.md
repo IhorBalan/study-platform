@@ -75,6 +75,7 @@ const steps: Step[] = [
 
 export async function runCheckout(id: string): Promise<void> {
   let checkout = await load(id);
+  if (checkout.status === 'completed' || checkout.status === 'cancelled') return; // final: nothing to resume
   const done = steps.findIndex((s) => s.name === checkout.status) + 1; // resume after the last step that finished
   for (let i = done; i < steps.length; i++) {
     try {
@@ -82,7 +83,8 @@ export async function runCheckout(id: string): Promise<void> {
       checkout = await save(id, { ...changes, status: steps[i].name });
     } catch (error) {
       await save(id, { status: 'compensating', error: String(error) });
-      for (let j = i - 1; j >= 0; j--) await retryForever(() => steps[j].compensate(checkout));
+      // From i, not i - 1: the step that failed may have happened (a timeout during the charge).
+      for (let j = i; j >= 0; j--) await retryForever(() => steps[j].compensate(checkout));
       await save(id, { status: 'cancelled' });
       return;
     }
@@ -95,7 +97,8 @@ The details carry the reliability:
 
 - Every `run` is idempotent with a key derived from the checkout id, so resuming after a crash repeats the last step safely.
 - The status is saved after each step, so a worker that picks up a crashed checkout knows where it stopped. A sweeper job finds checkouts stuck in a non-final status for too long and runs them again. (A checkout found in `compensating` should go straight back to the compensation loop; the sketch leaves that branch out.)
-- Should the step that failed be compensated too? If it failed with an unknown outcome (a timeout during the charge), yes, because it may have happened. Compensations must therefore accept "there was nothing to undo".
+- The compensation loop includes the step that failed. If it failed with an unknown outcome (a timeout during the charge), it may have happened. Compensations must therefore accept "there was nothing to undo".
+- A checkout in a final status returns at once. Without that guard, `findIndex` gives -1 for `completed` and `cancelled`, and a sweeper would run a finished checkout again from the first step.
 - `retryForever` is a figure of speech: retry with backoff, and after a limit alert a human, leaving the status at `compensating`.
 
 Writing this by hand is fine for one or two flows. When you have many, long waits, or timers ("cancel if not paid within 30 minutes"), a durable workflow engine such as Temporal or a hosted one such as Inngest stores the progress for you. Module 7 compares them.

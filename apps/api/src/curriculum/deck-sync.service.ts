@@ -10,6 +10,13 @@ const { cards, cardSchedules, cardSkills, lessonProgress, removedLessonCards } =
 /** A transaction, or the database itself: both can run the same queries. */
 type Executor = Pick<Database, 'select' | 'insert' | 'update'>;
 
+export interface DeckSyncResult {
+  updated: number;
+  added: number;
+  retagged: number;
+  retired: number;
+}
+
 /**
  * Keeps the learner's copies of lesson cards in step with the curriculum files.
  *
@@ -27,10 +34,10 @@ export class DeckSyncService implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
-    const { updated, added, retagged } = await this.sync();
-    if (updated > 0 || added > 0 || retagged > 0) {
+    const { updated, added, retagged, retired } = await this.sync();
+    if (updated > 0 || added > 0 || retagged > 0 || retired > 0) {
       this.logger.log(
-        `Lesson cards brought up to date: ${updated} corrected, ${added} added, ${retagged} with new skills`,
+        `Lesson cards brought up to date: ${updated} corrected, ${added} added, ${retagged} with new skills, ${retired} retired`,
       );
     }
   }
@@ -86,8 +93,12 @@ export class DeckSyncService implements OnApplicationBootstrap {
    * that were written for a lesson after the learner finished it.
    * A card the learner edited keeps its text. Skills are not the learner's to
    * edit, so every lesson card follows the files there.
+   *
+   * A card that was removed from the files (a duplicate, or one whose id was
+   * renamed) is suspended once: it leaves the review queue but keeps its row,
+   * schedule and history, and the learner can resume it from the Cards page.
    */
-  async sync(now = new Date()): Promise<{ updated: number; added: number; retagged: number }> {
+  async sync(now = new Date()): Promise<DeckSyncResult> {
     return this.db.transaction(async (tx) => {
       const current = new Map(
         this.curriculum
@@ -103,20 +114,57 @@ export class DeckSyncService implements OnApplicationBootstrap {
           type: cards.type,
           front: cards.front,
           back: cards.back,
+          status: cards.status,
         })
         .from(cards)
         .where(and(eq(cards.source, 'lesson'), isNotNull(cards.sourceKey), isNull(cards.editedAt)));
       let updated = 0;
+      const left: { id: string; key: string }[] = [];
       for (const row of rows) {
         const card = current.get(row.key ?? '');
-        // A card that left the curriculum stays: the learner may be half-way through learning it.
-        if (!card) continue;
+        if (!card) {
+          if (row.key && row.status === 'active') left.push({ id: row.id, key: row.key });
+          continue;
+        }
         if (card.type === row.type && card.front === row.front && card.back === row.back) continue;
         await tx
           .update(cards)
           .set({ type: card.type, front: card.front, back: card.back })
           .where(eq(cards.id, row.id));
         updated++;
+      }
+
+      // Retire each card that left the curriculum, once. The key is remembered,
+      // so a card the learner resumes afterwards is not suspended again.
+      let retired = 0;
+      if (left.length > 0) {
+        const seen = await tx
+          .select({ key: removedLessonCards.sourceKey })
+          .from(removedLessonCards)
+          .where(
+            inArray(
+              removedLessonCards.sourceKey,
+              left.map((c) => c.key),
+            ),
+          );
+        const already = new Set(seen.map((r) => r.key));
+        const retire = left.filter((c) => !already.has(c.key));
+        if (retire.length > 0) {
+          await tx
+            .update(cards)
+            .set({ status: 'suspended' })
+            .where(
+              inArray(
+                cards.id,
+                retire.map((c) => c.id),
+              ),
+            );
+          await tx
+            .insert(removedLessonCards)
+            .values(retire.map((c) => ({ sourceKey: c.key })))
+            .onConflictDoNothing();
+          retired = retire.length;
+        }
       }
 
       const owned = await tx
@@ -167,7 +215,7 @@ export class DeckSyncService implements OnApplicationBootstrap {
         const lesson = lessons.get(lessonId);
         if (lesson) added += await this.addDeck(tx, lesson, now);
       }
-      return { updated, added, retagged };
+      return { updated, added, retagged, retired };
     });
   }
 }

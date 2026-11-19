@@ -5,6 +5,7 @@ import { asc, desc, eq, isNotNull, sql } from 'drizzle-orm';
 import { CurriculumService } from '../curriculum/curriculum.service.js';
 import { InjectDb, type Database } from '../database/database.module.js';
 import { ReviewService } from '../srs/review.service.js';
+import { openTasksForNextUp } from './open-tasks.js';
 
 @Injectable()
 export class PlanService {
@@ -125,18 +126,7 @@ export class PlanService {
         break;
       }
     }
-    const started = result.filter(
-      (m) =>
-        m.lessons.some((l) => l.status !== 'not_started') ||
-        m.tasks.some((t) => t.status !== 'not_started'),
-    );
-    const openTasks = started
-      .flatMap((m) =>
-        m.tasks
-          .filter((t) => t.status !== 'done')
-          .map((t) => ({ id: t.id, title: t.title, moduleTitle: m.title, type: t.type })),
-      )
-      .slice(0, 6);
+    const openTasks = openTasksForNextUp(result, lesson?.id ?? null);
 
     let continueWith: NextUp['continueWith'] = null;
     const last = lastOpened[0];

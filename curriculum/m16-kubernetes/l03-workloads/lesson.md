@@ -67,7 +67,7 @@ You change the image to `1.43.0` and apply. With `maxSurge: 1` and `maxUnavailab
 
 If a new Pod never becomes ready, the rollout stalls with the old Pods still serving, because `maxUnavailable: 0` forbids removing them. After `progressDeadlineSeconds` (default 600) the Deployment reports the rollout as failed. It does **not** roll back on its own; your pipeline or you must.
 
-The defaults are `maxSurge: 25%` and `maxUnavailable: 25%`, which may remove a ready Pod before its replacement is ready. For a small API with three replicas, `maxSurge: 1, maxUnavailable: 0` is the safer choice.
+The defaults are `maxSurge: 25%` and `maxUnavailable: 25%`. Kubernetes rounds the surge up and the unavailable count down. With three replicas that gives surge 1 and unavailable 0, so nothing is removed early. From four replicas up, 25% unavailable is at least one Pod, and the rollout may remove a ready Pod before its replacement is ready. Set `maxSurge: 1, maxUnavailable: 0` explicitly, so the rule does not depend on the replica count.
 
 The other strategy, `Recreate`, kills all old Pods before starting new ones. Use it only when two versions must never run at once, and accept downtime.
 
@@ -140,7 +140,7 @@ Write job code to be **idempotent**. A Job can run a Pod more than once (a retry
 ## Common mistakes
 
 - Creating bare Pods. Nothing recreates them when they die.
-- Leaving the default `maxUnavailable: 25%` on a small Deployment and dropping capacity during each deploy.
+- Leaving the default `maxUnavailable: 25%` and dropping capacity during each deploy once the Deployment grows to four replicas or more.
 - Running `kubectl rollout undo` and not reverting git, so the next deploy re-breaks production.
 - Database migrations in the app's start-up code, run by every replica at once. Use a Job or a pipeline step.
 - Non-idempotent Jobs that charge a card twice on a retry.

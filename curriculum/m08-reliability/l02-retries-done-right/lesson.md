@@ -50,20 +50,30 @@ const RETRY_STATUS = new Set([408, 429, 502, 503, 504]);
 
 export async function getJson(url: string, deadline: AbortSignal, retries = 3): Promise<unknown> {
   for (let attempt = 0; ; attempt++) {
+    let wait = backoffDelay(attempt + 1);
     try {
       const res = await fetch(url, { signal: AbortSignal.any([deadline, AbortSignal.timeout(1_000)]) });
       if (res.ok) return await res.json();
       if (!RETRY_STATUS.has(res.status) || attempt === retries) {
         throw new Error(`GET ${url} failed with ${res.status}`);
       }
+      wait = retryAfterMs(res) ?? wait;            // the server's own number wins
       await res.body?.cancel();                    // free the connection before waiting
     } catch (error) {
       if (deadline.aborted) throw deadline.reason;  // out of budget: stop
       const transient = error instanceof TypeError || (error as Error).name === 'TimeoutError';
       if (!transient || attempt === retries) throw error;
     }
-    await sleep(backoffDelay(attempt + 1), deadline);
+    await sleep(wait, deadline);
   }
+}
+
+/** `Retry-After: 2` (seconds) or an HTTP date. Undefined when absent or unreadable. */
+function retryAfterMs(res: Response): number | undefined {
+  const value = res.headers.get('retry-after');
+  if (!value) return undefined;
+  const ms = /^\d+$/.test(value) ? Number(value) * 1_000 : Date.parse(value) - Date.now();
+  return Number.isFinite(ms) ? Math.max(0, ms) : undefined;
 }
 
 function sleep(ms: number, signal: AbortSignal): Promise<void> {

@@ -260,8 +260,16 @@ function ReviewPage() {
                   type="button"
                   disabled={submit.isPending}
                   onClick={() => submit.mutate(g.grade)}
-                  className={`rounded-md border-2 px-2 py-2 text-sm hover:bg-zinc-50 disabled:opacity-50 dark:hover:bg-zinc-900 ${g.tone}`}
+                  aria-keyshortcuts={g.key}
+                  className={`relative rounded-md border-2 px-2 py-2 text-sm hover:bg-zinc-50 disabled:opacity-50 dark:hover:bg-zinc-900 ${g.tone}`}
                 >
+                  {/* The key that grades, where the eye already is. Not on a touch screen. */}
+                  <kbd
+                    aria-hidden="true"
+                    className="absolute top-1 right-1.5 font-mono text-[0.65rem] leading-none text-zinc-500 pointer-coarse:hidden dark:text-zinc-400"
+                  >
+                    {g.key}
+                  </kbd>
                   <span className="block font-medium">{g.label}</span>
                   <span className="block text-xs text-zinc-500 dark:text-zinc-400">
                     {untilLabel(card.preview[g.grade] ?? card.due)}

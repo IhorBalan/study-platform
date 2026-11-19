@@ -14,7 +14,7 @@ skills: [kafka-vs-queues]
 | Retries, delays, priorities | You build them (or pg-boss, Graphile Worker) | Built in | Visibility timeout, redrive to a DLQ, delay | You build them (retry and dead-letter topics) |
 | Ordering | Whatever your query says | Per queue, loosely | None (standard), per message group (FIFO) | Per partition |
 | Several independent readers | No | No | Via SNS fan-out to several queues | Yes, one group each |
-| Replay | No | No | No | Yes, within retention |
+| Replay | No | No | Not from SQS; an SNS FIFO topic can archive and replay | Yes, within retention |
 | What you operate | Nothing new | A Valkey instance | Nothing | A cluster, or a paid managed service |
 | Throughput | Moderate; jobs compete with your app's queries | High for jobs | Very high, scales without you | Very high and sustained, through batching |
 
@@ -28,7 +28,7 @@ You have a Node backend that needs **background jobs**: emails, image processing
 
 ### Choose SQS (with SNS) when
 
-You are on AWS, want a queue with **no servers at all**, and pay per request. Use SNS in front of several SQS queues when more than one service must react to the same message. FIFO queues give ordering per message group and deduplicate within a 5-minute window. What you do not get is replay: once a message is deleted, it is gone, and retention tops out at 14 days.
+You are on AWS, want a queue with **no servers at all**, and pay per request. Use SNS in front of several SQS queues when more than one service must react to the same message. FIFO queues give ordering per message group and deduplicate within a 5-minute window. What a queue does not give you is replay: once a message is deleted, it is gone, and retention tops out at 14 days. The one exception sits in front of the queue: an SNS FIFO topic can keep an archive (up to 365 days) and replay it to a subscription.
 
 ### Choose Kafka when
 

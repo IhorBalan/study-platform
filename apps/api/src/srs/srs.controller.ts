@@ -16,11 +16,13 @@ import {
   CreateCard,
   ReviewQueueQuery,
   SubmitReview,
+  UndoReview,
   UpdateCard,
   type CardDto,
   type CardListResponse,
   type ReviewQueueResponse,
   type SubmitReviewResponse,
+  type UndoReviewResponse,
 } from '@study/shared';
 import { z } from 'zod';
 import { CurriculumService } from '../curriculum/curriculum.service.js';
@@ -95,8 +97,12 @@ export class SrsController {
 
   @Post('review/:cardId/undo')
   @HttpCode(200)
-  async undo(@Param('cardId', ParseUUIDPipe) cardId: string): Promise<SubmitReviewResponse> {
-    const result = await this.review.undo(cardId);
+  async undo(
+    @Param('cardId', ParseUUIDPipe) cardId: string,
+    // A request with no body at all is the plain "undo the latest grade".
+    @Body({ schema: UndoReview.default({}) }) body: UndoReview,
+  ): Promise<UndoReviewResponse> {
+    const result = await this.review.undo(cardId, body.reviewId);
     // The grade that is gone may have been what put a skill on the refresh list.
     try {
       await this.weakSkills.evaluate();

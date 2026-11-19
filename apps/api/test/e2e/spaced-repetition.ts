@@ -142,6 +142,26 @@ export function spacedRepetitionTests(ctx: E2eContext): void {
       await ctx.http().post(`/api/review/${target.id}`).send({ grade: 'good' }).expect(200);
       await ctx.http().post(`/api/review/${target.id}/undo`).expect(200);
 
+      // With the grade named, a repeated request (a double click) takes back one grade only.
+      await ctx.http().post(`/api/review/${target.id}`).send({ grade: 'again' }).expect(200);
+      await ctx.makeDue(target.id);
+      const second = await ctx
+        .http()
+        .post(`/api/review/${target.id}`)
+        .send({ grade: 'good' })
+        .expect(200);
+      const undo = () =>
+        ctx.http().post(`/api/review/${target.id}/undo`).send({ reviewId: second.body.reviewId });
+      const twice = await Promise.all([undo(), undo()]);
+      expect(twice.map((r) => r.status).toSorted()).toEqual([200, 409]);
+      // Take the first of the two back as well, so later tests see the card as before.
+      await ctx.http().post(`/api/review/${target.id}/undo`).expect(200);
+      expect(
+        (await ctx.http().get('/api/cards').expect(200)).body.cards.find(
+          (c: { id: string }) => c.id === target.id,
+        ),
+      ).toEqual(before);
+
       await ctx.http().post('/api/review/00000000-0000-4000-8000-000000000000/undo').expect(404);
     });
 

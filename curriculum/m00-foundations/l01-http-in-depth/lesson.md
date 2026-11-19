@@ -85,7 +85,7 @@ Vary: Origin
 
 For cookies or other credentials, the server must also send `Access-Control-Allow-Credentials: true`, and then `Access-Control-Allow-Origin` must name one exact origin. The wildcard `*` is not accepted together with credentials. Servers that allow several origins check the request's `Origin` against a list, echo the one that matches, and send `Vary: Origin` so a cache does not hand one origin's answer to another.
 
-CORS is not authentication and does not protect an API. It only decides which web pages may read your responses in a browser. Anyone can call the API without a browser, so every request still needs its own authentication and authorization (module 5).
+CORS is not authentication and does not protect an API. It only decides which web pages may read your responses in a browser. Anyone can call the API without a browser, so every request still needs its own authentication and authorization (module 6).
 
 ## HTTP/1.1, HTTP/2 and HTTP/3
 

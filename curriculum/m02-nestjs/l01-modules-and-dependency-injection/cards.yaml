@@ -60,8 +60,8 @@
   skills: [nest-di]
 - id: nest-hook-close-pool
   type: concept
-  front: In which Nest lifecycle hook do you close a database pool, and why not earlier?
-  back: "`onApplicationShutdown`. It runs after the HTTP server has closed, so no request that is still running loses its connection."
+  front: Why close a database pool in `onApplicationShutdown` rather than `onModuleDestroy`?
+  back: "`onApplicationShutdown` runs after the HTTP server has closed, so no request that is still running loses its connection."
   skills: [nest-di]
 - id: nest-startup-hook-order
   type: comparison

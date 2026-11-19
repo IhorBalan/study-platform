@@ -76,11 +76,18 @@ export class ProblemDetailsFilter implements ExceptionFilter {
     const res = host.switchToHttp().getResponse<Response>();
     let status = 500;
     let detail: string | undefined;
+    let errors: string[] | undefined;
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const body = exception.getResponse();      // a string, or an object with `message`
-      detail = typeof body === 'string' ? body : String((body as { message?: unknown }).message);
+      const message = typeof body === 'string' ? body : (body as { message?: unknown }).message;
+      if (Array.isArray(message)) {
+        errors = message.map(String);            // ValidationPipe: one entry per failed rule
+        detail = 'The request body is not valid.';
+      } else {
+        detail = String(message);
+      }
     } else if (exception instanceof NotesLimitReachedError) {
       status = 409;
       detail = exception.message;
@@ -89,7 +96,7 @@ export class ProblemDetailsFilter implements ExceptionFilter {
     }
 
     const title = STATUS_CODES[status] ?? 'Error';   // 409 -> "Conflict"
-    res.status(status).type('application/problem+json').json({ type: 'about:blank', title, status, detail });
+    res.status(status).type('application/problem+json').json({ type: 'about:blank', title, status, detail, errors });
   }
 }
 ```
@@ -101,6 +108,8 @@ providers: [{ provide: APP_FILTER, useClass: ProblemDetailsFilter }]   // APP_FI
 ```
 
 Note the three branches: exceptions that already carry a status, domain errors you map on purpose, and everything else.
+
+`ValidationPipe` puts an array of messages in `message`. Joining them into one string gives a client nothing it can map to form fields, so the filter keeps them as a list in an `errors` extension member. Module 4 refines this into one entry per field with a `pointer` to it.
 
 ## Do not leak internals
 

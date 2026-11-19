@@ -98,12 +98,40 @@ test('pinned-image: the image has an immutable tag or a digest, not latest', () 
   }
 });
 
+const CPU_UNITS = { '': 1, m: 1e-3 };
+const MEMORY_UNITS = { '': 1, m: 1e-3, k: 1e3, M: 1e6, G: 1e9, T: 1e12, Ki: 2 ** 10, Mi: 2 ** 20, Gi: 2 ** 30, Ti: 2 ** 40 };
+
+/** A Kubernetes quantity as a number of cores or bytes, or NaN when it is not one. */
+function quantity(value, units) {
+  const match = /^(\d+(?:\.\d+)?)([A-Za-z]*)$/.exec(String(value ?? ''));
+  if (!match || !(match[2] in units)) return Number.NaN;
+  return Number(match[1]) * units[match[2]];
+}
+
 test('resources: every container requests CPU and memory and has a memory limit', () => {
   for (const c of containers()) {
     const r = c.resources ?? {};
     assert.ok(r.requests?.cpu, `${c.name}: resources.requests.cpu is missing. The scheduler and the HPA's CPU percentage both need it.`);
     assert.ok(r.requests?.memory, `${c.name}: resources.requests.memory is missing`);
     assert.ok(r.limits?.memory, `${c.name}: resources.limits.memory is missing`);
+
+    const cpu = quantity(r.requests.cpu, CPU_UNITS);
+    assert.ok(!Number.isNaN(cpu), `${c.name}: requests.cpu ${show(r.requests.cpu)} is not a CPU quantity. Write cores (0.2) or millicores (200m).`);
+    assert.ok(cpu >= 0.01 && cpu <= 8, `${c.name}: requests.cpu ${show(r.requests.cpu)} is ${cpu} cores, which cannot be right for one Node API Pod. A bare number means whole cores: 200 millicores is 200m.`);
+    if (r.limits?.cpu !== undefined) {
+      const cpuLimit = quantity(r.limits.cpu, CPU_UNITS);
+      assert.ok(!Number.isNaN(cpuLimit), `${c.name}: limits.cpu ${show(r.limits.cpu)} is not a CPU quantity`);
+      assert.ok(cpu <= cpuLimit, `${c.name}: requests.cpu ${show(r.requests.cpu)} is above limits.cpu ${show(r.limits.cpu)}. The API server rejects that.`);
+    }
+
+    const sizes = {};
+    for (const [where, raw] of [['requests', r.requests.memory], ['limits', r.limits.memory]]) {
+      const bytes = quantity(raw, MEMORY_UNITS);
+      assert.ok(!Number.isNaN(bytes), `${c.name}: ${where}.memory ${show(raw)} is not a memory quantity. Write it like 256Mi.`);
+      assert.ok(bytes >= 16 * 2 ** 20 && bytes <= 16 * 2 ** 30, `${c.name}: ${where}.memory ${show(raw)} is ${bytes} bytes, which cannot be right for a Node API. Check the unit: Mi is mebibytes, a lowercase m is thousandths of a byte, and a bare number is bytes.`);
+      sizes[where] = bytes;
+    }
+    assert.ok(sizes.requests <= sizes.limits, `${c.name}: requests.memory ${show(r.requests.memory)} is above limits.memory ${show(r.limits.memory)}. The API server rejects that.`);
   }
 });
 

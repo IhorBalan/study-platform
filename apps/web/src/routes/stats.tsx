@@ -104,8 +104,14 @@ function StatsPage() {
         <Tile label="Review streak" value={`${memory.reviewStreakDays} d`} />
         <Tile
           label="Retention, 30 days"
-          value={memory.retention === null ? 'No data' : percentLabel(memory.retention)}
-          hint={`Target ${percentLabel(memory.desiredRetention)} · ${memory.retentionReviews} reviews`}
+          value={memory.retention === null ? 'No data yet' : percentLabel(memory.retention)}
+          // Only reviews of cards past their learning steps count. Without saying so,
+          // "0 reviews" after a first session reads like a bug.
+          hint={
+            memory.retentionReviews === 0
+              ? `Target ${percentLabel(memory.desiredRetention)} · counts once cards you have learned come back for review`
+              : `Target ${percentLabel(memory.desiredRetention)} · ${memory.retentionReviews} ${memory.retentionReviews === 1 ? 'review' : 'reviews'} of learned cards`
+          }
         />
         <Tile label="New cards" value={String(memory.cardsByState.new)} />
         <Tile label="Learning" value={String(memory.cardsByState.learning)} />

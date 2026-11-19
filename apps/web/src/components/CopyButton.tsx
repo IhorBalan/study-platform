@@ -11,7 +11,7 @@ export function Command({ children }: { children: string }) {
 
   return (
     <span className="inline-flex max-w-full items-center gap-2 rounded-md bg-zinc-100 py-1 pr-1 pl-2 dark:bg-zinc-800">
-      <code className="min-w-0 font-mono text-xs break-all">{children}</code>
+      <code className="min-w-0 font-mono text-xs wrap-anywhere">{children}</code>
       <button
         type="button"
         onClick={() => {

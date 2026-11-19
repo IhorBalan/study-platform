@@ -31,6 +31,8 @@ function LessonPage() {
   useStudySession('lesson', id);
   useScrollMemory(id);
   const doneButton = useRef<HTMLButtonElement>(null);
+  const completed = useRef<HTMLSpanElement>(null);
+  const focusWhenDone = useRef(false);
   const [notice, setNotice] = useState<{ lessonId: string; text: string } | null>(null);
 
   const progress = useMutation({
@@ -52,6 +54,15 @@ function LessonPage() {
   useEffect(() => {
     if (lesson.status === 'not_started' && isIdle) mutate('in_progress');
   }, [lesson.status, isIdle, mutate]);
+
+  // "Mark as done" disappears when the lesson is done, and focus would fall back to the
+  // top of the page. Move it to "Completed", so the next Tab reaches the links beside it
+  // and a screen reader says what happened.
+  useEffect(() => {
+    if (lesson.status !== 'done' || !focusWhenDone.current) return;
+    focusWhenDone.current = false;
+    completed.current?.focus({ preventScroll: true });
+  }, [lesson.status]);
 
   return (
     <article>
@@ -111,7 +122,11 @@ function LessonPage() {
         className="mt-10 flex scroll-mt-4 flex-wrap items-center gap-4 border-t border-zinc-200 pt-6 dark:border-zinc-800"
       >
         {lesson.status === 'done' ? (
-          <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+          <span
+            ref={completed}
+            tabIndex={-1}
+            className="rounded-sm text-sm font-medium text-emerald-700 dark:text-emerald-400"
+          >
             Completed
           </span>
         ) : (
@@ -119,7 +134,10 @@ function LessonPage() {
             ref={doneButton}
             type="button"
             disabled={progress.isPending}
-            onClick={() => progress.mutate('done')}
+            onClick={() => {
+              focusWhenDone.current = true;
+              progress.mutate('done');
+            }}
             className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
             Mark as done

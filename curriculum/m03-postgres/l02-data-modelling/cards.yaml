@@ -45,8 +45,13 @@
   skills: [data-modelling]
 - id: denormalise-when
   type: concept
-  front: When is denormalising worth it, and what does it cost?
-  back: "When a measured read is too slow. The cost is keeping a second copy in sync on every write path."
+  front: When is denormalising worth it?
+  back: "When a measured read is too slow and no index or query change fixes it."
+  skills: [data-modelling]
+- id: denormalise-cost
+  type: concept
+  front: What does denormalising cost?
+  back: "Every write path has to keep the second copy in sync, or the two drift apart."
   skills: [data-modelling]
 - id: jsonb-fit
   type: concept

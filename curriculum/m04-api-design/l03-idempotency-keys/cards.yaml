@@ -57,6 +57,11 @@
   skills: [api-idempotency]
 - id: idem-stuck-in-flight
   type: concept
-  front: "The process crashes after reserving a key. What happens to retries, and what is the fix?"
-  back: "They get `409` forever. Store the reservation time and let a retry take over a key in flight longer than the request timeout."
+  front: "The process crashes after reserving an idempotency key. What do retries of that request get?"
+  back: "`409` forever, because the key stays marked as in flight."
+  skills: [api-idempotency]
+- id: idem-stuck-fix
+  type: concept
+  front: "How do you stop a crashed request from blocking its idempotency key forever?"
+  back: "Store the reservation time and let a retry take over a key that has been in flight longer than the request timeout."
   skills: [api-idempotency]

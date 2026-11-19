@@ -10,8 +10,8 @@
   skills: [api-rest-design]
 - id: idempotent-methods
   type: concept
-  front: "Which HTTP methods are idempotent, and why does a client care?"
-  back: "`GET`, `HEAD`, `PUT`, `DELETE` (and `OPTIONS`). They can be retried after a dropped connection without changing the result; `POST` and `PATCH` cannot."
+  front: "Is `PATCH` idempotent?"
+  back: "Not by definition. A merge patch that sets fields gives the same result twice, but a patch that appends or increments does not, so a client must not retry `PATCH` blindly the way it can retry `PUT` or `DELETE`."
   skills: [api-rest-design]
 - id: put-vs-patch
   type: comparison
@@ -22,11 +22,6 @@
   type: cloze
   front: "A successful create returns `201 Created` and the {{...}} header with the new resource's URL."
   back: "`Location`"
-  skills: [api-rest-design]
-- id: 401-vs-403
-  type: comparison
-  front: "`401 Unauthorized` vs `403 Forbidden`"
-  back: "`401`: the caller is not authenticated (log in or refresh the token). `403`: the caller is known and not allowed."
   skills: [api-rest-design]
 - id: 409-conflict-use
   type: concept

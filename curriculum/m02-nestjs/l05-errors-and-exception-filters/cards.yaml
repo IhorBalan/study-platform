@@ -15,20 +15,10 @@
   front: Why should a service throw its own error class instead of `ConflictException`?
   back: The service may be called from a queue worker or CLI where HTTP statuses mean nothing. The mapping to a status belongs at the HTTP edge.
   skills: [nest-errors]
-- id: problem-media-type
-  type: cloze
-  front: "RFC 9457 problem documents are served with the content type `{{...}}`."
-  back: "`application/problem+json`"
-  skills: [nest-errors]
 - id: problem-type-about-blank
   type: concept
   front: 'What does `"type": "about:blank"` mean in a problem document?' 
   back: The problem has no meaning beyond its HTTP status, and `title` should be the status phrase, such as "Not Found".
-  skills: [nest-errors]
-- id: title-vs-detail
-  type: comparison
-  front: "`title` vs `detail` in a problem document"
-  back: "`title` is a short summary that is the same for every occurrence of that problem type. `detail` explains this particular occurrence."
   skills: [nest-errors]
 - id: catch-all-filter
   type: comparison

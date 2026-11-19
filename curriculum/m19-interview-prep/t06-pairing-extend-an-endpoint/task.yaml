@@ -1,0 +1,29 @@
+title: "Pairing: extend a list endpoint in 45 minutes"
+type: repo
+skills: [interview-take-home]
+services: []
+runner: node
+hints:
+  - "Before you code, write three questions in NOTES.md and the answer you will assume. For example: may a cursor be reused with a different sort? Does the client need a total count?"
+  - "Go in slices that each run: the status filter, then sorting, then the limit, then the cursor. Run your tests after each one."
+  - "One comparator serves both sorting and the cursor: compare the sort field first, then the id, and multiply by -1 for a descending sort."
+  - "A cursor that stores the sort value and the id of the last item still works after that item is deleted. An offset, or a cursor that looks the item up by id, does not."
+  - "To know whether there is another page, take limit + 1 items and return only limit of them."
+  - "Number('10abc') is NaN and parseInt('10abc') is 10. Which of the two do you want for limit?"
+  - "Buffer.from(json).toString('base64url') gives a cursor that is safe in a URL. Decoding can throw, and so can JSON.parse: turn both into a ValidationError."
+criteria:
+  - { id: filter, title: "status keeps only tickets in that status, and an unknown status is rejected with ValidationError" }
+  - { id: sort, title: "The four sorts order by the field and break ties by id in the same direction; the default is newest first; an unknown sort is rejected" }
+  - { id: limit, title: "limit defaults to 20, accepts whole numbers from 1 to 100 and rejects everything else" }
+  - { id: pagination, title: "Following nextCursor returns every ticket exactly once in order, nextCursor is null on the last page, and a broken cursor is rejected" }
+  - { id: stable, title: "Tickets created or deleted between two pages cause no skipped and no repeated ticket" }
+  - { id: http-api, title: "GET /tickets reads the query string, returns 200 with items and nextCursor, and answers invalid input with a 400 problem document" }
+  - { id: own-tests, title: Your tests pass and catch a list that ignores the cursor }
+rubric:
+  - { id: clarify, title: "NOTES.md lists at least three clarifying questions with the answer assumed for each, at least one of them about behaviour the brief leaves open (for example reusing a cursor with another sort, a total count, or repeated query parameters)", skill: interview-take-home, max: 3 }
+  - { id: slices, title: "NOTES.md shows the work ordered as small slices that each ran with a test before the next one started, and the first slice is something other than the hardest part", skill: interview-take-home, max: 3 }
+  - { id: narration, title: "NOTES.md gives at least three decisions with their reason as you would say them aloud, including why the cursor is a keyset and not an offset and why ties need the id", skill: interview-take-home, max: 4 }
+  - { id: code, title: "Query parameters are parsed and validated in one place, the core has no HTTP in it, and sorting and the cursor share one comparator instead of a branch per sort", skill: interview-take-home, max: 4 }
+  - { id: tests, title: "Own tests are named after behaviour and cover the end of the list (including a list that is an exact multiple of the limit) and a change between two pages", skill: interview-take-home, max: 3 }
+  - { id: wrap-up, title: "NOTES.md states the time spent, what is unfinished or untested, and what you would do next with ten more minutes", skill: interview-take-home, max: 3 }
+limits: { timeoutSeconds: 90 }

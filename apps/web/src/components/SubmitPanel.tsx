@@ -167,6 +167,8 @@ export function SubmitPanel({ task }: { task: TaskDetail }) {
 function SubmissionCard({ submission, open }: { submission: SubmissionDto; open: boolean }) {
   const run = submission.runs.find((r) => r.stage === 'checks');
   const passed = run?.checks.filter((c) => c.passed).length ?? 0;
+  const firstWithLog =
+    run?.checks.find((c) => !c.passed && c.log) ?? run?.checks.find((c) => c.log);
 
   return (
     <li className="rounded-lg border border-zinc-200 p-4 text-sm dark:border-zinc-800">
@@ -225,9 +227,15 @@ function SubmissionCard({ submission, open }: { submission: SubmissionDto; open:
                 </span>
                 {check.title}
                 {check.log && (
-                  <pre className="mt-1 max-h-48 overflow-auto rounded-md bg-zinc-50 p-2 text-xs whitespace-pre-wrap dark:bg-zinc-900">
-                    {check.log}
-                  </pre>
+                  // One root cause often fails every check, so only the first log starts open.
+                  <details open={check === firstWithLog} className="mt-1">
+                    <summary className="cursor-pointer py-1 text-xs text-zinc-500 dark:text-zinc-400">
+                      Log
+                    </summary>
+                    <pre className="mt-1 max-h-48 overflow-auto rounded-md bg-zinc-50 p-2 text-xs whitespace-pre-wrap dark:bg-zinc-900">
+                      {check.log}
+                    </pre>
+                  </details>
                 )}
               </li>
             ))}

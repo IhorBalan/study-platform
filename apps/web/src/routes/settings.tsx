@@ -1,7 +1,7 @@
 import { Editor, type SettingsDto, type UpdateSettings } from '@study/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Button, Field, Input, PageHeader, Select } from '../components/ui';
 import { api, ApiError } from '../lib/api';
 import { agoLabel } from '../lib/format';
@@ -25,6 +25,20 @@ function SettingsPage() {
       void queryClient.invalidateQueries({ queryKey: ['review-queue'] });
     },
   });
+
+  // A field typed back to its saved value is not a change.
+  const saved = settings.data;
+  const dirty =
+    saved !== undefined &&
+    (Object.keys(draft) as (keyof UpdateSettings)[]).some((key) => draft[key] !== saved[key]);
+  // The form saves on a button while the theme below applies at once, so it is
+  // easy to change a field and leave. The browser asks before a reload or close.
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [dirty]);
 
   if (!settings.data) return <p className="text-sm text-zinc-500 dark:text-zinc-400">Loading…</p>;
 
@@ -122,7 +136,12 @@ function SettingsPage() {
           <Button type="submit" disabled={save.isPending}>
             Save
           </Button>
-          {save.isSuccess && (
+          {dirty && !save.isPending && (
+            <span role="status" className="text-sm text-amber-700 dark:text-amber-400">
+              Unsaved changes
+            </span>
+          )}
+          {save.isSuccess && !dirty && (
             <span role="status" className="text-sm text-emerald-700 dark:text-emerald-400">
               Saved
             </span>

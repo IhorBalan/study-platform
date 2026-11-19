@@ -4,6 +4,7 @@ import type {
   ReactNode,
   TextareaHTMLAttributes,
 } from 'react';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 const field =
   'w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:border-zinc-400 dark:focus:ring-zinc-500';
@@ -61,6 +62,7 @@ export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
 }
 
 export function PageHeader({ title, children }: { title: string; children?: ReactNode }) {
+  useDocumentTitle(title);
   return (
     <header className="mb-6">
       <h1 className="text-2xl font-semibold">{title}</h1>

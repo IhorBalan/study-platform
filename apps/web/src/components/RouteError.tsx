@@ -1,10 +1,12 @@
 import { Link, type ErrorComponentProps } from '@tanstack/react-router';
 import { ApiError } from '../lib/api';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { Button } from './ui';
 
 /** Shown in place of a page that failed to load, inside the normal layout. */
 export function RouteError({ error }: ErrorComponentProps) {
   const missing = error instanceof ApiError && error.status === 404;
+  useDocumentTitle(missing ? 'Page not found' : 'Could not load');
   return (
     <section className="py-16 text-center">
       <h1 className="text-2xl font-semibold">

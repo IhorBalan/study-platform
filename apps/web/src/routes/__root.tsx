@@ -3,6 +3,7 @@ import { createRootRouteWithContext, Link, Outlet } from '@tanstack/react-router
 import { Button } from '../components/ui';
 import { HealthBadge } from '../components/HealthBadge';
 import { Shortcuts } from '../components/Shortcuts';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 const nav = [
   { to: '/', label: 'Plan' },
@@ -19,6 +20,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function NotFound() {
+  useDocumentTitle('Page not found');
   return (
     <section className="py-16 text-center">
       <h1 className="text-2xl font-semibold">Page not found</h1>

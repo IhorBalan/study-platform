@@ -38,6 +38,25 @@ export function plainText(markdown: string): string {
     .trim();
 }
 
+/**
+ * Cuts a snippet around the match at `at`. Both ends move inward to a space, so the
+ * snippet starts and ends on a whole word. The match itself is never cut.
+ */
+export function cutSnippet(text: string, at: number, matchLength: number): string {
+  let start = Math.max(0, at - SNIPPET_BEFORE);
+  let end = Math.min(text.length, at + Math.max(SNIPPET_AFTER, matchLength));
+  if (start > 0 && text[start - 1] !== ' ') {
+    const space = text.indexOf(' ', start);
+    if (space !== -1 && space < at) start = space + 1;
+  }
+  if (end < text.length && text[end] !== ' ') {
+    const space = text.lastIndexOf(' ', end);
+    if (space >= at + matchLength) end = space;
+  }
+  const piece = text.slice(start, end).trim();
+  return `${start > 0 ? '…' : ''}${piece}${end < text.length ? '…' : ''}`;
+}
+
 function countOccurrences(haystack: string, needle: string): number {
   let count = 0;
   for (let at = haystack.indexOf(needle); at !== -1; at = haystack.indexOf(needle, at + 1)) {
@@ -114,10 +133,8 @@ export class SearchService {
     // Positions come from the lower-cased text. A few non-English letters change length when
     // lower-cased, which would shift the snippet slightly. The curriculum is English.
     const at = Math.min(...positions);
-    const start = Math.max(0, at - SNIPPET_BEFORE);
-    const end = Math.min(entry.text.length, at + SNIPPET_AFTER);
-    const piece = entry.text.slice(start, end).trim();
-    return `${start > 0 ? '…' : ''}${piece}${end < entry.text.length ? '…' : ''}`;
+    const term = terms.find((t) => entry.textLower.startsWith(t, at)) ?? '';
+    return cutSnippet(entry.text, at, term.length);
   }
 
   /** Built on first use: the curriculum is loaded by then and does not change while running. */

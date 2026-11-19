@@ -10,7 +10,7 @@ Keep every `.tf` file at the top level of the submission (no subdirectories). Fi
 - **Names and tags.** The names of the bucket, both queues and the parameter are built from `var.environment` (directly or through a local). Tags come from a local that includes the environment, either through the provider's `default_tags` or a `tags` argument on each bucket, queue and parameter.
 - **Bucket.** An `aws_s3_bucket`, an `aws_s3_bucket_versioning` for it with status `Enabled`, and an `aws_s3_bucket_lifecycle_configuration` for it with at least one enabled rule that has an action.
 - **Queues.** Two `aws_sqs_queue` resources. The jobs queue has a redrive policy (the `redrive_policy` argument or an `aws_sqs_queue_redrive_policy` resource) whose `deadLetterTargetArn` is the other queue's `arn` and whose `maxReceiveCount` is a number.
-- **Parameter.** An `aws_ssm_parameter` with a name, a type and a value. If it is a `SecureString`, its value must not be written in the file.
+- **Parameter.** An `aws_ssm_parameter` with a name, a type and a value. If it is a `SecureString`, its value must not be written in any file of the submission: not as a string or heredoc, not as the default of a variable, and not in a `.tfvars` file.
 - **Outputs.** Outputs for the bucket name, the jobs queue URL and the parameter name.
 
 Fill in the README: how you ran it (or would run it), the decisions above, and what changes for real AWS.

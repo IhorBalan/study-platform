@@ -173,7 +173,23 @@ test('ssm-parameter: an SSM parameter is declared without a secret in the code',
     const value = attrValue(p.body, 'value') ?? attrValue(p.body, 'insecure_value') ?? attrValue(p.body, 'value_wo');
     assert.ok(value, `aws_ssm_parameter.${id} needs a value`);
     if (type === 'SecureString') {
-      assert.ok(!isLiteralString(value), `aws_ssm_parameter.${id} is a SecureString whose value is written in the file`);
+      const heredoc = /^<<[-~]?/.test(value.trim()) && !/\$\{|%\{/.test(value.replace(/\$\$\{|%%\{/g, ''));
+      assert.ok(!isLiteralString(value) && !heredoc, `aws_ssm_parameter.${id} is a SecureString whose value is written in the file`);
+      for (const name of varsBehind(value)) {
+        const def = attrValue(block(config().body, 'variable', name)?.body ?? [], 'default');
+        assert.ok(
+          def === undefined || def.trim() === 'null',
+          `aws_ssm_parameter.${id} is a SecureString, and variable "${name}" behind its value has a default written in the file`,
+        );
+        for (const file of fs.readdirSync(dir).filter((f) => /\.tfvars(\.json)?$/.test(f))) {
+          const text = fs.readFileSync(path.join(dir, file), 'utf8');
+          assert.doesNotMatch(
+            text,
+            new RegExp(`(^|[\\s{,])"?${name}"?\\s*[=:]`, 'm'),
+            `aws_ssm_parameter.${id} is a SecureString, and ${file} sets variable "${name}" behind its value`,
+          );
+        }
+      }
     }
   }
 });

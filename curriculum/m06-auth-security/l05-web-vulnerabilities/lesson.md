@@ -39,6 +39,8 @@ db.query(`SELECT * FROM invoices WHERE customer ILIKE '%${search}%'`);
 db.query(`SELECT id, customer FROM invoices WHERE owner_id = $1 AND customer ILIKE '%' || $2 || '%'`, [userId, search]);
 ```
 
+One detail remains, and it is correctness, not injection: inside a `LIKE` pattern `%` and `_` are wildcards even in a bound value, so a search for `50%` matches `500`. Escape them before binding (`search.replace(/[\\%_]/g, (c) => '\\' + c)`) when the user means the literal text.
+
 Parameters carry **values** only. Column names, table names and `ASC`/`DESC` are structure, so they cannot be parameters. When the client chooses a sort column, map the allowed keys to SQL fragments you wrote and reject anything else:
 
 ```ts
@@ -85,7 +87,7 @@ Defences, layered:
 
 1. **`SameSite=Lax` or `Strict` cookies** (lesson 2). Blocks the example above in current browsers.
 2. **No state changes on `GET`.**
-3. **Check the origin of unsafe requests.** Reject `POST`, `PUT`, `PATCH` and `DELETE` when `Sec-Fetch-Site` is `cross-site`, or when `Origin` is present and not your app's origin.
+3. **Check the origin of unsafe requests.** For `POST`, `PUT`, `PATCH` and `DELETE`, accept `Sec-Fetch-Site: same-origin` (and `none`, which is the user typing or bookmarking the address) and reject the rest. Rejecting only `cross-site` is not enough: `same-site` covers every sibling subdomain, and one forgotten `old-blog.example.com` with an XSS bug can then forge requests. When the header is missing (older browsers, non-browser clients), fall back to requiring that `Origin`, if present, equals your app's origin.
 4. **CSRF tokens** where you need more: a random token bound to the session, sent in a header or form field, compared on the server.
 
 APIs that authenticate with an `Authorization: Bearer` header are not exposed to CSRF, because the browser never adds that header on its own. That is a property of the transport, not a reason to store tokens in `localStorage`.

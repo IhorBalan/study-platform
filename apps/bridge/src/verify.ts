@@ -12,6 +12,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { loadCurriculum, type LoadedTask } from '@study/curriculum';
 import { dockerAvailable, runChecks } from './checks.js';
+import { VERIFY_OWNER } from './sweep.js';
 import { loadConfig } from './config.js';
 import { exec } from './exec.js';
 
@@ -59,7 +60,12 @@ async function verifyTask(task: LoadedTask): Promise<Outcome> {
     await git(repo, 'config', 'commit.gpgsign', 'false');
 
     await commitFolder(repo, task, task.solutionDir, 'solution');
-    const solution = await runChecks(config, task, { taskId: task.id, repoPath: repo });
+    const solution = await runChecks(
+      config,
+      task,
+      { taskId: task.id, repoPath: repo },
+      VERIFY_OWNER,
+    );
     if (solution.status === 'error') {
       const needsService =
         task.services.length > 0 && /practice service/.test(solution.message ?? '');
@@ -90,7 +96,12 @@ async function verifyTask(task: LoadedTask): Promise<Outcome> {
       );
     }
     await commitFolder(repo, task, task.starterDir, 'starter');
-    const starter = await runChecks(config, task, { taskId: task.id, repoPath: repo });
+    const starter = await runChecks(
+      config,
+      task,
+      { taskId: task.id, repoPath: repo },
+      VERIFY_OWNER,
+    );
     if (starter.status === 'error') {
       return done('wrong', `the checks could not run on starter/: ${starter.message}`);
     }

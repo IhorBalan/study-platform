@@ -614,6 +614,10 @@ The module had a take-home but no live-coding exercise. Task 6 gives a working l
 
 D-161 removed only leftovers older than 30 minutes, so that a running `pnpm curriculum:verify` was not disturbed. That missed the usual case: the bridge dies during a check and is started again a minute later. Each bridge process now labels its containers `study.check.owner=bridge-<id>` and verify uses `verify`. On start the bridge removes every container of another bridge process, whatever its age; the age rule stays for verify, for containers without an owner and for temporary folders. The sweep runs after the port is bound, so a second bridge started by mistake fails first and removes nothing.
 
+### D-164 · A retired card that returns to the curriculum becomes active again — 2026-11-19
+
+D-160 suspends a card whose key left the files and remembers the key, so a card the learner resumes is not suspended twice. The remembered key also kept the card suspended for ever if the key came back, for example after a removal was reverted. The sync now makes such a card active again and forgets the key. It tells the cases apart by the row: a card the learner deleted has a remembered key but no row, and a card the learner suspended has a row but no remembered key. One case is knowingly not covered: a card that was retired, resumed and then suspended by the learner would be made active if its key returned.
+
 ---
 
 ## Product direction

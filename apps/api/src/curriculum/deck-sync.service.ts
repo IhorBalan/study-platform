@@ -15,6 +15,7 @@ export interface DeckSyncResult {
   added: number;
   retagged: number;
   retired: number;
+  restored: number;
 }
 
 /**
@@ -34,10 +35,10 @@ export class DeckSyncService implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
-    const { updated, added, retagged, retired } = await this.sync();
-    if (updated > 0 || added > 0 || retagged > 0 || retired > 0) {
+    const { updated, added, retagged, retired, restored } = await this.sync();
+    if (updated > 0 || added > 0 || retagged > 0 || retired > 0 || restored > 0) {
       this.logger.log(
-        `Lesson cards brought up to date: ${updated} corrected, ${added} added, ${retagged} with new skills, ${retired} retired`,
+        `Lesson cards brought up to date: ${updated} corrected, ${added} added, ${retagged} with new skills, ${retired} retired, ${restored} restored`,
       );
     }
   }
@@ -97,6 +98,8 @@ export class DeckSyncService implements OnApplicationBootstrap {
    * A card that was removed from the files (a duplicate, or one whose id was
    * renamed) is suspended once: it leaves the review queue but keeps its row,
    * schedule and history, and the learner can resume it from the Cards page.
+   * If its key comes back to the files (a removal that was reverted, or a start on
+   * a half-edited file), the card is made active again.
    */
   async sync(now = new Date()): Promise<DeckSyncResult> {
     return this.db.transaction(async (tx) => {
@@ -120,11 +123,15 @@ export class DeckSyncService implements OnApplicationBootstrap {
         .where(and(eq(cards.source, 'lesson'), isNotNull(cards.sourceKey), isNull(cards.editedAt)));
       let updated = 0;
       const left: { id: string; key: string }[] = [];
+      const suspendedButCurrent: { id: string; key: string }[] = [];
       for (const row of rows) {
         const card = current.get(row.key ?? '');
         if (!card) {
           if (row.key && row.status === 'active') left.push({ id: row.id, key: row.key });
           continue;
+        }
+        if (row.key && row.status === 'suspended') {
+          suspendedButCurrent.push({ id: row.id, key: row.key });
         }
         if (card.type === row.type && card.front === row.front && card.back === row.back) continue;
         await tx
@@ -164,6 +171,42 @@ export class DeckSyncService implements OnApplicationBootstrap {
             .values(retire.map((c) => ({ sourceKey: c.key })))
             .onConflictDoNothing();
           retired = retire.length;
+        }
+      }
+
+      // Bring back each card that was retired above in an earlier run and is in the
+      // files again. The marker tells a retired card from one the learner suspended:
+      // a card the learner deleted has a marker too, but no row to find here.
+      let restored = 0;
+      if (suspendedButCurrent.length > 0) {
+        const marked = await tx
+          .select({ key: removedLessonCards.sourceKey })
+          .from(removedLessonCards)
+          .where(
+            inArray(
+              removedLessonCards.sourceKey,
+              suspendedButCurrent.map((c) => c.key),
+            ),
+          );
+        const keys = new Set(marked.map((r) => r.key));
+        const restore = suspendedButCurrent.filter((c) => keys.has(c.key));
+        if (restore.length > 0) {
+          await tx
+            .update(cards)
+            .set({ status: 'active' })
+            .where(
+              inArray(
+                cards.id,
+                restore.map((c) => c.id),
+              ),
+            );
+          await tx.delete(removedLessonCards).where(
+            inArray(
+              removedLessonCards.sourceKey,
+              restore.map((c) => c.key),
+            ),
+          );
+          restored = restore.length;
         }
       }
 
@@ -215,7 +258,7 @@ export class DeckSyncService implements OnApplicationBootstrap {
         const lesson = lessons.get(lessonId);
         if (lesson) added += await this.addDeck(tx, lesson, now);
       }
-      return { updated, added, retagged, retired };
+      return { updated, added, retagged, retired, restored };
     });
   }
 }

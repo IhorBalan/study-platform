@@ -38,13 +38,25 @@ export function curriculumUpdatesTests(ctx: E2eContext): void {
       await db.delete(schema.cards).where(eq(schema.cards.sourceKey, key('c2')));
       const scheduleBefore = await schedule(first.id);
 
-      expect(await decks.sync()).toEqual({ updated: 1, added: 1, retagged: 0, retired: 0 });
+      expect(await decks.sync()).toEqual({
+        updated: 1,
+        added: 1,
+        retagged: 0,
+        retired: 0,
+        restored: 0,
+      });
       expect((await card('c1'))?.front).toBe('Q1');
       // Only the text changes: the card keeps its place in the schedule.
       expect(await schedule(first.id)).toEqual(scheduleBefore);
       const second = await card('c2');
       expect(second).toMatchObject({ front: 'Q2', status: 'active', source: 'lesson' });
-      expect(await decks.sync()).toEqual({ updated: 0, added: 0, retagged: 0, retired: 0 });
+      expect(await decks.sync()).toEqual({
+        updated: 0,
+        added: 0,
+        retagged: 0,
+        retired: 0,
+        restored: 0,
+      });
 
       // A skill tag that changed in the files reaches the card the learner has.
       const tags = async () =>
@@ -54,7 +66,13 @@ export function curriculumUpdatesTests(ctx: E2eContext): void {
       const tagged = await tags();
       expect(tagged).toEqual(['http-basics']);
       await db.delete(schema.cardSkills).where(eq(schema.cardSkills.cardId, first.id));
-      expect(await decks.sync()).toEqual({ updated: 0, added: 0, retagged: 1, retired: 0 });
+      expect(await decks.sync()).toEqual({
+        updated: 0,
+        added: 0,
+        retagged: 1,
+        retired: 0,
+        restored: 0,
+      });
       expect(await tags()).toEqual(tagged);
 
       // Saving the same text again is not an edit: corrections still arrive.
@@ -68,7 +86,13 @@ export function curriculumUpdatesTests(ctx: E2eContext): void {
       // A card the learner reworded, and one they deleted, are left alone.
       await ctx.http().patch(`/api/cards/${first.id}`).send({ front: 'My wording' }).expect(200);
       await ctx.http().delete(`/api/cards/${second?.id}`).expect(204);
-      expect(await decks.sync()).toEqual({ updated: 0, added: 0, retagged: 0, retired: 0 });
+      expect(await decks.sync()).toEqual({
+        updated: 0,
+        added: 0,
+        retagged: 0,
+        retired: 0,
+        restored: 0,
+      });
       expect((await card('c1'))?.front).toBe('My wording');
       expect(await card('c2')).toBeUndefined();
       const again = await ctx
@@ -122,6 +146,52 @@ export function curriculumUpdatesTests(ctx: E2eContext): void {
       expect((await decks.sync()).retired).toBe(0);
       expect(await status()).toBe('active');
       await ctx.http().delete(`/api/cards/${gone.id}`).expect(204);
+    });
+
+    it('makes a retired card active again when it is back in the curriculum', async () => {
+      const db = ctx.app.get<Database>(DB);
+      const decks = ctx.app.get(DeckSyncService);
+      // The second fixture card, as it looks after an update retired it: the row is
+      // suspended and its key is remembered. Now the files hold the card again.
+      const sourceKey = 'm00-demo/l01-first#c2';
+      await db.delete(schema.cards).where(eq(schema.cards.sourceKey, sourceKey));
+      const [back] = await db
+        .insert(schema.cards)
+        .values({
+          type: 'concept',
+          front: 'Q2',
+          back: 'A2',
+          source: 'lesson',
+          status: 'suspended',
+          lessonId: 'm00-demo/l01-first',
+          sourceKey,
+        })
+        .returning();
+      if (!back) throw new Error('could not add the card');
+      await db.insert(schema.cardSchedules).values({ cardId: back.id, due: new Date(0) });
+      await db.insert(schema.removedLessonCards).values({ sourceKey }).onConflictDoNothing();
+      const marker = () =>
+        db
+          .select()
+          .from(schema.removedLessonCards)
+          .where(eq(schema.removedLessonCards.sourceKey, sourceKey));
+
+      expect((await decks.sync()).restored).toBe(1);
+      const [row] = await db.select().from(schema.cards).where(eq(schema.cards.id, back.id));
+      expect(row?.status).toBe('active');
+      expect(await marker()).toHaveLength(0);
+      const queue = await ctx.http().get('/api/review/queue').expect(200);
+      expect(JSON.stringify(queue.body)).toContain(back.id);
+
+      // A card the learner suspended has no marker and stays suspended.
+      await ctx.http().patch(`/api/cards/${back.id}`).send({ status: 'suspended' }).expect(200);
+      expect((await decks.sync()).restored).toBe(0);
+      const [still] = await db.select().from(schema.cards).where(eq(schema.cards.id, back.id));
+      expect(still?.status).toBe('suspended');
+
+      // Back to how the earlier test left it: deleted by the learner.
+      await ctx.http().delete(`/api/cards/${back.id}`).expect(204);
+      expect(await marker()).toHaveLength(1);
     });
   });
 }

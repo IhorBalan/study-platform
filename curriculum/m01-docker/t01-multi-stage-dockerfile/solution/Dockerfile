@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # ---- build: has npm, the build script and the sources -----------------------
-FROM node:24-bookworm-slim AS build
+FROM node:24-trixie-slim AS build
 WORKDIR /app
 
 # Manifest first, so this layer and the install below stay cached until it changes.
@@ -14,7 +14,7 @@ COPY src ./src
 RUN npm run build
 
 # ---- runtime: only what the process needs ------------------------------------
-FROM node:24-bookworm-slim AS runtime
+FROM node:24-trixie-slim AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
 

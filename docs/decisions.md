@@ -594,6 +594,10 @@ The UX review found that on a phone "Mark as done" sits about 6,000px down a les
 
 The `task-checks` job takes four to five minutes and ran on every change under `curriculum/`, including a one-line fix to a lesson or a card. Neither file can affect a task's checks, and `pnpm curriculum:check` in the `verify` job already validates both. The workflow's path filter now excludes `lesson.md` and `cards.yaml`. Changes to a task folder, the runner images, the bridge or the workflow itself still run it.
 
+### D-159 · Docker examples stay on Node 24 and move to Debian trixie — 2026-11-19
+
+A content review asked for the Docker lessons to move from `node:24-bookworm-slim` to Node 26 on trixie. Only the Debian release changes: the examples now use `node:24-trixie-slim`. Node stays at 24 because the platform, the task runner image and the learner's local setup all run Node 24, and the authoring guide allows 24 as the minimum. Moving the examples to 26 belongs with moving the platform itself.
+
 ---
 
 ## Product direction

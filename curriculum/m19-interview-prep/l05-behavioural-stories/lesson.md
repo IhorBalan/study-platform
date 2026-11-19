@@ -66,11 +66,13 @@ A worked example:
 
 > I'm a frontend developer with five years in React, most recently on a booking product used by about 200 clinics. Over the last year more of my work has been on the server: I wrote our Next.js route handlers and the webhook that syncs payments, and I tracked a slow dashboard down to an N+1 query and fixed it with the backend team, which cut the page from four seconds to under one. I found I enjoy that side more, the data model, the failure cases, what happens under load, so I have been building it up deliberately: a NestJS and Postgres service with tests, queues and a deployment pipeline. I'm looking for a role where I own features end to end, API and data included, and your team's size is the reason I applied.
 
+If your backend evidence comes from study and not from a job, name what you built: "a URL shortener with Postgres and rate limiting" or "an outbox relay with retries" is evidence, and "I have been learning backend" is not.
+
 Write yours down, then say it aloud until it stops sounding written. Do not recite your CV in order, and do not apologise for the frontend years: they are why you understand what an API's consumer needs.
 
 ### The salary question
 
-Recruiter screens often ask "What are your salary expectations?". Decide your answer before the call. Either give a range you have researched for the role, level and location, with the bottom of the range a number you would accept, or ask for theirs first: "What is the range for this position?" is a normal question and many companies will answer it. Do not name a number you made up on the spot, and do not anchor on your current salary if you are changing role.
+Recruiter screens often ask "What are your salary expectations?". Decide your answer before the call. Either give a range you have researched for the role, level and location, with the bottom of the range a number you would accept, or ask for theirs first: "What is the range for this position?" is a normal question and many companies will answer it. Do not name a number you made up on the spot, and do not anchor on your current salary if you are changing role. In a growing number of places the law is on your side: the EU pay transparency directive (which member states were due to apply by June 2026) and several US states, among them California, Colorado and New York, require employers to share the range, and many of these rules also stop them asking what you earn now. Check what applies where you are applying.
 
 ## Building a story bank
 

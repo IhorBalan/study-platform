@@ -1,7 +1,7 @@
 import { Editor, type SettingsDto, type UpdateSettings } from '@study/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createFileRoute } from '@tanstack/react-router';
-import { useEffect, useState, type FormEvent } from 'react';
+import { createFileRoute, useBlocker } from '@tanstack/react-router';
+import { useState, type FormEvent } from 'react';
 import { Button, Field, Input, PageHeader, Select } from '../components/ui';
 import { api, ApiError } from '../lib/api';
 import { agoLabel } from '../lib/format';
@@ -32,13 +32,13 @@ function SettingsPage() {
     saved !== undefined &&
     (Object.keys(draft) as (keyof UpdateSettings)[]).some((key) => draft[key] !== saved[key]);
   // The form saves on a button while the theme below applies at once, so it is
-  // easy to change a field and leave. The browser asks before a reload or close.
-  useEffect(() => {
-    if (!dirty) return;
-    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
-    window.addEventListener('beforeunload', warn);
-    return () => window.removeEventListener('beforeunload', warn);
-  }, [dirty]);
+  // easy to change a field and leave. Leaving the page inside the app asks first,
+  // and the browser asks before a reload or close.
+  const leaving = useBlocker({
+    shouldBlockFn: () => dirty,
+    enableBeforeUnload: () => dirty,
+    withResolver: true,
+  });
 
   if (!settings.data) return <p className="text-sm text-zinc-500 dark:text-zinc-400">Loading…</p>;
 
@@ -56,6 +56,25 @@ function SettingsPage() {
   return (
     <section>
       <PageHeader title="Settings" />
+      {leaving.status === 'blocked' && (
+        <div
+          role="alertdialog"
+          aria-labelledby="leave-title"
+          className="fixed inset-x-0 bottom-0 z-10 border-t border-zinc-200 bg-white p-4 shadow-lg dark:border-zinc-800 dark:bg-zinc-950"
+        >
+          <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-3">
+            <p id="leave-title" className="text-sm font-medium">
+              Leave without saving your changes?
+            </p>
+            <Button autoFocus variant="secondary" onClick={leaving.reset}>
+              Stay
+            </Button>
+            <Button variant="danger" onClick={leaving.proceed}>
+              Leave
+            </Button>
+          </div>
+        </div>
+      )}
       <form onSubmit={onSubmit} className="grid max-w-md gap-4">
         <Field
           label="New cards per day"

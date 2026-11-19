@@ -114,7 +114,7 @@ For a typical startup with one web app and one API, sessions are simpler and saf
 - **In memory** (a variable): gone on reload, still usable by an XSS payload while the page is open, but not stealable for later.
 - **`HttpOnly`, `Secure`, `SameSite` cookie**: script cannot read it. XSS can still make requests while the user is on the page, but it cannot take the token away. You now need CSRF protection.
 
-The current guidance for browser apps (RFC 10017, the OAuth best practice for browser-based apps) prefers a **backend for frontend (BFF)**: your server keeps the tokens, and the browser only holds a session cookie. In other words, for the browser, a session again.
+The current guidance for browser apps (the IETF's OAuth 2.0 for Browser-Based Applications best current practice) prefers a **backend for frontend (BFF)**: your server keeps the tokens, and the browser only holds a session cookie. In other words, for the browser, a session again.
 
 ## API keys for machine clients
 
@@ -143,5 +143,5 @@ For a higher bar, the OAuth client credentials grant swaps a long-lived secret f
 - [RFC 7519: JSON Web Token](https://www.rfc-editor.org/rfc/rfc7519): the format and the registered claims.
 - [RFC 8725: JWT Best Current Practices](https://www.rfc-editor.org/rfc/rfc8725): the validation pitfalls, from the authors of the standard.
 - [RFC 9700: OAuth 2.0 Security Best Current Practice](https://www.rfc-editor.org/rfc/rfc9700): refresh token rotation and sender-constrained tokens.
-- [RFC 10017: OAuth 2.0 for Browser-Based Applications](https://www.rfc-editor.org/rfc/rfc10017): BFF and where tokens may live in a browser.
+- [OAuth 2.0 for Browser-Based Applications](https://datatracker.ietf.org/doc/draft-ietf-oauth-browser-based-apps/): BFF and where tokens may live in a browser.
 - [jose](https://github.com/panva/jose): the library used above, with its API reference.

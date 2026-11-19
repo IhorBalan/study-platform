@@ -51,7 +51,7 @@
 - id: bff
   type: term
   front: Backend for frontend (BFF) in OAuth
-  back: "A server-side component that holds the tokens and gives the browser only a session cookie. RFC 10017 ranks it as the most secure option for browser apps."
+  back: "A server-side component that holds the tokens and gives the browser only a session cookie. The IETF guidance for browser-based apps ranks it as the most secure option."
   skills: [token-auth]
 - id: decode-vs-verify
   type: concept

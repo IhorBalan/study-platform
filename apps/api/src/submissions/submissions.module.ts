@@ -3,6 +3,7 @@ import { QueueService } from '../queue/queue.service.js';
 import { SubmissionReviewController } from '../review/review.controller.js';
 import { SubmissionReviewService } from '../review/review.service.js';
 import { SettingsModule } from '../settings/settings.module.js';
+import { CommitResolver } from './commit-resolver.service.js';
 import { SubmissionsController } from './submissions.controller.js';
 import { SubmissionsService } from './submissions.service.js';
 
@@ -10,6 +11,6 @@ import { SubmissionsService } from './submissions.service.js';
 @Module({
   imports: [SettingsModule],
   controllers: [SubmissionsController, SubmissionReviewController],
-  providers: [QueueService, SubmissionsService, SubmissionReviewService],
+  providers: [QueueService, CommitResolver, SubmissionsService, SubmissionReviewService],
 })
 export class SubmissionsModule {}

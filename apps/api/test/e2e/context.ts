@@ -13,6 +13,10 @@ export interface E2eContext {
   readonly bridgeReplies: unknown[];
   /** How long the stand-in bridge takes to answer, to imitate a review in progress. */
   bridgeDelayMs: number;
+  /** What the stand-in bridge resolves a submitted commit to. Undefined: it cannot answer. */
+  resolvedCommit: string | null | undefined;
+  /** The bodies of the commit lookups the stand-in bridge received. */
+  readonly commitLookups: unknown[];
   http(): Agent;
   /** Moves a card's due date into the past, as if its interval had elapsed. */
   makeDue(cardId: string): Promise<void>;

@@ -3,13 +3,15 @@ import { timingSafeEqual } from 'node:crypto';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import type { Curriculum, LoadedTask } from '@study/curriculum';
 import {
+  ResolveCommitRequest,
   RunChecksRequest,
   RunReviewRequest,
   type BridgeHealth,
+  type ResolveCommitResponse,
   type RunChecksResponse,
   type RunReviewResponse,
 } from '@study/shared';
-import { dockerAvailable, imageExists, runChecks, runnerImage } from './checks.js';
+import { dockerAvailable, imageExists, resolveCommit, runChecks, runnerImage } from './checks.js';
 import type { Config } from './config.js';
 import { claudeAvailable, runReview } from './review.js';
 
@@ -55,6 +57,7 @@ export interface BridgeDeps {
   run?: typeof runChecks;
   review?: typeof runReview;
   health?: typeof readHealth;
+  resolve?: typeof resolveCommit;
 }
 
 /** How long a health answer is reused. */
@@ -88,6 +91,7 @@ export function createBridgeServer({
   run = runChecks,
   review = runReview,
   health = readHealth,
+  resolve = resolveCommit,
 }: BridgeDeps): Server {
   const tasks = new Map<string, LoadedTask>(
     curriculum.modules.flatMap((m) => m.tasks.map((t) => [t.id, t] as const)),
@@ -155,6 +159,27 @@ export function createBridgeServer({
       const task = tasks.get(parsed.data.taskId);
       if (!task) return problem(res, 404, 'Not Found', `Unknown task ${parsed.data.taskId}.`);
       const result: RunChecksResponse = await inTurn(() => run(config, task, parsed.data));
+      return send(res, 200, result);
+    }
+
+    // Read-only: the API asks which commit "latest" is at the moment of a submission,
+    // so a run that waits in the queue still checks the commit that was submitted.
+    if (req.method === 'POST' && url.pathname === '/commits/resolve') {
+      let json: unknown;
+      try {
+        json = await readJson(req);
+      } catch (error) {
+        return error instanceof Error && error.message === 'too-large'
+          ? problem(res, 413, 'Payload Too Large')
+          : problem(res, 400, 'Bad Request', 'The body is not valid JSON.');
+      }
+      const parsed = ResolveCommitRequest.safeParse(json);
+      if (!parsed.success) {
+        return problem(res, 400, 'Bad Request', parsed.error.issues[0]?.message);
+      }
+      const result: ResolveCommitResponse = {
+        commitSha: await resolve(parsed.data.repoPath, parsed.data.commitSha),
+      };
       return send(res, 200, result);
     }
 

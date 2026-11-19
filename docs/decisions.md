@@ -625,6 +625,13 @@ D-160 suspends a card whose key left the files and remembers the key, so a card 
 - **Limit:** a running stack keeps the zone it started with until the next `pnpm full:up`.
 - **Not verified:** a full start here. The image build cannot reach the npm registry in this environment. Checked instead: Compose resolves `TZ` for both services, and the `node:24-alpine` base image follows `TZ` without extra packages.
 
+### D-166 · A code submission is pinned to a commit when it is made — 2026-11-19
+- **Problem:** found in UX review round 8. With an empty Commit field, "latest" was looked up when the checks started. A run that waited in the queue checked whatever was committed later, so an attempt made before the solution existed could be stored as passed and counted in Stats.
+- **Chosen:** when a code answer is submitted, the API asks the bridge for the full id of the commit and stores it. The checks and the review then use exactly that commit.
+- **Cost:** the bridge gets a third operation, `POST /commits/resolve`. It only reads: one `git rev-parse` in the lab repository, with the same secret and input rules as the other two.
+- **When it cannot be told:** no lab path, the bridge is not running, or the commit does not exist. The submission is stored as typed, as before, and the check run reports the problem. The API waits at most three seconds for the answer.
+- **Alternative:** run git in the API. Rejected: in full mode the API is a container without the lab repository, and only the bridge touches the host.
+
 ---
 
 ## Product direction

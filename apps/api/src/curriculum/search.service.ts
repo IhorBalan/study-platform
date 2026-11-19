@@ -21,8 +21,6 @@ interface Entry {
   inNote: boolean;
 }
 
-/** A match in the learner's own words ranks above the same words in a lesson. */
-const NOTE_BONUS = 50;
 
 /** Turns Markdown into plain text that reads well in a one-line snippet. */
 export function plainText(markdown: string): string {
@@ -109,11 +107,15 @@ export class SearchService {
         // A title match outweighs any number of mentions in the text.
         score += (inTitle ? 100 : 0) + Math.min(inText, 20);
       }
-      if (score > 0) scored.push({ entry, score: score + (entry.inNote ? NOTE_BONUS : 0) });
+      if (score > 0) scored.push({ entry, score });
     }
 
+    // The learner's own notes come first, whatever the score: they wrote those words,
+    // so that is most likely what they are looking for, and there are few of them.
     // The sort is stable, so equal scores stay in curriculum order.
-    scored.sort((a, b) => b.score - a.score);
+    scored.sort(
+      (a, b) => Number(b.entry.inNote) - Number(a.entry.inNote) || b.score - a.score,
+    );
     return {
       query,
       results: scored.slice(0, MAX_RESULTS).map(({ entry }) => ({

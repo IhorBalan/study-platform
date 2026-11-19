@@ -3,8 +3,9 @@ import { MarkdownHooks, type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 const shikiOptions = {
-  // The plain github-light theme has colours below 4.5:1 on a light background.
-  themes: { light: 'github-light-high-contrast', dark: 'github-dark' },
+  // The plain github themes have colours below 4.5:1: several in light, and
+  // comments in dark (#6a737d, about 4.1:1 on the code block background).
+  themes: { light: 'github-light-high-contrast', dark: 'github-dark-high-contrast' },
   defaultColor: false,
 } as const;
 

@@ -632,6 +632,12 @@ D-160 suspends a card whose key left the files and remembers the key, so a card 
 - **When it cannot be told:** no lab path, the bridge is not running, or the commit does not exist. The submission is stored as typed, as before, and the check run reports the problem. The API waits at most three seconds for the answer.
 - **Alternative:** run git in the API. Rejected: in full mode the API is a container without the lab repository, and only the bridge touches the host.
 
+### D-167 · A waiting check run says when no checker is running — 2026-11-19
+- **Problem:** found in UX review round 8. When the worker was down, a run stayed on "Waiting to run" with no hint.
+- **Chosen:** the API marks a run as stalled when it has waited more than 20 seconds and no other check run is in progress. The task page then says "Nothing is running the checks. Restart pnpm dev and this run starts by itself."
+- **Why no heartbeat:** checks run one at a time, and a free worker takes a waiting run within seconds. A run that waits while nothing runs already shows that the worker is down, so no new table or timer is needed.
+- **Limit:** a worker that hangs in the middle of a run is not detected this way. The next worker start marks that run as failed.
+
 ---
 
 ## Product direction

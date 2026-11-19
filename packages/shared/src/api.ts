@@ -319,6 +319,8 @@ export const RunDto = z.object({
   durationMs: z.number().int().nullable(),
   createdAt: z.string(),
   finishedAt: z.string().nullable(),
+  /** True when the run keeps waiting although nothing else is running: the checker is down. */
+  stalled: z.boolean().default(false),
   checks: z.array(CheckResultDto),
 });
 export type RunDto = z.infer<typeof RunDto>;

@@ -610,6 +610,10 @@ If the bridge stops while a task check runs, its cleanup never happens: the chec
 
 The module had a take-home but no live-coding exercise. Task 6 gives a working list endpoint and 45 minutes to add a filter, sorting and cursor pagination. Nobody listens to a learner studying alone, so the task asks for a short `NOTES.md` (questions with assumed answers, slices, decisions with reasons, what is left) and the rubric scores that as an interviewer would score the talking. The hidden checks change the list between two pages, so only a keyset cursor passes; an offset and a cursor that looks its ticket up both fail.
 
+### D-163 · Check containers carry their owner, and an earlier bridge's are removed at any age — 2026-11-19
+
+D-161 removed only leftovers older than 30 minutes, so that a running `pnpm curriculum:verify` was not disturbed. That missed the usual case: the bridge dies during a check and is started again a minute later. Each bridge process now labels its containers `study.check.owner=bridge-<id>` and verify uses `verify`. On start the bridge removes every container of another bridge process, whatever its age; the age rule stays for verify, for containers without an owner and for temporary folders. The sweep runs after the port is bound, so a second bridge started by mistake fails first and removes nothing.
+
 ---
 
 ## Product direction

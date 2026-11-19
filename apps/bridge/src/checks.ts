@@ -9,7 +9,7 @@ import type { Config } from './config.js';
 import { exec, TailBuffer } from './exec.js';
 import { readResults, watchFolderSize, type ReportedResult } from './results.js';
 import { prepareServices } from './services.js';
-import { CHECK_LABEL } from './sweep.js';
+import { BRIDGE_OWNER, CHECK_LABEL, OWNER_LABEL } from './sweep.js';
 
 const RUNNER_IMAGES = { node: 'study-runner-node', nest: 'study-runner-nest' } as const;
 const DEFAULT_MEMORY_MB = { node: 512, nest: 1024 } as const;
@@ -129,6 +129,8 @@ export async function runChecks(
   config: Config,
   task: LoadedTask,
   request: RunChecksRequest,
+  /** Who started the container. The bridge removes what an earlier bridge left behind. */
+  owner: string = BRIDGE_OWNER,
 ): Promise<RunChecksResponse> {
   const startedAt = Date.now();
   const repo = request.repoPath;
@@ -211,6 +213,8 @@ export async function runChecks(
         name,
         '--label',
         CHECK_LABEL,
+        '--label',
+        `${OWNER_LABEL}=${owner}`,
         '--network',
         config.LAB_NETWORK,
         '--memory',

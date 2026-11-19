@@ -16,6 +16,7 @@ describe('sweepLeftovers', () => {
 
   /** A stand-in for docker: records each call and answers the ones the sweep reads. */
   async function fakeDocker(containers: Record<string, string>, databases: string[]) {
+    // Each value is "<created>" or "<created> <owner>".
     const script = path.join(root, 'docker');
     const inspect = Object.entries(containers)
       .map(([id, created]) => `${id} ${created}`)
@@ -86,6 +87,36 @@ exit 0
     const log = await readFile(calls, 'utf8');
     expect(log).toContain('rm --force aaa\n');
     expect(log).not.toContain('psql');
+  });
+
+  it("removes a container of an earlier bridge however young, and keeps its own and verify's", async () => {
+    const config = await fakeDocker(
+      {
+        crashed: `${YOUNG} bridge-earlier`,
+        mine: `${YOUNG} bridge-me`,
+        verifying: `${YOUNG} verify`,
+        unlabelled: YOUNG,
+      },
+      ['check_0123456789ab'],
+    );
+    expect(await sweepLeftovers(config, NOW, temp, 'bridge-me')).toEqual({
+      containers: 1,
+      folders: 0,
+      databases: 0,
+    });
+    const log = await readFile(calls, 'utf8');
+    expect(log).toContain('rm --force crashed\n');
+    // Containers remain that may use a practice database.
+    expect(log).not.toContain('psql');
+  });
+
+  it('drops unused databases once the only container was an orphan', async () => {
+    const config = await fakeDocker({ crashed: `${YOUNG} bridge-earlier` }, ['check_0123456789ab']);
+    expect(await sweepLeftovers(config, NOW, temp, 'bridge-me')).toEqual({
+      containers: 1,
+      folders: 0,
+      databases: 1,
+    });
   });
 
   it('does nothing harmful when docker is missing', async () => {

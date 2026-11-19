@@ -318,13 +318,14 @@ test('cancels-upstream: when the client disconnects, the request to the model is
   assert.equal(seen, 2, 'Expected at least two delta events before disconnecting.');
   const call = calls[before];
   assert.ok(call, 'No request reached the model server.');
-  const deadline = Date.now() + 1500;
+  // Well before LLM_TIMEOUT_MS runs out: the timeout must not be what ends the model request here.
+  const deadline = Date.now() + 600;
   while (!call.closedEarly && !call.finished && Date.now() < deadline) await sleep(50);
   assert.ok(
     call.closedEarly,
     call.finished
       ? 'The client went away, but the model kept generating to the end. Abort the upstream call when the client disconnects.'
-      : 'Within 1.5 s of the client disconnecting, the request to the model was still open. Abort it when the client goes away.',
+      : '0.6 s after the client disconnected, the request to the model was still open. Abort it when the client goes away, without waiting for the timeout.',
   );
 });
 

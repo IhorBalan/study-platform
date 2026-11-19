@@ -129,6 +129,14 @@ export function planAndStatsTests(ctx: E2eContext): void {
           inNote: true,
         },
       ]);
+      // The note comes before a page that has the word in its title.
+      const titled = await ctx.http().get('/api/search?q=second').expect(200);
+      expect(
+        titled.body.results.map((r: { id: string; inNote: boolean }) => [r.id, r.inNote]),
+      ).toEqual([
+        [lessonId, true],
+        ['m00-demo/l02-second', false],
+      ]);
       const both = await ctx.http().get('/api/search?q=first').expect(200);
       expect(both.body.results.map((r: { inNote: boolean }) => r.inNote)).toEqual([false]);
 

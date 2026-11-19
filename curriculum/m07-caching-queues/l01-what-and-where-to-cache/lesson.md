@@ -64,7 +64,8 @@ type Product = { id: string; name: string; priceCents: number };
 
 export async function getProduct(id: string): Promise<Product | null> {
   const key = `${prefix}product:${id}`;
-  const cached = await redis.get(key);
+  // A cache error is a miss, not a failed request.
+  const cached = await redis.get(key).catch(() => null);
   if (cached !== null) return JSON.parse(cached) as Product;
 
   const { rows } = await db.query<Product>(
@@ -72,12 +73,12 @@ export async function getProduct(id: string): Promise<Product | null> {
     [id],
   );
   const product = rows[0] ?? null;
-  if (product) await redis.set(key, JSON.stringify(product), 'EX', 300);
+  if (product) await redis.set(key, JSON.stringify(product), 'EX', 300).catch(() => {});
   return product;
 }
 ```
 
-Strengths: only data that is actually read gets cached, and if Valkey is down the code can fall back to the database. Weaknesses: the first read after a miss is slow, and keeping it fresh is your job (next lesson).
+Strengths: only data that is actually read gets cached, and if Valkey is down the code falls back to the database. That fallback only exists because of the two `catch` calls, and it is only fast if the client gives up quickly: by default ioredis queues commands while it reconnects, so create it with a `commandTimeout` (a few hundred milliseconds), or every request waits on the dead cache first. Log or count the errors so that an outage is visible. Weaknesses: the first read after a miss is slow, and keeping it fresh is your job (next lesson).
 
 ### Read-through
 
@@ -111,6 +112,7 @@ A cache is a copy, so the system must still be correct when it is empty. Never m
 - A long `max-age` on responses whose data can change, which no server-side invalidation can undo.
 - Caching per-user responses as `public` on a CDN, so one user's data is served to another.
 - No TTL on application cache keys, so memory grows until eviction starts deleting things you did not choose.
+- Letting a cache error fail the request. A cache error is a miss.
 - Treating the cache as the source of truth.
 
 ## Go deeper

@@ -659,6 +659,13 @@ D-160 suspends a card whose key left the files and remembers the key, so a card 
 - **The YAML reader:** the check sandbox has no YAML library and no network, and a rebuilt runner image cannot be tried in the build environment. The checks therefore carry a small reader (`checks/yaml.mjs`) for the YAML that manifests use. It rejects anchors, aliases, tags and multi-line flow collections with a message, and the brief says so. It reads every YAML block in the module's lessons and tasks.
 - **Revisit:** if a learner's valid YAML is rejected, add the `yaml` package to the runner image and drop the reader.
 
+### D-208 · Active work stops here; the rest is a backlog — 2026-11-19
+
+- **Decision (Ihor, 2026-11-19):** "Also find reasonable place to stop work when the quality of the project will be good." The rule we agreed: finish the queue, run one last round of reviews, fix only real bugs and errors in what the learner reads or is graded on, and stop when that round has nothing of high or medium severity.
+- **The last round (main at 64a9fef):** UX round 9, code review 06 and backend report 04 found nothing high or medium. Content review round 5 found two medium items, both checks of the new Kubernetes task that passed wrong work (resource values, image tag). Both are fixed. The backend run confirmed that for all 55 code tasks the starter fails and the solution passes.
+- **What is left:** low-priority polish, listed in [backlog.md](backlog.md). No new features or modules are planned.
+- **Revisit:** when Ihor asks for more, or when studying with the platform turns up a real problem.
+
 ---
 
 ## Product direction

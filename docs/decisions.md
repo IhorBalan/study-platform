@@ -646,6 +646,12 @@ D-160 suspends a card whose key left the files and remembers the key, so a card 
 - **Still to look at:** seven lessons are over 1,500. Two hold two topics each and are candidates for a split: m06 l05 (web vulnerabilities and supply chain) and m11 l07 (compute options and the AWS network layout). Each split is its own change.
 - **Revisit if:** you would rather have shorter lessons. Then the limit goes back down and the long lessons get split, module by module.
 
+### D-207 · No screen-reader support as a goal — 2026-11-19
+
+- **Decision (Ihor, 2026-11-19):** "I don't think we need screen reader." The platform is a local tool for one learner, so screen-reader support is not a goal. No more work is planned for it, UX review rounds skip screen-reader checks, and testing with a real screen reader is off the list of open items.
+- **What stays:** keyboard use of every page (focus order, visible focus, shortcuts on Review), readable contrast, and the semantic HTML and status regions that exist. They cost nothing to keep and they serve keyboard use too.
+- **Revisit:** if the platform is ever shared with other learners.
+
 ---
 
 ## Product direction

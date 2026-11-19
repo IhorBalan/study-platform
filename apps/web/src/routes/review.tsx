@@ -101,6 +101,23 @@ function ReviewPage() {
     if (cardId) shownAt.current = Date.now();
   }, [cardId]);
 
+  // Grading and revealing remove the control that was used, which would leave focus
+  // on the page body: a screen reader would say nothing, and Tab would start at the top.
+  // Focus follows the content instead: the next question, then its answer.
+  const question = useRef<HTMLDivElement>(null);
+  const answer = useRef<HTMLDivElement>(null);
+  const lastCardId = useRef(cardId);
+  useEffect(() => {
+    // Not for the first card, so opening the page leaves focus where the browser put it.
+    if (cardId && lastCardId.current && cardId !== lastCardId.current) {
+      question.current?.focus({ preventScroll: true });
+    }
+    lastCardId.current = cardId;
+  }, [cardId]);
+  useEffect(() => {
+    if (revealed) answer.current?.focus({ preventScroll: true });
+  }, [revealed]);
+
   const submit = useMutation({
     mutationFn: (grade: Grade) => {
       if (!cardId) throw new Error('no card');
@@ -228,14 +245,25 @@ function ReviewPage() {
         </div>
       ) : (
         <div className="mx-auto max-w-2xl">
-          <div className="min-h-64 rounded-xl border border-zinc-200 p-6 dark:border-zinc-800">
+          <div
+            ref={question}
+            tabIndex={-1}
+            className="min-h-64 rounded-xl border border-zinc-200 p-6 outline-none dark:border-zinc-800"
+          >
             <p className="mb-3 text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
               {card.type}
               {card.state === 'new' && ' · new'}
             </p>
             <Markdown>{renderFront(card)}</Markdown>
             {revealed && (
-              <div className="mt-6 border-t border-zinc-200 pt-6 dark:border-zinc-800">
+              <div
+                ref={answer}
+                tabIndex={-1}
+                // Code in an answer is highlighted a moment after it is shown. A live
+                // region has the finished text announced when it replaces the placeholder.
+                aria-live="polite"
+                className="mt-6 border-t border-zinc-200 pt-6 outline-none dark:border-zinc-800"
+              >
                 <Markdown>{card.back}</Markdown>
                 {card.lessonId && (
                   <p className="mt-4 text-sm">
@@ -295,7 +323,7 @@ function ReviewPage() {
       )}
 
       {lastGraded && (
-        <p className="mt-4 text-center text-sm text-zinc-600 dark:text-zinc-300">
+        <p role="status" className="mt-4 text-center text-sm text-zinc-600 dark:text-zinc-300">
           Last card graded {grades.find((g) => g.grade === lastGraded.grade)?.label}.{' '}
           <button
             type="button"

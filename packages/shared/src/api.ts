@@ -64,7 +64,7 @@ export const NextUp = z.object({
    */
   continueWith: NextItem.extend({ kind: z.enum(['lesson', 'task']) }).nullable(),
   lesson: NextItem.nullable(),
-  /** Tasks of modules the learner has started, not yet done. */
+  /** Up to three open tasks of the modules the learner works in, started ones first. */
   tasks: z.array(NextItem.extend({ type: SubmissionType })),
   dueCards: z.number().int(),
   newCards: z.number().int(),

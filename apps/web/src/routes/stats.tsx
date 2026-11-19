@@ -198,6 +198,14 @@ function ForecastChart({ days }: { days: StatsResponse['memory']['dueByDay'] }) 
   const total = days.reduce((sum, d) => sum + d.cards, 0);
   const label = (d: { day: string; cards: number }, i: number) =>
     `${i === 0 ? 'Today' : d.day}: ${d.cards} ${d.cards === 1 ? 'card' : 'cards'}`;
+  // A row of empty bars says less than one sentence does.
+  if (total === 0) {
+    return (
+      <p className="mt-6 text-sm text-zinc-500 dark:text-zinc-400">
+        No reviewed cards are due in the next {days.length} days. New cards are not counted.
+      </p>
+    );
+  }
   return (
     <figure className="mt-6">
       <figcaption className="text-sm font-medium">

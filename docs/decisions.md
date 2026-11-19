@@ -586,6 +586,10 @@ The end-to-end spec had grown to almost a thousand lines. Each group of tests (w
 
 Backend testing found that the API exits when its database connections are cut while a transaction is open: `pg` emits `error` on the client, and the pool only listens while a client is idle. `pnpm restore --force` with the platform running does exactly that, and under `node --watch` the API then stays down. `createDatabase` now attaches a listener to each client when the pool opens it, so the event is logged, the next query on that client fails as an ordinary error, and the pool replaces the connection. An end-to-end test ends every session in the middle of a transaction and expects the transaction to fail and the health check to pass. Considered: catching `uncaughtException` in the process, which would hide unrelated bugs.
 
+### D-157 · A jump link to "Mark as done", not automatic completion — 2026-11-19
+
+The UX review found that on a phone "Mark as done" sits about 6,000px down a lesson and suggested either completing the lesson automatically at the end or a link in the section list. The section list now ends with "Finish: mark as done", which jumps to the button. Automatic completion was rejected because finishing a lesson adds its cards to the review queue, and that should stay a deliberate click, not a side effect of scrolling.
+
 ---
 
 ## Product direction

@@ -79,6 +79,14 @@ function LessonPage() {
                   </a>
                 </li>
               ))}
+              {/* A long lesson is many screens on a phone; this jumps to the button at the end. */}
+              {lesson.status !== 'done' && (
+                <li>
+                  <a href="#finish" className="font-medium hover:underline">
+                    Finish: mark as done
+                  </a>
+                </li>
+              )}
             </ol>
           </nav>
         </details>
@@ -88,7 +96,10 @@ function LessonPage() {
 
       <NotesBox key={id} itemId={id} />
 
-      <div className="mt-10 flex flex-wrap items-center gap-4 border-t border-zinc-200 pt-6 dark:border-zinc-800">
+      <div
+        id="finish"
+        className="mt-10 flex scroll-mt-4 flex-wrap items-center gap-4 border-t border-zinc-200 pt-6 dark:border-zinc-800"
+      >
         {lesson.status === 'done' ? (
           <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
             Completed

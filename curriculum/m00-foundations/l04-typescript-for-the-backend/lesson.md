@@ -7,7 +7,9 @@ You know TypeScript from React, where a bundler decides how modules resolve and 
 
 ## ESM in Node
 
-Node treats a `.js` file as an ES module when the nearest `package.json` contains `"type": "module"`. Without it, `.js` means CommonJS. New backend projects should be ESM.
+Node treats a `.js` file as an ES module when the nearest `package.json` contains `"type": "module"`. Without it, `.js` is treated as CommonJS, unless the file uses `import` or `export`, in which case current Node detects that and runs it as a module anyway. Do not rely on the detection: set `"type": "module"` so every tool reads the project the same way. New backend projects should be ESM.
+
+Current Node also runs `.ts` files directly by stripping the type annotations (`node app.ts`). Nothing is checked and nothing is compiled, so syntax that needs real compilation, such as `enum` and decorators, does not work that way; `tsc` remains the type checker, and a Nest app still needs a build.
 
 Node's ESM resolver is stricter than a bundler's:
 

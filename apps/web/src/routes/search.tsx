@@ -4,6 +4,7 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { Input, PageHeader } from '../components/ui';
 import { api } from '../lib/api';
+import { splitByTerms } from '../lib/highlight';
 
 const MIN_LENGTH = 2;
 
@@ -51,6 +52,8 @@ function SearchPage() {
     placeholderData: keepPreviousData,
   });
   const results = enabled ? (search.data?.results ?? []) : [];
+  // While a new search loads, the list still shows the previous answer: mark its words.
+  const answeredQuery = search.data?.query ?? q;
 
   return (
     <section>
@@ -106,7 +109,18 @@ function SearchPage() {
                   )}
                   {result.snippet && (
                     <p className="mt-1 text-sm break-words text-zinc-600 dark:text-zinc-300">
-                      {result.snippet}
+                      {splitByTerms(result.snippet, answeredQuery).map((part, index) =>
+                        part.match ? (
+                          <mark
+                            key={index}
+                            className="rounded-sm bg-amber-200 px-0.5 text-inherit dark:bg-amber-500/30"
+                          >
+                            {part.text}
+                          </mark>
+                        ) : (
+                          part.text
+                        ),
+                      )}
                     </p>
                   )}
                 </li>

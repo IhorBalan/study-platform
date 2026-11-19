@@ -590,6 +590,10 @@ Backend testing found that the API exits when its database connections are cut w
 
 The UX review found that on a phone "Mark as done" sits about 6,000px down a lesson and suggested either completing the lesson automatically at the end or a link in the section list. The section list now ends with "Finish: mark as done", which jumps to the button. Automatic completion was rejected because finishing a lesson adds its cards to the review queue, and that should stay a deliberate click, not a side effect of scrolling.
 
+### D-158 · Task checks do not run for lesson and card edits — 2026-11-19
+
+The `task-checks` job takes four to five minutes and ran on every change under `curriculum/`, including a one-line fix to a lesson or a card. Neither file can affect a task's checks, and `pnpm curriculum:check` in the `verify` job already validates both. The workflow's path filter now excludes `lesson.md` and `cards.yaml`. Changes to a task folder, the runner images, the bridge or the workflow itself still run it.
+
 ---
 
 ## Product direction

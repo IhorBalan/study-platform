@@ -7,6 +7,9 @@ on:
     branches: [main]
     paths:
       - 'curriculum/**'
+      # Lesson text and review cards cannot change a task check. CI's verify job validates them.
+      - '!curriculum/**/lesson.md'
+      - '!curriculum/**/cards.yaml'
       - 'infra/docker/runner/**'
       - 'infra/docker/runner-nest/**'
       - 'infra/compose/lab.compose.yaml'
@@ -17,6 +20,9 @@ on:
   pull_request:
     paths:
       - 'curriculum/**'
+      # Lesson text and review cards cannot change a task check. CI's verify job validates them.
+      - '!curriculum/**/lesson.md'
+      - '!curriculum/**/cards.yaml'
       - 'infra/docker/runner/**'
       - 'infra/docker/runner-nest/**'
       - 'infra/compose/lab.compose.yaml'

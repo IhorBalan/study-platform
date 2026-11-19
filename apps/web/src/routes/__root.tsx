@@ -35,6 +35,13 @@ function NotFound() {
 function RootLayout() {
   return (
     <div className="mx-auto flex min-h-dvh max-w-5xl flex-col px-4 sm:px-6">
+      {/* The first Tab stop on every page, shown only while it has focus. */}
+      <a
+        href="#content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-zinc-900 focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-white dark:focus:bg-zinc-100 dark:focus:text-zinc-900"
+      >
+        Skip to content
+      </a>
       {/* On a phone the title and status share the first line and the links take the second.
           Six links fit a 360px screen only with tight padding; narrower screens scroll the row. */}
       <header className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-zinc-200 py-3 sm:py-4 dark:border-zinc-800">
@@ -61,7 +68,7 @@ function RootLayout() {
           <HealthBadge />
         </div>
       </header>
-      <main className="flex-1 py-8">
+      <main id="content" tabIndex={-1} className="flex-1 py-8 outline-none">
         <Outlet />
       </main>
       <footer className="hidden pb-4 text-xs text-zinc-500 sm:block dark:text-zinc-400">

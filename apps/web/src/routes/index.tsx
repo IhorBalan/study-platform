@@ -130,7 +130,8 @@ function NextUpPanel({ nextUp }: { nextUp: NextUp }) {
       {nothing ? (
         <p className="mt-2 text-sm">Everything is done. Nothing is due.</p>
       ) : (
-        <ul className="mt-2 grid gap-2 text-sm">
+        // On a phone a long module name gets one line and is cut there, not three lines per item.
+        <ul className="mt-2 grid gap-2 text-sm *:min-w-0">
           {resume && (
             <li>
               Continue:{' '}
@@ -157,8 +158,8 @@ function NextUpPanel({ nextUp }: { nextUp: NextUp }) {
                   {resume.title}
                 </Link>
               )}{' '}
-              <span className="text-zinc-500 dark:text-zinc-400">
-                {resume.moduleTitle} · where you stopped last time
+              <span className="text-zinc-500 max-sm:block max-sm:truncate dark:text-zinc-400">
+                Where you stopped last time · {resume.moduleTitle}
               </span>
             </li>
           )}
@@ -214,7 +215,7 @@ function NextUpPanel({ nextUp }: { nextUp: NextUp }) {
               >
                 {nextUp.lesson.title}
               </Link>{' '}
-              <span className="text-zinc-500 dark:text-zinc-400">
+              <span className="text-zinc-500 max-sm:block max-sm:truncate dark:text-zinc-400">
                 Lesson · {nextUp.lesson.moduleTitle}
               </span>
             </li>
@@ -231,7 +232,9 @@ function NextUpPanel({ nextUp }: { nextUp: NextUp }) {
                 >
                   {task.title}
                 </Link>{' '}
-                <span className="text-zinc-500 dark:text-zinc-400">Task · {task.moduleTitle}</span>
+                <span className="text-zinc-500 max-sm:block max-sm:truncate dark:text-zinc-400">
+                  Task · {task.moduleTitle}
+                </span>
               </li>
             ))}
           {nextUp.pendingCards > 0 && (

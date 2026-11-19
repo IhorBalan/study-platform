@@ -23,18 +23,18 @@ Layers are identified by a hash of their content, which gives you two things:
 That is why instruction order matters, the main topic of the next lesson. Deleting a file in a later layer does not shrink the image either: the file is still present in the earlier layer and is only hidden.
 
 ```sh
-docker image history node:24-bookworm-slim   # one line per layer, with sizes
+docker image history node:24-trixie-slim   # one line per layer, with sizes
 ```
 
 ## Tags and digests
 
-`node:24-bookworm-slim` is a repository name and a **tag**. A tag is a movable pointer, like a Git branch: the publisher re-points it whenever they release a patch. `latest` is not special, it is only the tag used when you do not write one.
+`node:24-trixie-slim` is a repository name and a **tag**. A tag is a movable pointer, like a Git branch: the publisher re-points it whenever they release a patch. `latest` is not special, it is only the tag used when you do not write one.
 
 A **digest** is the content hash of one exact image, like a commit SHA:
 
 ```sh
-docker pull node:24-bookworm-slim
-docker image inspect --format '{{index .RepoDigests 0}}' node:24-bookworm-slim
+docker pull node:24-trixie-slim
+docker image inspect --format '{{index .RepoDigests 0}}' node:24-trixie-slim
 # node@sha256:…   pull or build FROM this reference to get identical bytes every time
 ```
 

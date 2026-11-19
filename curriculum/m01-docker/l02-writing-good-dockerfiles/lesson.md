@@ -26,7 +26,7 @@ Building needs the TypeScript compiler and dev dependencies. Running needs neith
 ```dockerfile
 # syntax=docker/dockerfile:1
 
-FROM node:24-bookworm-slim AS base
+FROM node:24-trixie-slim AS base
 WORKDIR /app
 RUN npm install -g pnpm@11 && pnpm config set --global store-dir /pnpm/store
 
@@ -49,7 +49,7 @@ RUN --mount=type=cache,target=/pnpm/store \
     pnpm install --frozen-lockfile --prod
 
 # The image that ships: no pnpm, no compiler, no sources
-FROM node:24-bookworm-slim AS runtime
+FROM node:24-trixie-slim AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=prod-deps /app/node_modules ./node_modules
@@ -64,7 +64,7 @@ CMD ["node", "dist/main.js"]
 
 What to notice:
 
-- **Pinned base.** `node:24-bookworm-slim` names the Node major, the Debian release and the slim variant. A bare `node` or `node:latest` changes under you. For byte-for-byte reproducibility append the digest: `node:24-bookworm-slim@sha256:…`.
+- **Pinned base.** `node:24-trixie-slim` names the Node major, the Debian release and the slim variant. A bare `node` or `node:latest` changes under you. For byte-for-byte reproducibility append the digest: `node:24-trixie-slim@sha256:…`.
 - **Cache mount.** `--mount=type=cache` keeps pnpm's package store between builds without putting it in a layer, so even a lockfile change downloads only what is new.
 - **`--frozen-lockfile`** fails the build if the lockfile and `package.json` disagree, instead of silently resolving new versions.
 - **Non-root.** The official Node images include an unprivileged `node` user. Files copied in are owned by root and readable by everyone, so the process can read its code but cannot modify it. If the app must write somewhere, use `COPY --chown=node:node` for that path or mount a volume.

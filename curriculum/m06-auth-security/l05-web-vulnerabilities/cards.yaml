@@ -24,7 +24,7 @@
 - id: csrf-defence
   type: concept
   front: "Interview: how do you prevent CSRF with cookie-based sessions?"
-  back: "SameSite cookies, no state changes on GET, reject unsafe requests whose Origin or Sec-Fetch-Site is cross-site, and CSRF tokens where more is needed."
+  back: "SameSite cookies, no state changes on GET, accept unsafe requests only when Sec-Fetch-Site is same-origin or none (or Origin matches the app), and CSRF tokens where more is needed."
   skills: [web-vulnerabilities]
 - id: bearer-no-csrf
   type: concept
@@ -83,4 +83,9 @@
   type: cloze
   front: "In the OWASP Top 10:2025, risks from dependencies and build pipelines are {{A03 Software Supply Chain Failures}}."
   back: A03 Software Supply Chain Failures
+  skills: [web-vulnerabilities]
+- id: csrf-same-site-not-enough
+  type: concept
+  front: "Why should a CSRF check accept `Sec-Fetch-Site: same-origin` and not also `same-site`?"
+  back: "`same-site` includes every sibling subdomain. One compromised or forgotten subdomain could then send forged requests with the user's cookies."
   skills: [web-vulnerabilities]

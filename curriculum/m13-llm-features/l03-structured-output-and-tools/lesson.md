@@ -118,7 +118,7 @@ Treat each tool like a public endpoint, because in effect it is one: anyone who 
 - **Validate inputs** with tight schemas. A regex on the order id, `int().positive()` on an amount.
 - **Authorise in code, not in the prompt.** "Only refund the customer's own orders" in the instructions is a wish. `if (order.customerId !== customerId) return { error: ... }` inside `execute` is a rule. The customer id comes from the session, never from the model's arguments.
 - **Give errors back as results.** Returning `{ error: 'refund_not_allowed' }` lets the model explain the refusal. Throwing ends the loop.
-- **Limit side effects.** At most one refund per conversation, amounts within the order total, and a human approval step for anything irreversible. The AI SDK's `toolApproval` option can pause a call until a person approves it.
+- **Limit side effects.** At most one refund per conversation, amounts within the order total, and a human approval step for anything irreversible. The AI SDK's `toolApproval` option can pause a call until a person approves it. A model can ask for several tool calls in one step, and they run at the same time. So check the limit and record the use in one go, before the first `await`; a check that waits for the database first lets two calls through.
 - **Return only what the model needs.** Do not hand it a whole database row with other customers' data or internal flags.
 
 Lesson 7 explains why this matters so much: text inside a tool result, such as a customer's note on an order, can contain instructions that the model may follow.

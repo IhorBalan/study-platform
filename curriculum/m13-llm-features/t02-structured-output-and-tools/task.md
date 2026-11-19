@@ -15,7 +15,7 @@ Edit `src/support.ts`. Keep every export. Both functions take the model as their
 
 - Offer two tools: `getOrder({ orderId })` and `refundOrder({ orderId, amountCents })`, with `orderId` in the format above and `amountCents` a positive integer.
 - `getOrder` returns status, total and note for the signed-in customer's (`deps.customerId`) orders. For anyone else's order it returns exactly what it returns for an order that does not exist.
-- `refundOrder` calls `deps.refund` only for the customer's own order, with status `delivered`, an amount up to `totalCents`, and at most once per run. Otherwise it returns an error result.
+- `refundOrder` calls `deps.refund` only for the customer's own order, with status `delivered`, an amount up to `totalCents`, and at most once per run. The model may send two `refundOrder` calls in one step, and they then run at the same time: still one refund. Otherwise it returns an error result.
 - Stop after `maxSteps` model calls. If the model still wants tools then, reject with `StepLimitError`.
 - `refunds` lists the refund ids issued.
 

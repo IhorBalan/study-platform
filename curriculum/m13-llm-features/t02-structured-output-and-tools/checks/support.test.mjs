@@ -274,6 +274,20 @@ test('refund-gate: refunds run only for own, delivered orders, within the total,
   assert.deepEqual(result.refunds, ['re_1'], `refunds must list the refund ids that were issued, got ${JSON.stringify(result.refunds)}`);
   const afterRefusal = JSON.stringify(model.doGenerateCalls[2].prompt.at(-1));
   assert.ok(/error|not|denied|refus/i.test(afterRefusal), 'A refused refund must return a result that tells the model it did not happen.');
+
+  // A model can ask for two refunds in one step, and the SDK then runs both tool calls at the
+  // same time. "Once per run" must hold there too.
+  const twice = fakeDeps();
+  const both = toolCall('refundOrder', { orderId: 'ord_abc123', amountCents: 1000 });
+  both.content.push(toolCall('refundOrder', { orderId: 'ord_abc123', amountCents: 2000 }).content[0]);
+  const together = await runSupportAgent(scripted([both, text('Done.')]), 'Refund ord_abc123 twice', twice.deps, { maxSteps: 5 });
+  assert.equal(
+    twice.log.refund.length,
+    1,
+    `Two refundOrder calls in the same step must lead to one refund. refund() was called with: ${JSON.stringify(twice.log.refund)}. ` +
+      'Both calls run at the same time, so the limit has to be claimed before the first await, not recorded after the refund.',
+  );
+  assert.equal(together.refunds.length, 1, `refunds must list one id, got ${JSON.stringify(together.refunds)}`);
 });
 
 // ---------- the learner's own tests ----------

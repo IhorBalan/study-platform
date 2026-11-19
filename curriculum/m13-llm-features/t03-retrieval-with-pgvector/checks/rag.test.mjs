@@ -284,6 +284,42 @@ test('grounded-answer: the model sees the retrieved sources and the question, an
   );
 });
 
+test('grounded-answer: four sources reach the model, and citations come in order of first use', async () => {
+  const { answerQuestion, ingestDocument } = ready();
+  await seed();
+  // Six documents that all match the question, each a little worse than the one before it.
+  const question = 'webhook delivery retries signature';
+  const extras = ['alpha', 'bravo charlie', 'delta echo foxtrot', 'golf hotel india juliet', 'kilo lima mike november oscar', 'papa quebec romeo sierra tango uniform'];
+  const docs = extras.map((extra, i) => ({
+    tenantId: 'hooli',
+    documentId: `kb-hook-${i}`,
+    title: `Webhooks ${i}`,
+    text: `Webhook delivery retries signature MARK${i}X ${extra}.`,
+  }));
+  const model = embeddingModel();
+  for (const doc of docs) await ingestDocument(state.pool, model, doc);
+  const q = embedText(question);
+  const ranked = docs
+    .map((doc) => ({ doc, score: embedText(doc.text).reduce((sum, v, i) => sum + v * q[i], 0) }))
+    .sort((x, y) => y.score - x.score);
+
+  const chat = chatModel('Retries back off [3]. Each delivery is signed [1]. See also [3] and [9].');
+  const result = await answerQuestion(state.pool, model, chat, { tenantId: 'hooli', question });
+  const prompt = JSON.stringify(chat.doGenerateCalls[0]?.prompt ?? '');
+  const sent = docs.filter((_, i) => prompt.includes(`MARK${i}X`)).map((doc) => doc.documentId);
+  assert.deepEqual(
+    sent.toSorted(),
+    ranked.slice(0, 4).map((r) => r.doc.documentId).toSorted(),
+    `answerQuestion must search with k = 4: six chunks match, and the four closest must reach the model. Sent: ${sent.join(', ')}`,
+  );
+  const cite = (r) => ({ documentId: r.doc.documentId, title: r.doc.title, chunkIndex: 0 });
+  assert.deepEqual(
+    result?.citations,
+    [cite(ranked[2]), cite(ranked[0])],
+    `The answer cites [3], then [1], then [3] again and [9]. citations must be source 3, then source 1: once each, in order of first use. Got ${JSON.stringify(result?.citations)}`,
+  );
+});
+
 test('no-context: without relevant chunks the answer is NO_ANSWER and the chat model is not called', async () => {
   const { answerQuestion, NO_ANSWER } = ready();
   await seed();

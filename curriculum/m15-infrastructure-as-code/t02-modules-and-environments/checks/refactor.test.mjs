@@ -175,12 +175,14 @@ test('prevent-destroy: the bucket in the module cannot be destroyed by a plan', 
   const { body } = load(m);
   const buckets = blocks(body, 'resource', 'aws_s3_bucket');
   assert.ok(buckets.length > 0, `expected an aws_s3_bucket in ${rel(m)}`);
-  const vars = new Map(blocks(body, 'variable').map((v) => [v.labels[0], v]));
   for (const b of buckets) {
     const value = attrValue(block(b.body, 'lifecycle')?.body ?? [], 'prevent_destroy');
-    let ok = value === 'true';
-    const ref = /^var\.([A-Za-z_][\w-]*)$/.exec(value ?? '');
-    if (ref && vars.has(ref[1])) ok = attrValue(vars.get(ref[1]).body, 'default') === 'true';
-    assert.ok(ok, `aws_s3_bucket.${b.labels[1]} needs lifecycle { prevent_destroy = true } (or a variable that defaults to true)`);
+    // The literal only. Behind a variable, an environment could switch the rail off, prod included.
+    assert.equal(
+      value,
+      'true',
+      `aws_s3_bucket.${b.labels[1]} needs lifecycle { prevent_destroy = true }, written as the literal true. ` +
+        `Found: ${value ?? 'no prevent_destroy'}. A variable here would let an environment turn the protection off.`,
+    );
   }
 });

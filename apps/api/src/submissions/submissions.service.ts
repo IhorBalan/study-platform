@@ -1,12 +1,13 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { schema } from '@study/db';
 import type { CreateSubmission, SubmissionDto } from '@study/shared';
-import { asc, desc, eq, inArray } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray } from 'drizzle-orm';
 import { CurriculumService } from '../curriculum/curriculum.service.js';
 import { InjectDb, type Database } from '../database/database.module.js';
 import { QueueService } from '../queue/queue.service.js';
 import { SubmissionReviewService } from '../review/review.service.js';
 import { CommitResolver } from './commit-resolver.service.js';
+import { isStalled } from './stalled.js';
 
 const { submissions, verificationRuns, checkResults } = schema;
 
@@ -121,6 +122,18 @@ export class SubmissionsService {
             .orderBy(asc(checkResults.position));
     const reviews = await this.reviews.latestFor(ids);
 
+    // Only a waiting run needs to know whether the checker is busy with another one.
+    const now = new Date();
+    const anotherRunInProgress =
+      runs.some((r) => r.stage === 'checks' && r.status === 'queued') &&
+      (
+        await this.db
+          .select({ id: verificationRuns.id })
+          .from(verificationRuns)
+          .where(and(eq(verificationRuns.stage, 'checks'), eq(verificationRuns.status, 'running')))
+          .limit(1)
+      ).length > 0;
+
     return subs.map((s) => ({
       id: s.id,
       taskId: s.taskId,
@@ -139,6 +152,7 @@ export class SubmissionsService {
           durationMs: r.durationMs,
           createdAt: r.createdAt.toISOString(),
           finishedAt: r.finishedAt?.toISOString() ?? null,
+          stalled: isStalled(r, anotherRunInProgress, now),
           checks: checks
             .filter((c) => c.runId === r.id)
             .map((c) => ({

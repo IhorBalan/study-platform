@@ -85,6 +85,45 @@ export function submissionsTests(ctx: E2eContext): void {
       }
     });
 
+    it('marks a run as stalled when it keeps waiting and nothing else is running', async () => {
+      const db = ctx.app.get<Database>(DB);
+      const first = await ctx
+        .http()
+        .post('/api/tasks/m00-demo/t02-code/submissions')
+        .send({ type: 'repo', commitSha: 'abc1234' })
+        .expect(201);
+      const second = await ctx
+        .http()
+        .post('/api/tasks/m00-demo/t02-code/submissions')
+        .send({ type: 'repo', commitSha: 'abc1234' })
+        .expect(201);
+      const runOf = async (id: string) => {
+        const list = await ctx.http().get('/api/tasks/m00-demo/t02-code/submissions').expect(200);
+        return list.body.submissions.find((s: { id: string }) => s.id === id).runs[0];
+      };
+      try {
+        expect(first.body.runs[0].stalled).toBe(false);
+
+        // Half a minute later nothing has taken it: no checker is running.
+        await db
+          .update(schema.verificationRuns)
+          .set({ createdAt: new Date(Date.now() - 30_000) })
+          .where(eq(schema.verificationRuns.id, first.body.runs[0].id));
+        expect((await runOf(first.body.id)).stalled).toBe(true);
+
+        // Behind a run that is in progress, waiting is normal.
+        await db
+          .update(schema.verificationRuns)
+          .set({ status: 'running' })
+          .where(eq(schema.verificationRuns.id, second.body.runs[0].id));
+        expect((await runOf(first.body.id)).stalled).toBe(false);
+      } finally {
+        for (const made of [first, second]) {
+          await db.delete(schema.submissions).where(eq(schema.submissions.id, made.body.id));
+        }
+      }
+    });
+
     it('reports a run whose checks could not be queued, so it does not wait for ever', async () => {
       const enqueue = vi
         .spyOn(ctx.app.get(QueueService), 'enqueueChecks')

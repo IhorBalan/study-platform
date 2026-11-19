@@ -202,6 +202,13 @@ function SubmissionCard({ submission, open }: { submission: SubmissionDto; open:
           )}
         </summary>
 
+        {run?.stalled && (
+          <p role="status" className="mt-3 text-amber-700 dark:text-amber-400">
+            Nothing is running the checks. Restart <code className="font-mono">pnpm dev</code> and
+            this run starts by itself.
+          </p>
+        )}
+
         {run?.error && (
           <p className="mt-3 text-zinc-700 dark:text-zinc-300">
             {run.error}{' '}

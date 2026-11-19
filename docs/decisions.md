@@ -582,6 +582,10 @@ Reviews were queued on the bridge so that only one Claude process runs at a time
 
 The end-to-end spec had grown to almost a thousand lines. Each group of tests (write protection, curriculum, submissions, spaced repetition, plan and statistics, curriculum updates) now lives in its own file under `apps/api/test/e2e/` and is registered by `app.e2e-spec.ts` with a shared context. Considered: separate spec files, each with its own Postgres container. That would isolate the groups, but later groups build on what earlier ones leave behind (finished lessons, graded cards), and six containers would make the run several times slower on a laptop. Keeping one suite keeps the order and the single container; the split is only for reading.
 
+### D-156 · Every pooled database client has its own error listener — 2026-11-19
+
+Backend testing found that the API exits when its database connections are cut while a transaction is open: `pg` emits `error` on the client, and the pool only listens while a client is idle. `pnpm restore --force` with the platform running does exactly that, and under `node --watch` the API then stays down. `createDatabase` now attaches a listener to each client when the pool opens it, so the event is logged, the next query on that client fails as an ordinary error, and the pool replaces the connection. An end-to-end test ends every session in the middle of a transaction and expects the transaction to fail and the health check to pass. Considered: catching `uncaughtException` in the process, which would hide unrelated bugs.
+
 ---
 
 ## Product direction

@@ -18,7 +18,7 @@ export type { Database };
       useFactory: async (env: Env): Promise<DatabaseHandle> => {
         const logger = new Logger('Database');
         const handle = createDatabase(env.DATABASE_URL, {
-          onPoolError: (error) => logger.warn(`Idle connection lost: ${error.message}`),
+          onPoolError: (error) => logger.warn(`Database connection lost: ${error.message}`),
         });
         // One user, one instance: applying migrations at start-up is safe here
         // and means `pnpm dev` works on a fresh volume with no extra step.

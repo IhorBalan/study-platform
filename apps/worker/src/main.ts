@@ -7,7 +7,7 @@ import { loadConfig } from './config.js';
 
 const config = loadConfig();
 const { db, pool } = createDatabase(config.DATABASE_URL, {
-  onPoolError: (error) => console.warn('[worker] idle connection lost:', error.message),
+  onPoolError: (error) => console.warn('[worker] database connection lost:', error.message),
 });
 const runOnBridge = createBridgeClient(config);
 

@@ -45,7 +45,13 @@ function PlanPage() {
           <OverallProgress modules={data.modules} />
           <ol className="mt-3 space-y-2" aria-label="Modules">
             {data.modules.map((m) => (
-              <ModuleRow key={m.id} module={m} />
+              <ModuleRow
+                key={m.id}
+                module={m}
+                holdsNextLesson={
+                  data.nextUp.lesson !== null && splitId(data.nextUp.lesson.id).moduleId === m.id
+                }
+              />
             ))}
           </ol>
         </>
@@ -265,10 +271,17 @@ function moduleStatus(m: ModuleSummary): keyof typeof statusDot {
 }
 
 /**
- * One module. Only a module in progress starts open; the rest are a single line
+ * One module. A module in progress starts open, and so does the one that holds the next
+ * lesson: on a new database nothing is in progress yet. The rest are a single line
  * until opened, so the page is not twenty summaries long.
  */
-function ModuleRow({ module: m }: { module: ModuleSummary }) {
+function ModuleRow({
+  module: m,
+  holdsNextLesson,
+}: {
+  module: ModuleSummary;
+  holdsNextLesson: boolean;
+}) {
   const lessonsDone = m.lessons.filter((l) => l.status === 'done').length;
   const tasksDone = m.tasks.filter((t) => t.status === 'done').length;
   const status = moduleStatus(m);
@@ -280,7 +293,7 @@ function ModuleRow({ module: m }: { module: ModuleSummary }) {
           : 'border-zinc-200 dark:border-zinc-800'
       }`}
     >
-      <details open={status === 'in_progress'} className="group">
+      <details open={status === 'in_progress' || holdsNextLesson} className="group">
         <summary className="flex cursor-pointer flex-wrap items-baseline justify-between gap-x-3 gap-y-1 p-4">
           <h2 className="flex min-w-0 items-baseline gap-2 font-medium [overflow-wrap:anywhere]">
             <span

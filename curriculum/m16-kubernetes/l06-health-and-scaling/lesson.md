@@ -133,11 +133,12 @@ spec:
           averageUtilization: 70
   behavior:
     scaleDown:
-      stabilizationWindowSeconds: 300   # wait 5 minutes of low load before removing Pods
+      stabilizationWindowSeconds: 300   # the default, written out: 5 minutes of low load before Pods go
 ```
 
 Notes:
 
+- Scale-down already waits 300 seconds by default, so the `behavior` block above changes nothing; it is there to show where the setting lives. Scale-up has no such wait. Lower the window for workers that should shrink fast, raise it for load that comes in waves.
 - Resource metrics come from **metrics-server**, an add-on most managed clusters include.
 - **Remove `replicas` from the Deployment manifest** once an HPA owns it. Otherwise every deploy resets the count to the manifest's value and the HPA has to scale up again. On a Deployment that is already running, do not just delete the line: the next `kubectl apply` would then scale it to the default of one Pod, once. First run `kubectl apply edit-last-applied deployment/<name>` and remove `replicas` there, then remove it from the manifest. Server-side apply avoids the problem.
 - CPU is a decent signal for a CPU-bound API. For queue workers, scale on queue depth instead; **KEDA** is the common tool for event-driven scaling from Redis, SQS, Kafka and others.

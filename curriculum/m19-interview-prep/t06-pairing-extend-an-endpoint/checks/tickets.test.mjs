@@ -206,6 +206,24 @@ test('stable: tickets created or deleted between two pages cause no skipped and 
       `sort ${sort}: after two tickets were created at the front and the last ticket of page one was deleted, ` +
         `page two must still be tickets 7 to 12 of the original order. An offset, or a cursor that looks its ticket up, cannot do this.`,
     );
+
+    // The other side of the boundary: the first ticket of page two is deleted, and a new
+    // ticket appears in the middle of page two. A cursor that names the ticket the next page
+    // starts with, and looks it up, has nothing to find; a cursor that holds a position does.
+    const near = tickets.find((t) => t.id === order[8]);
+    const inside = { ...near, id: 9500, title: 'New C' };
+    const shifted = [...tickets.filter((t) => t.id !== order[6]), inside];
+    const after = expectedOrder(shifted, sort);
+    const expected = after.slice(after.indexOf(order[5]) + 1, after.indexOf(order[5]) + 7);
+    assert.ok(expected.includes(9500) && !expected.includes(order[6]), 'the check itself is wrong: its expected page must hold the new ticket and not the deleted one');
+    const next = page(listTickets, shifted, { sort, limit: 6, cursor: first.nextCursor }, `sort ${sort}, second page after a change inside it`);
+    assert.deepEqual(
+      ids(next),
+      expected,
+      `sort ${sort}: after the first ticket of page two was deleted and a ticket was created inside page two, ` +
+        `page two must be the six tickets that now follow the last ticket of page one, the new one among them. ` +
+        `A cursor that looks up the first ticket of the next page cannot do this.`,
+    );
   }
 });
 

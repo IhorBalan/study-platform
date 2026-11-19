@@ -638,6 +638,14 @@ D-160 suspends a card whose key left the files and remembers the key, so a card 
 - **Why no heartbeat:** checks run one at a time, and a free worker takes a waiting run within seconds. A run that waits while nothing runs already shows that the worker is down, so no new table or timer is needed.
 - **Limit:** a worker that hangs in the middle of a run is not detected this way. The next worker start marks that run as failed.
 
+### D-205 · Lesson length: 800 to 1,500 words of prose, split above about 1,800 — 2026-11-19
+- **Source:** content review round 4 measured every lesson. The choice to change the guide and not the lessons came through the project coordinator, not from Ihor directly, so it is open to revisit.
+- **Problem:** the authoring guide said 500 to 900 words. Of 131 lessons, 16 are within that. Counting prose only, the median is 1,188 words, nine in ten are under 1,430 and the longest is 1,816.
+- **Chosen:** the guide now says 800 to 1,500 words of prose, not counting code blocks, and to split a lesson above about 1,800.
+- **Why:** the old limit was never met, so it guided nobody. Splitting more than a hundred lessons would change card keys and reset progress for little gain. Counting prose only stops a lesson being penalised for its code examples.
+- **Still to look at:** seven lessons are over 1,500. Two hold two topics each and are candidates for a split: m06 l05 (web vulnerabilities and supply chain) and m11 l07 (compute options and the AWS network layout). Each split is its own change.
+- **Revisit if:** you would rather have shorter lessons. Then the limit goes back down and the long lessons get split, module by module.
+
 ---
 
 ## Product direction

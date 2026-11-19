@@ -52,7 +52,7 @@ Build caches (TypeScript's incremental info, Docker layers) follow the same idea
 
 A pipeline that can be ignored will be. In GitHub, a branch ruleset (or the older branch protection) on `main` makes named checks required: a pull request cannot merge until they pass. Three details matter:
 
-- **Require the check by its job name**, and keep that name stable. Renaming a job silently drops it from the required list.
+- **Require the check by its job name**, and keep that name stable. Renaming a job leaves the old name required, so every pull request is blocked waiting for a check that never reports; update the ruleset in the same change.
 - **Require the branch to be up to date**, or use a merge queue, if two green pull requests can break each other. Otherwise `main` is only checked after the merge, which is why pipelines also run on `push` to `main`.
 - **Flaky tests are a pipeline bug.** A test that fails one run in twenty teaches everyone to press "re-run" without reading. Fix it or quarantine it the same day; module 5 covers the usual causes.
 

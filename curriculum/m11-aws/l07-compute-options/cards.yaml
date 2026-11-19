@@ -70,8 +70,13 @@
   skills: [aws-compute]
 - id: nat-gateway-why
   type: concept
-  front: What is a NAT gateway for, and why watch it on the bill?
-  back: "It lets resources in private subnets open outbound connections to the internet. It bills by the hour and per gigabyte, per gateway."
+  front: What is a NAT gateway for?
+  back: "It lets resources in private subnets open outbound connections to the internet, while nothing outside can open a connection to them."
+  skills: [aws-compute]
+- id: nat-gateway-cost
+  type: concept
+  front: Why watch NAT gateways on the AWS bill?
+  back: "Each one bills by the hour and per gigabyte processed. One per availability zone plus heavy traffic to S3 through it adds up; the free S3 gateway endpoint takes that traffic off the NAT."
   skills: [aws-compute]
 - id: vpc-endpoint-why
   type: concept

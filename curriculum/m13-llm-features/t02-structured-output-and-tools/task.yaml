@@ -10,7 +10,7 @@ hints:
   - "Without `stopWhen`, generateText stops after the first tool call. `isStepCount(n)` allows up to n model calls."
   - "When the step cap is hit, the result's `finishReason` is still 'tool-calls'."
   - "The customer id comes from `deps`, never from the model's tool arguments. Check ownership inside each tool's `execute`."
-  - "Return `{ error: '...' }` from a tool to refuse. Throwing ends the loop with no answer."
+  - "Return `{ error: '...' }` from a tool to refuse. A thrown error also goes back to the model, but as its raw message."
 criteria:
   - { id: compiles, title: The project compiles with tsc }
   - { id: triage-valid, title: "Valid output is returned after one call, with the ticket only in a user message" }

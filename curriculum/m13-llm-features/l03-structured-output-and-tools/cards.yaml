@@ -51,7 +51,7 @@
 - id: tool-errors-as-results
   type: concept
   front: "Why return `{ error: 'refund_not_allowed' }` from a tool instead of throwing?"
-  back: "The model gets the result in the next step and can explain the refusal. A throw ends the loop with no answer for the user."
+  back: "You decide exactly what the model sees, and it can explain the refusal. A thrown error is passed to the model as its raw message, which can leak internals."
   skills: [llm-structured-output]
 - id: tool-call-cost
   type: concept

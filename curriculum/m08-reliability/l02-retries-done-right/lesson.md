@@ -39,7 +39,7 @@ export function backoffDelay(retry: number, baseMs = 100, maxMs = 5_000, random 
 
 Passing `random` in is not decoration. It lets a test pin the value and check the arithmetic, the same trick as injecting the clock in module 5.
 
-When the server tells you how long to wait, believe it. A `429` or `503` may carry `Retry-After`, either as seconds (`Retry-After: 2`) or as an HTTP date. Wait that long instead of your own backoff, and if that is longer than your remaining deadline, stop and return the response now.
+When the server tells you how long to wait, believe it. A `429` or `503` may carry `Retry-After`, either as seconds (`Retry-After: 2`) or as an HTTP date. Wait that long instead of your own backoff. If that is longer than your remaining deadline, waiting is pointless: the simple loop below lets the deadline cut the wait short, and a stricter version compares the wait with the time left and fails at once with the status it received.
 
 ## A retry loop that respects the deadline
 

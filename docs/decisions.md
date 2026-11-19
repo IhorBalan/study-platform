@@ -606,6 +606,10 @@ Until now a lesson card that was deleted from the files (or whose id was renamed
 
 If the bridge stops while a task check runs, its cleanup never happens: the check container keeps running with no time limit, and its temporary folder and practice database stay. Check containers now carry the label `study.check=1`, and on start the bridge removes labelled containers and `study-check-*` or `study-review-*` temp folders older than 30 minutes, which is twice the longest time limit a task may set, so a check that `pnpm curriculum:verify` is running at the same moment is never touched. Unused `check_<id>` databases are dropped only when no check container is left. Valkey keys with a `check_<id>:` prefix are not swept; they are small and the practice Valkey is disposable.
 
+### D-162 · Interview prep gets a pairing task, with notes in place of talking — 2026-11-19
+
+The module had a take-home but no live-coding exercise. Task 6 gives a working list endpoint and 45 minutes to add a filter, sorting and cursor pagination. Nobody listens to a learner studying alone, so the task asks for a short `NOTES.md` (questions with assumed answers, slices, decisions with reasons, what is left) and the rubric scores that as an interviewer would score the talking. The hidden checks change the list between two pages, so only a keyset cursor passes; an offset and a cursor that looks its ticket up both fail.
+
 ---
 
 ## Product direction

@@ -29,7 +29,7 @@ Compute money from tokens with a price table that lives in configuration, per mo
 The biggest levers, roughly in the order to try them:
 
 1. **Send less.** Trim history, retrieve 4 chunks instead of 20, remove tool definitions a request does not need. Input tokens are paid on every step of every call.
-2. **Write less.** Set `maxOutputTokens`, ask for short answers, and use structured output instead of prose your code then parses. Output tokens cost several times more than input tokens.
+2. **Write less.** Set `maxOutputTokens`, ask for short answers, and use structured output instead of prose your code then parses. Output tokens cost several times more than input tokens. The output count in `usage` includes the model's hidden thinking, so a lower effort setting cuts cost too.
 3. **Cache** (below).
 4. **Use a smaller model where it is good enough.** Classification and extraction often work on a small, cheap model. Decide with an evaluation (lesson 6), not by feel.
 5. **Batch what is not urgent.** Providers offer batch APIs at a large discount (Anthropic's is half price) for work that can wait minutes or hours, such as nightly summaries.

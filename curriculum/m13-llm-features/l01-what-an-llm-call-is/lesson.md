@@ -29,8 +29,10 @@ A truncated answer (`max_tokens` / `length`) looks like a normal answer that sto
 Models read and write **tokens**, chunks of text of a few characters each. A rough rule for English is four characters per token; code and other languages use more. Three things are measured in tokens:
 
 - **The context window**: the maximum of input plus output in one call. Current Claude models accept up to a million tokens, local models often far less. Everything you send counts: instructions, history, retrieved documents, tool definitions.
-- **The output cap** (`max_tokens`, `maxOutputTokens`): the most the model may write in this call. Always set it. It bounds latency and cost.
+- **The output cap** (`max_tokens`, `maxOutputTokens`): the most the model may generate in this call. Always set it. It bounds latency and cost.
 - **The bill**: providers charge per million input tokens and per million output tokens, and output costs several times more than input. Prices change often and differ per model, so read them from the provider's pricing page when you need numbers, and record the usage of every call so you can compute cost later (lesson 5).
+
+The output is more than the text you get back. Current Claude models think before they answer unless you say otherwise, and the thinking is hidden by default. Thinking tokens count against the output cap and are billed as output. A cap sized for a one-line answer can be used up by thinking: the call then stops with `max_tokens` and no text at all. Leave room in the cap, and set how hard the model thinks with `output_config.effort` (`low` suits a one-sentence summary).
 
 Latency has the same shape. Time to first token is roughly constant per call, then each output token takes a few milliseconds. A 1,000-token answer takes many seconds. That is why lesson 2 streams.
 
@@ -50,7 +52,8 @@ import Anthropic from '@anthropic-ai/sdk';
 const client = new Anthropic(); // reads ANTHROPIC_API_KEY from the environment
 const message = await client.messages.create({
   model: 'claude-haiku-5-5',
-  max_tokens: 512,
+  max_tokens: 2000, // room for thinking and the sentence
+  output_config: { effort: 'low' },
   system: 'You summarise support tickets in one sentence.',
   messages: [{ role: 'user', content: ticketText }],
 });
@@ -76,7 +79,7 @@ const result = await generateText({
   model: local.chatModel(process.env.LLM_MODEL ?? 'llama3.2'),
   instructions: 'You summarise support tickets in one sentence.',
   prompt: ticketText,
-  maxOutputTokens: 512,
+  maxOutputTokens: 2000,
 });
 console.log(result.text, result.finishReason, result.usage.inputTokens, result.usage.outputTokens);
 ```
@@ -103,7 +106,7 @@ It helps to see that an "OpenAI-compatible" call is ordinary JSON over HTTP. Thi
 ```json
 {
   "model": "llama3.2",
-  "max_tokens": 512,
+  "max_tokens": 2000,
   "messages": [
     { "role": "system", "content": "You summarise support tickets in one sentence." },
     { "role": "user", "content": "My invoice shows the wrong VAT number." }

@@ -602,6 +602,10 @@ A content review asked for the Docker lessons to move from `node:24-bookworm-sli
 
 Until now a lesson card that was deleted from the files (or whose id was renamed) stayed active for anyone who had finished that lesson, so removing a duplicate card never reached an existing learner. The deck sync now suspends such a card: it leaves the review queue but keeps its row, schedule and history. The key is recorded in `removed_lesson_cards`, so this happens once and a card the learner resumes from the Cards page stays active. Cards the learner reworded are left alone, because they are the learner's own by then. This reverses the earlier choice to leave removed cards untouched.
 
+### D-161 · The bridge sweeps leftovers of interrupted checks when it starts — 2026-11-19
+
+If the bridge stops while a task check runs, its cleanup never happens: the check container keeps running with no time limit, and its temporary folder and practice database stay. Check containers now carry the label `study.check=1`, and on start the bridge removes labelled containers and `study-check-*` or `study-review-*` temp folders older than 30 minutes, which is twice the longest time limit a task may set, so a check that `pnpm curriculum:verify` is running at the same moment is never touched. Unused `check_<id>` databases are dropped only when no check container is left. Valkey keys with a `check_<id>:` prefix are not swept; they are small and the practice Valkey is disposable.
+
 ---
 
 ## Product direction

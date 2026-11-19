@@ -114,6 +114,7 @@ export class ReviewService {
         pendingApproval: pending[0]?.n ?? 0,
       },
       nextDue: upcoming[0]?.due?.toISOString() ?? null,
+      reviewLimitReached: limits.reviewAllowance === 0,
       secondsPerCard,
     };
   }

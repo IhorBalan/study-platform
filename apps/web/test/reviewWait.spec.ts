@@ -26,4 +26,10 @@ describe('waitForNextDue', () => {
   it('does not poll for a card that is hours away', () => {
     expect(waitForNextDue({ cards: [], nextDue: inSeconds(3 * 3600) }, NOW)).toBe(false);
   });
+
+  it('does not poll at the daily limit, where the card would be held back anyway', () => {
+    expect(
+      waitForNextDue({ cards: [], nextDue: inSeconds(5), reviewLimitReached: true }, NOW),
+    ).toBe(false);
+  });
 });

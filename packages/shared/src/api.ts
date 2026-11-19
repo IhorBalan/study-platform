@@ -218,6 +218,11 @@ export const ReviewQueueResponse = z.object({
   /** When the next card that is not due yet becomes due. Null when no such card exists. */
   nextDue: z.string().nullable(),
   /**
+   * True when today's limit for cards seen before is used up. Cards that come due
+   * later today are then held back until tomorrow, whatever nextDue says.
+   */
+  reviewLimitReached: z.boolean(),
+  /**
    * Typical seconds this learner spends on one card: the median of the last 14 days,
    * or 8 until there are enough reviews to tell.
    */

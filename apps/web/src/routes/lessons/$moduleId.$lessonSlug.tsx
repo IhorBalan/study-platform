@@ -1,6 +1,6 @@
 import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Markdown } from '../../components/Markdown';
 import { NotesBox } from '../../components/NotesBox';
 import { api } from '../../lib/api';
@@ -30,6 +30,7 @@ function LessonPage() {
   const outline = useMemo(() => lessonOutline(lesson.markdown), [lesson.markdown]);
   useStudySession('lesson', id);
   useScrollMemory(id);
+  const doneButton = useRef<HTMLButtonElement>(null);
   const [notice, setNotice] = useState<{ lessonId: string; text: string } | null>(null);
 
   const progress = useMutation({
@@ -82,7 +83,16 @@ function LessonPage() {
               {/* A long lesson is many screens on a phone; this jumps to the button at the end. */}
               {lesson.status !== 'done' && (
                 <li>
-                  <a href="#finish" className="font-medium hover:underline">
+                  <a
+                    href="#finish"
+                    className="font-medium hover:underline"
+                    // The jump scrolls by itself; focus follows so the keyboard lands on the button.
+                    onClick={() =>
+                      requestAnimationFrame(() =>
+                        doneButton.current?.focus({ preventScroll: true }),
+                      )
+                    }
+                  >
                     Finish: mark as done
                   </a>
                 </li>
@@ -106,6 +116,7 @@ function LessonPage() {
           </span>
         ) : (
           <button
+            ref={doneButton}
             type="button"
             disabled={progress.isPending}
             onClick={() => progress.mutate('done')}

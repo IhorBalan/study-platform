@@ -189,6 +189,17 @@ export function curriculumUpdatesTests(ctx: E2eContext): void {
       const [still] = await db.select().from(schema.cards).where(eq(schema.cards.id, back.id));
       expect(still?.status).toBe('suspended');
 
+      // A retired card the learner resumed before it came back to the files: the
+      // marker goes at the next update, so a later suspension is the learner's own.
+      await ctx.http().patch(`/api/cards/${back.id}`).send({ status: 'active' }).expect(200);
+      await db.insert(schema.removedLessonCards).values({ sourceKey }).onConflictDoNothing();
+      expect((await decks.sync()).restored).toBe(0);
+      expect(await marker()).toHaveLength(0);
+      await ctx.http().patch(`/api/cards/${back.id}`).send({ status: 'suspended' }).expect(200);
+      expect((await decks.sync()).restored).toBe(0);
+      const [kept] = await db.select().from(schema.cards).where(eq(schema.cards.id, back.id));
+      expect(kept?.status).toBe('suspended');
+
       // Back to how the earlier test left it: deleted by the learner.
       await ctx.http().delete(`/api/cards/${back.id}`).expect(204);
       expect(await marker()).toHaveLength(1);

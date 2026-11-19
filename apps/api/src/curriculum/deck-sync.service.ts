@@ -124,6 +124,7 @@ export class DeckSyncService implements OnApplicationBootstrap {
       let updated = 0;
       const left: { id: string; key: string }[] = [];
       const suspendedButCurrent: { id: string; key: string }[] = [];
+      const activeAndCurrent: string[] = [];
       for (const row of rows) {
         const card = current.get(row.key ?? '');
         if (!card) {
@@ -133,6 +134,7 @@ export class DeckSyncService implements OnApplicationBootstrap {
         if (row.key && row.status === 'suspended') {
           suspendedButCurrent.push({ id: row.id, key: row.key });
         }
+        if (row.key && row.status === 'active') activeAndCurrent.push(row.key);
         if (card.type === row.type && card.front === row.front && card.back === row.back) continue;
         await tx
           .update(cards)
@@ -172,6 +174,15 @@ export class DeckSyncService implements OnApplicationBootstrap {
             .onConflictDoNothing();
           retired = retire.length;
         }
+      }
+
+      // A card the learner resumed after it was retired, and that is in the files
+      // again, is an ordinary card from now on. Its marker goes, or a later
+      // suspension by the learner would be taken for a retirement and undone below.
+      if (activeAndCurrent.length > 0) {
+        await tx
+          .delete(removedLessonCards)
+          .where(inArray(removedLessonCards.sourceKey, activeAndCurrent));
       }
 
       // Bring back each card that was retired above in an earlier run and is in the

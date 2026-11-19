@@ -154,7 +154,9 @@ describe('bridge server', () => {
         body: JSON.stringify({ taskId: 'm00-demo/t01-explain', prompt: 'Review this.' }),
       });
     const replies = await Promise.all([review(), review(), review()]);
-    expect(replies.map((r) => r.status)).toEqual([200, 200, 200]);
+    // The others are refused, not queued: the API would stop waiting for them.
+    expect(replies.map((r) => r.status).sort()).toEqual([200, 409, 409]);
     expect(mostReviewsAtOnce).toBe(1);
+    expect((await review()).status).toBe(200);
   });
 });

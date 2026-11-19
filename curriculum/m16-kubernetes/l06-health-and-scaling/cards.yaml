@@ -8,11 +8,6 @@
   front: What problem does a startup probe solve?
   back: "It holds off liveness and readiness until a slow-starting app is up, so liveness can stay strict without killing the app during boot."
   skills: [k8s-health-scaling]
-- id: liveness-no-db
-  type: concept
-  front: "Interview: why should a liveness probe not check the database?"
-  back: "A database blip would fail liveness on every Pod at once and restart them all, turning a short dependency problem into a full outage."
-  skills: [k8s-health-scaling]
 - id: no-readiness
   type: concept
   front: What goes wrong during a rollout if a Deployment has no readiness probe?

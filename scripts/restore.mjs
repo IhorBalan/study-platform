@@ -60,20 +60,6 @@ if (!yes) {
   }
 }
 
-// Keep what is there now, so restoring the wrong file can be undone.
-const safety = await writeBackup({
-  prefix: 'before-restore',
-  pattern: SAFETY_PATTERN,
-  keep: KEEP_SAFETY,
-});
-if (safety.error) {
-  console.error(
-    `The current data could not be saved first, so nothing was changed.\n${safety.error}`,
-  );
-  process.exit(1);
-}
-console.log(`The current data was saved to ${safety.file}.`);
-
 // The backup is loaded into a new, empty database, which then takes the place of the
 // current one. Restoring over the current database would keep every table the backup
 // does not know (one added by a later migration), and the next start would fail when
@@ -114,6 +100,19 @@ if (code !== 0) {
   fail(`\nThe backup could not be read and the current data was kept. The lines above say why.`);
 }
 
+// Keep what is there now, so restoring the wrong file can be undone. This comes after
+// the backup was read: a file that cannot be read must not use up a safety copy.
+const safety = await writeBackup({
+  prefix: 'before-restore',
+  pattern: SAFETY_PATTERN,
+  keep: KEEP_SAFETY,
+});
+if (safety.error) {
+  await admin(`drop database if exists ${SCRATCH} with (force)`);
+  fail(`The current data could not be saved first, so nothing was changed.\n${safety.error}`);
+}
+console.log(`The current data was saved to ${safety.file}.`);
+
 if (force) {
   // A database cannot be renamed while anything is connected to it.
   await admin(
@@ -135,6 +134,9 @@ if ((await admin(`alter database ${SCRATCH} rename to study`)) === null) {
 // The data that was replaced is in the safety backup, so this copy is not needed.
 await admin(`drop database if exists ${PREVIOUS} with (force)`);
 
-console.log(
-  `Restored. Start the platform again with "pnpm dev".\nTo undo this restore: pnpm restore "${safety.file}"`,
-);
+// A platform that kept running through a forced restore holds connections to the
+// database that is gone, and the job queue's own tables are not part of a backup.
+const next = force
+  ? 'If "pnpm dev" is still running, stop it and start it again now: it cannot continue on the restored data.'
+  : 'Start the platform again with "pnpm dev".';
+console.log(`Restored. ${next}\nTo undo this restore: pnpm restore "${safety.file}"`);

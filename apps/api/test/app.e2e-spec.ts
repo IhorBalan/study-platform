@@ -13,6 +13,7 @@ import { AppModule } from '../src/app.module.js';
 import { JSON_BODY_LIMIT } from '../src/common/body-limit.js';
 import { DB, type Database } from '../src/database/database.module.js';
 import type { E2eContext } from './e2e/context.js';
+import { databaseOutageTests } from './e2e/database-outage.js';
 import { writeProtectionTests } from './e2e/write-protection.js';
 import { curriculumTests } from './e2e/curriculum.js';
 import { submissionsTests } from './e2e/submissions.js';
@@ -104,4 +105,5 @@ describe('API (e2e, real Postgres)', () => {
   spacedRepetitionTests(ctx);
   planAndStatsTests(ctx);
   curriculumUpdatesTests(ctx);
+  databaseOutageTests(ctx);
 });

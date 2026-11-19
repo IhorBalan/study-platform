@@ -10,7 +10,7 @@ export interface DatabaseHandle {
 }
 
 export interface CreateDatabaseOptions {
-  /** Called when an idle pooled connection fails, e.g. because Postgres restarted. */
+  /** Called when a pooled connection fails outside a query, e.g. because Postgres restarted. */
   onPoolError?: (error: Error) => void;
 }
 
@@ -19,12 +19,18 @@ export function createDatabase(
   options: CreateDatabaseOptions = {},
 ): DatabaseHandle {
   const pool = new pg.Pool({ connectionString, max: 10 });
-  // An idle client emits 'error' when the server goes away. Without a listener
-  // Node treats that as an unhandled 'error' event and exits the process. The
-  // pool has already discarded the broken client and will open a new one on the
-  // next query, so reporting the error is all that is needed.
-  pool.on('error', (error) => {
-    (options.onPoolError ?? ((e) => console.error('[db] idle connection lost:', e.message)))(error);
+  // A client emits 'error' when the server goes away. Without a listener Node
+  // treats that as an unhandled 'error' event and exits the process. The pool
+  // listens only while a client is idle; one that is checked out (inside a
+  // transaction, between two statements) would still end the process. So each
+  // client gets its own listener, which also covers the idle case. The broken
+  // client's next query fails, the pool drops it and opens a new one.
+  const report =
+    options.onPoolError ?? ((e: Error) => console.error('[db] connection lost:', e.message));
+  pool.on('connect', (client) => {
+    client.on('error', report);
   });
+  // The pool re-emits the idle case; it is already reported above.
+  pool.on('error', () => undefined);
   return { db: drizzle(pool, { schema }), pool };
 }

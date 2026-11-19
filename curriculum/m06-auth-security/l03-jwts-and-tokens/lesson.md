@@ -116,6 +116,17 @@ For a typical startup with one web app and one API, sessions are simpler and saf
 
 The current guidance for browser apps (RFC 10017, the OAuth best practice for browser-based apps) prefers a **backend for frontend (BFF)**: your server keeps the tokens, and the browser only holds a session cookie. In other words, for the browser, a session again.
 
+## API keys for machine clients
+
+Sessions and short-lived JWTs both assume someone can log in again. A customer's cron job or backend calling your API cannot, so B2B APIs give it an **API key**: a long-lived random secret, sent as `Authorization: Bearer <key>`. A key is not a JWT. It is an opaque pointer, like a session id, and you treat it the same way:
+
+- **Generate** at least 32 random bytes (`randomBytes(32).toString('base64url')`) and add a recognisable prefix such as `sk_live_`. The prefix lets secret scanners, and your own `grep`, find a key that leaked into a repository or a log.
+- **Store only a hash.** A key has enough entropy that a plain SHA-256 is right here (no slow password hash needed), and an indexed lookup by hash stays fast. Show the full key once, at creation; afterwards show only the prefix and the last few characters so that people can tell keys apart.
+- **Tie each key to a tenant** and give it **scopes** (read-only, one resource), not the full power of the user who created it.
+- **Make rotation painless.** Allow two active keys at once, so a customer can deploy the new one before revoking the old one. Record `last_used_at` so that unused keys can be found and removed, and let keys be revoked immediately.
+
+For a higher bar, the OAuth client credentials grant swaps a long-lived secret for short-lived access tokens, at the cost of more work for every client.
+
 ## Common mistakes
 
 - Letting the token's header choose the algorithm.
@@ -124,6 +135,7 @@ The current guidance for browser apps (RFC 10017, the OAuth best practice for br
 - Access tokens that live for days, "because refresh is complicated".
 - Refresh tokens stored in plain text, or never rotated.
 - Tokens in `localStorage` for a browser app that handles anything valuable.
+- Storing API keys in plain text, or giving every key full access to the account.
 - Calling a JWT "stateless logout": logging out of a JWT-only system does nothing until `exp`.
 
 ## Go deeper

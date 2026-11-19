@@ -58,3 +58,18 @@
   front: What is wrong with reading the user id from a JWT with a library's decode function?
   back: "decode skips the signature check, so anyone can write any user id into a token and be believed."
   skills: [token-auth]
+- id: api-key-storage
+  type: concept
+  front: How should a server store the API keys it issues?
+  back: "Only a SHA-256 hash, looked up by index. The key is high-entropy, so a fast hash is enough. Show the full key once, at creation."
+  skills: [token-auth]
+- id: api-key-prefix
+  type: concept
+  front: "Why do API keys carry a prefix such as `sk_live_`?"
+  back: "So secret scanners and a plain search can recognise a leaked key in code or logs, and so people can tell what kind of key it is."
+  skills: [token-auth]
+- id: api-key-rotation
+  type: concept
+  front: What makes API key rotation possible without downtime for the customer?
+  back: "Two keys active at the same time: deploy the new key, then revoke the old one."
+  skills: [token-auth]

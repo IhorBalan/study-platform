@@ -38,13 +38,13 @@ export function curriculumUpdatesTests(ctx: E2eContext): void {
       await db.delete(schema.cards).where(eq(schema.cards.sourceKey, key('c2')));
       const scheduleBefore = await schedule(first.id);
 
-      expect(await decks.sync()).toEqual({ updated: 1, added: 1, retagged: 0 });
+      expect(await decks.sync()).toEqual({ updated: 1, added: 1, retagged: 0, retired: 0 });
       expect((await card('c1'))?.front).toBe('Q1');
       // Only the text changes: the card keeps its place in the schedule.
       expect(await schedule(first.id)).toEqual(scheduleBefore);
       const second = await card('c2');
       expect(second).toMatchObject({ front: 'Q2', status: 'active', source: 'lesson' });
-      expect(await decks.sync()).toEqual({ updated: 0, added: 0, retagged: 0 });
+      expect(await decks.sync()).toEqual({ updated: 0, added: 0, retagged: 0, retired: 0 });
 
       // A skill tag that changed in the files reaches the card the learner has.
       const tags = async () =>
@@ -54,7 +54,7 @@ export function curriculumUpdatesTests(ctx: E2eContext): void {
       const tagged = await tags();
       expect(tagged).toEqual(['http-basics']);
       await db.delete(schema.cardSkills).where(eq(schema.cardSkills.cardId, first.id));
-      expect(await decks.sync()).toEqual({ updated: 0, added: 0, retagged: 1 });
+      expect(await decks.sync()).toEqual({ updated: 0, added: 0, retagged: 1, retired: 0 });
       expect(await tags()).toEqual(tagged);
 
       // Saving the same text again is not an edit: corrections still arrive.
@@ -68,7 +68,7 @@ export function curriculumUpdatesTests(ctx: E2eContext): void {
       // A card the learner reworded, and one they deleted, are left alone.
       await ctx.http().patch(`/api/cards/${first.id}`).send({ front: 'My wording' }).expect(200);
       await ctx.http().delete(`/api/cards/${second?.id}`).expect(204);
-      expect(await decks.sync()).toEqual({ updated: 0, added: 0, retagged: 0 });
+      expect(await decks.sync()).toEqual({ updated: 0, added: 0, retagged: 0, retired: 0 });
       expect((await card('c1'))?.front).toBe('My wording');
       expect(await card('c2')).toBeUndefined();
       const again = await ctx
@@ -77,6 +77,51 @@ export function curriculumUpdatesTests(ctx: E2eContext): void {
         .send({ status: 'done' })
         .expect(200);
       expect(again.body.cardsAdded).toBe(0);
+    });
+
+    it('suspends a card that was removed from the curriculum, once', async () => {
+      const db = ctx.app.get<Database>(DB);
+      const decks = ctx.app.get(DeckSyncService);
+      // As if the lesson had a third card when the learner finished it, and the
+      // card was later removed from the files as a duplicate.
+      const [gone] = await db
+        .insert(schema.cards)
+        .values({
+          type: 'concept',
+          front: 'A question that was removed',
+          back: 'Its answer',
+          source: 'lesson',
+          status: 'active',
+          lessonId: 'm00-demo/l01-first',
+          sourceKey: 'm00-demo/l01-first#removed-later',
+        })
+        .returning();
+      if (!gone) throw new Error('could not add the card');
+      await db.insert(schema.cardSchedules).values({ cardId: gone.id, due: new Date(0) });
+      const status = async () =>
+        (await db.select().from(schema.cards).where(eq(schema.cards.id, gone.id)))[0]?.status;
+      const queued = async () => {
+        const res = await ctx.http().get('/api/review/queue').expect(200);
+        return JSON.stringify(res.body).includes(gone.id);
+      };
+      expect(await queued()).toBe(true);
+
+      expect((await decks.sync()).retired).toBe(1);
+      expect(await status()).toBe('suspended');
+      expect(await queued()).toBe(false);
+      // The row and its schedule are kept.
+      expect(
+        await db
+          .select()
+          .from(schema.cardSchedules)
+          .where(eq(schema.cardSchedules.cardId, gone.id)),
+      ).toHaveLength(1);
+
+      // The learner can take it back, and the next update leaves it alone.
+      await ctx.http().patch(`/api/cards/${gone.id}`).send({ status: 'active' }).expect(200);
+      expect((await decks.sync()).retired).toBe(0);
+      expect(await status()).toBe('active');
+      await ctx.http().delete(`/api/cards/${gone.id}`).expect(204);
     });
   });
 }

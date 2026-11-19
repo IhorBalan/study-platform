@@ -598,6 +598,10 @@ The `task-checks` job takes four to five minutes and ran on every change under `
 
 A content review asked for the Docker lessons to move from `node:24-bookworm-slim` to Node 26 on trixie. Only the Debian release changes: the examples now use `node:24-trixie-slim`. Node stays at 24 because the platform, the task runner image and the learner's local setup all run Node 24, and the authoring guide allows 24 as the minimum. Moving the examples to 26 belongs with moving the platform itself.
 
+### D-160 · Cards removed from the curriculum are suspended, once — 2026-11-19
+
+Until now a lesson card that was deleted from the files (or whose id was renamed) stayed active for anyone who had finished that lesson, so removing a duplicate card never reached an existing learner. The deck sync now suspends such a card: it leaves the review queue but keeps its row, schedule and history. The key is recorded in `removed_lesson_cards`, so this happens once and a card the learner resumes from the Cards page stays active. Cards the learner reworded are left alone, because they are the learner's own by then. This reverses the earlier choice to leave removed cards untouched.
+
 ---
 
 ## Product direction

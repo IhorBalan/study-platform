@@ -64,3 +64,23 @@
   front: "In the OWASP Top 10:2025, XSS is part of {{A05 Injection}}."
   back: A05 Injection
   skills: [web-vulnerabilities]
+- id: supply-chain-install-scripts
+  type: concept
+  front: Why is `npm install` of a hijacked package dangerous even if your code never imports it?
+  back: Lifecycle scripts such as `postinstall` run during the install with your user's rights, so they can read tokens and files. Skip them by default (`ignore-scripts`, or pnpm's allow-list) and allow only the packages that need a build step.
+  skills: [web-vulnerabilities]
+- id: supply-chain-frozen-lockfile
+  type: concept
+  front: What does `npm ci` (or `pnpm install --frozen-lockfile`) guarantee that `npm install` does not?
+  back: It installs exactly the versions recorded in the committed lockfile and fails if `package.json` disagrees, so CI and production never pull a version nobody reviewed.
+  skills: [web-vulnerabilities]
+- id: supply-chain-audit-limit
+  type: concept
+  front: What can `npm audit` not protect you from?
+  back: A malicious version published recently. Audit only compares the lockfile with known advisories. A release-age delay (pnpm's `minimumReleaseAge`), blocked install scripts and reviewed update pull requests cover that gap.
+  skills: [web-vulnerabilities]
+- id: owasp-2025-supply-chain
+  type: cloze
+  front: "In the OWASP Top 10:2025, risks from dependencies and build pipelines are {{A03 Software Supply Chain Failures}}."
+  back: A03 Software Supply Chain Failures
+  skills: [web-vulnerabilities]

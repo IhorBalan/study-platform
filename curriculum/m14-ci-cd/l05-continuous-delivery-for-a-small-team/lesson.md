@@ -110,7 +110,7 @@ deploy:
         FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 ```
 
-`--image` deploys the image CI already built and tested, by digest, which keeps the "build once" rule of lesson 3. The shorter `flyctl deploy --remote-only` builds again on Fly's builder from the checked-out source. That is fine for a first deploy, but what runs in production is then not the image your tests ran against. For the digest to reach this job, the build job declares it as a job output: `outputs: { digest: ${{ steps.build.outputs.digest }} }`.
+`--image` deploys the image CI already built and tested, by digest, which keeps the "build once" rule of lesson 3. The shorter `flyctl deploy --remote-only` builds again on Fly's builder from the checked-out source. That is fine for a first deploy, but what runs in production is then not the image your tests ran against. For the digest to reach this job, the build job declares it as a job output: `outputs: { digest: ${{ steps.build.outputs.digest }} }`. Fly also has to be able to pull the image. A public package works as it is; for a private one, the simplest route is to push the same image to Fly's own registry as well (`flyctl auth docker`, then tag and push it as `registry.fly.io/<app>`) and deploy that reference.
 
 To roll back, list earlier images with `fly releases --image` and deploy one again with `fly deploy --image <image>`. Like every image rollback, it does not touch the database.
 

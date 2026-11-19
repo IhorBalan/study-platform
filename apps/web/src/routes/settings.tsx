@@ -26,11 +26,15 @@ function SettingsPage() {
     },
   });
 
+  // The path field keeps what was typed, spaces included, so a path with a space can be
+  // typed. It is trimmed here, for the comparison and for the save.
+  const changes: UpdateSettings =
+    'labRepoPath' in draft ? { ...draft, labRepoPath: draft.labRepoPath?.trim() || null } : draft;
   // A field typed back to its saved value is not a change.
   const saved = settings.data;
   const dirty =
     saved !== undefined &&
-    (Object.keys(draft) as (keyof UpdateSettings)[]).some((key) => draft[key] !== saved[key]);
+    (Object.keys(changes) as (keyof UpdateSettings)[]).some((key) => changes[key] !== saved[key]);
   // The form saves on a button while the theme below applies at once, so it is
   // easy to change a field and leave. Leaving the page inside the app asks first,
   // and the browser asks before a reload or close.
@@ -48,9 +52,9 @@ function SettingsPage() {
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
     // An emptied number field holds NaN; the browser's `required` check stops it first.
-    if (Object.values(draft).some((value) => typeof value === 'number' && Number.isNaN(value)))
+    if (Object.values(changes).some((value) => typeof value === 'number' && Number.isNaN(value)))
       return;
-    save.mutate(draft);
+    save.mutate(changes);
   };
 
   return (
@@ -135,7 +139,7 @@ function SettingsPage() {
             type="text"
             placeholder="/Users/you/code/backend-lab"
             value={form.labRepoPath ?? ''}
-            onChange={(e) => set('labRepoPath', e.target.value.trim() || null)}
+            onChange={(e) => set('labRepoPath', e.target.value)}
           />
         </Field>
         <Field

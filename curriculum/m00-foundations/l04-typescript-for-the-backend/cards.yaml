@@ -28,6 +28,12 @@
   back: 'They must be written as `import type`, so the emitted JavaScript keeps exactly the imports you wrote.'
   skills: [ts-server-setup]
 
+- id: unknown-vs-any
+  type: comparison
+  front: '`unknown` vs `any`'
+  back: '`any` turns type checking off for that value and everything it touches. `unknown` accepts any value too, but you must narrow it (a check, `instanceof`, a parser) before you can use it.'
+  skills: [boundary-validation]
+
 - id: cast-vs-parse
   type: comparison
   front: "`body as CreateUser` vs `CreateUser.parse(body)`"

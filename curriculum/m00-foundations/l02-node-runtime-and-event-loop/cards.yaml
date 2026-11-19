@@ -52,6 +52,12 @@
   back: 'A worker thread takes one CPU-heavy job off the main thread inside a process. Cluster runs several copies of the whole server on one port; each copy can still block itself.'
   skills: [node-cpu-work]
 
+- id: child-process-when
+  type: comparison
+  front: '`child_process` vs a worker thread'
+  back: 'A child process runs another program (ffmpeg, git) or isolates work in its own memory, so a crash there cannot take the server down. A worker thread runs your own JavaScript in the same process and is cheaper to start.'
+  skills: [node-cpu-work]
+
 - id: measure-loop-delay
   type: snippet
   front: 'Start measuring event loop delay with a built-in API.'

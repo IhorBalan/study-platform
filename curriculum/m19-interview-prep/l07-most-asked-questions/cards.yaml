@@ -46,7 +46,7 @@
 - id: rate-limiter-state
   type: concept
   front: "Interview: you run three API instances. Where does rate limiter state live, and which algorithm do you pick?"
-  back: "In a shared store such as Valkey, updated atomically (a Lua script or INCR with expiry). Token bucket or sliding window, not a fixed window, to avoid double bursts at window edges."
+  back: "In a shared store such as Valkey, updated atomically with a Lua script. Token bucket or sliding window, not a fixed window (plain INCR with expiry), to avoid double bursts at window edges."
   skills: [interview-core-questions]
 - id: p99-after-deploy
   type: concept

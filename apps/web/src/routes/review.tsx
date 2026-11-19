@@ -7,6 +7,7 @@ import { Button, PageHeader, Select } from '../components/ui';
 import { api } from '../lib/api';
 import { lessonParams, reviewEstimate, untilLabel } from '../lib/format';
 import { useStudySession } from '../lib/useStudySession';
+import { moduleCardCounts } from '../lib/moduleCardCounts';
 import { waitForNextDue } from '../lib/reviewWait';
 
 /** "in 14 hours", "in 3 days": how long until a moment in the future. */
@@ -39,12 +40,45 @@ function renderFront(card: QueueCard): string {
   return card.type === 'cloze' ? card.front.replaceAll(/\{\{.*?\}\}/g, '`[ … ]`') : card.front;
 }
 
+/**
+ * Narrows the queue to one module. It offers only modules that have cards in the deck,
+ * and is hidden while the deck is empty: every choice would lead to an empty queue.
+ */
+function ModuleFilter({
+  moduleId,
+  onChange,
+}: {
+  moduleId: string | undefined;
+  onChange: (moduleId: string) => void;
+}) {
+  const plan = useQuery({ queryKey: ['plan'], queryFn: api.plan });
+  const deck = useQuery({ queryKey: ['cards', 'active'], queryFn: () => api.cards('active') });
+  const cardCounts = moduleCardCounts(deck.data?.cards ?? []);
+  // The chosen module stays in the list even without cards, so the choice can be seen and undone.
+  const modules = (plan.data?.modules ?? []).filter(
+    (m) => cardCounts.has(m.id) || m.id === moduleId,
+  );
+  if (modules.length === 0) return null;
+  return (
+    <label className="mb-4 flex max-w-md items-center gap-2 text-sm">
+      <span className="shrink-0 text-zinc-600 dark:text-zinc-300">Cards from</span>
+      <Select value={moduleId ?? ''} onChange={(event) => onChange(event.target.value)}>
+        <option value="">All modules</option>
+        {modules.map((m) => (
+          <option key={m.id} value={m.id}>
+            {m.title} ({cardCounts.get(m.id) ?? 0})
+          </option>
+        ))}
+      </Select>
+    </label>
+  );
+}
+
 function ReviewPage() {
   const queryClient = useQueryClient();
   useStudySession('review', null);
   const { module: moduleId } = Route.useSearch();
   const navigate = Route.useNavigate();
-  const plan = useQuery({ queryKey: ['plan'], queryFn: api.plan });
   const queue = useQuery({
     queryKey: ['review-queue', moduleId ?? null],
     queryFn: () => api.reviewQueue(moduleId),
@@ -151,25 +185,10 @@ function ReviewPage() {
         {counts.pendingApproval > 0 && <> ({counts.pendingApproval} waiting for approval)</>}
       </PageHeader>
 
-      <label className="mb-4 flex max-w-md items-center gap-2 text-sm">
-        <span className="shrink-0 text-zinc-600 dark:text-zinc-300">Cards from</span>
-        <Select
-          value={moduleId ?? ''}
-          onChange={(event) =>
-            void navigate({
-              search: event.target.value ? { module: event.target.value } : {},
-              replace: true,
-            })
-          }
-        >
-          <option value="">All modules</option>
-          {(plan.data?.modules ?? []).map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.title}
-            </option>
-          ))}
-        </Select>
-      </label>
+      <ModuleFilter
+        moduleId={moduleId}
+        onChange={(next) => void navigate({ search: next ? { module: next } : {}, replace: true })}
+      />
 
       {!card ? (
         <div className="rounded-lg border border-dashed border-zinc-300 p-8 text-center dark:border-zinc-700">

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { onceMigrated } from '../src/wait-for-schema.js';
+import { NotMigratedError, onceMigrated } from '../src/wait-for-schema.js';
 
 const noSleep = { sleep: () => Promise.resolve() };
 const missingTable = () =>
@@ -43,15 +43,17 @@ describe('onceMigrated', () => {
 
   it('gives up when the tables never appear', async () => {
     let calls = 0;
-    await expect(
-      onceMigrated(
-        async () => {
-          calls += 1;
-          throw missingTable();
-        },
-        { ...noSleep, intervalMs: 1000, timeoutMs: 3000 },
-      ),
-    ).rejects.toThrow('Failed query');
+    const gaveUp = onceMigrated(
+      async () => {
+        calls += 1;
+        throw missingTable();
+      },
+      { ...noSleep, intervalMs: 1000, timeoutMs: 3000 },
+    );
+    await expect(gaveUp).rejects.toBeInstanceOf(NotMigratedError);
+    await expect(gaveUp).rejects.toThrow(
+      'The database still has no tables after 3 seconds. The API creates them when it starts: check its output for an error, then restart "pnpm dev".',
+    );
     expect(calls).toBe(4);
   });
 });

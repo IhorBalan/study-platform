@@ -11,6 +11,18 @@ function postgresCode(error: unknown): string | undefined {
   return undefined;
 }
 
+/** The tables never appeared. The message is written for the learner, not for a stack trace. */
+export class NotMigratedError extends Error {
+  constructor(waitedMs: number, options?: ErrorOptions) {
+    super(
+      `The database still has no tables after ${Math.round(waitedMs / 1000)} seconds. ` +
+        'The API creates them when it starts: check its output for an error, then restart "pnpm dev".',
+      options,
+    );
+    this.name = 'NotMigratedError';
+  }
+}
+
 export interface WaitOptions {
   intervalMs?: number;
   timeoutMs?: number;
@@ -24,7 +36,7 @@ export interface WaitOptions {
  * The API applies the migrations when it starts. In `pnpm dev` the worker
  * starts at the same moment, so on a new install its first query can arrive
  * before the tables exist. Any other error, and a database that never gets
- * its tables, still stops the worker.
+ * its tables, still stops the worker: the latter with a NotMigratedError.
  */
 export async function onceMigrated<T>(
   work: () => Promise<T>,
@@ -42,7 +54,8 @@ export async function onceMigrated<T>(
       return await work();
     } catch (error) {
       const code = postgresCode(error);
-      if (!code || !NOT_MIGRATED.has(code) || waited >= timeoutMs) throw error;
+      if (!code || !NOT_MIGRATED.has(code)) throw error;
+      if (waited >= timeoutMs) throw new NotMigratedError(timeoutMs, { cause: error });
       if (waited === 0) onWaiting?.();
       await sleep(intervalMs);
       waited += intervalMs;

@@ -4,7 +4,7 @@ import { PgBoss } from 'pg-boss';
 import { createBridgeClient } from './bridge-client.js';
 import { failInterruptedRuns, processChecksJob, resendWaitingRuns } from './checks-job.js';
 import { loadConfig } from './config.js';
-import { onceMigrated } from './wait-for-schema.js';
+import { NotMigratedError, onceMigrated } from './wait-for-schema.js';
 
 const config = loadConfig();
 const { db, pool } = createDatabase(config.DATABASE_URL, {
@@ -20,6 +20,13 @@ await boss.createQueue(CHECKS_QUEUE);
 // On a new install the API may still be creating the tables.
 const interrupted = await onceMigrated(() => failInterruptedRuns(db), {
   onWaiting: () => console.log('[worker] waiting for the API to set up the database'),
+}).catch(async (error: unknown) => {
+  if (!(error instanceof NotMigratedError)) throw error;
+  // One line the learner can act on, not a query stack trace.
+  console.error(`[worker] ${error.message}`);
+  await boss.stop({ graceful: false }).catch(() => undefined);
+  await pool.end().catch(() => undefined);
+  process.exit(1);
 });
 if (interrupted > 0) {
   console.log(`[worker] marked ${interrupted} run(s) interrupted by a restart as failed`);

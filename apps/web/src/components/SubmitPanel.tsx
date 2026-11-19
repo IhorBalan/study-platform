@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { useState, type FormEvent } from 'react';
 import { api } from '../lib/api';
+import { Markdown } from './Markdown';
 import { ReviewPanel } from './ReviewPanel';
 import { Button, Input } from './ui';
 
@@ -245,9 +246,15 @@ function SubmissionCard({ submission, open }: { submission: SubmissionDto; open:
         <ReviewPanel submission={submission} />
 
         {submission.body && (
-          <pre className="mt-3 max-h-64 overflow-auto rounded-md bg-zinc-50 p-3 text-xs whitespace-pre-wrap dark:bg-zinc-900">
-            {submission.body}
-          </pre>
+          // The answer box promises Markdown, so the saved answer is shown as Markdown too.
+          <div
+            aria-label="Your answer"
+            role="group"
+            tabIndex={0}
+            className="mt-3 max-h-80 overflow-auto rounded-md border border-zinc-200 p-3 dark:border-zinc-800"
+          >
+            <Markdown compact>{submission.body}</Markdown>
+          </div>
         )}
       </details>
     </li>

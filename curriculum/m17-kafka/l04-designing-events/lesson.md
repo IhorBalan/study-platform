@@ -85,6 +85,7 @@ The fix is the same outbox as in module 8: write the event to a table **in the s
 ```sql
 CREATE TABLE outbox (
   id uuid PRIMARY KEY,
+  seq bigint GENERATED ALWAYS AS IDENTITY, -- the relay's order
   aggregatetype text NOT NULL,      -- 'order'
   aggregateid text NOT NULL,        -- 'order-1042', used as the Kafka key
   type text NOT NULL,               -- 'OrderPaid'
@@ -108,12 +109,12 @@ A worker in your app reads unpublished rows in order, publishes them, and marks 
 
 ```sql
 SELECT * FROM outbox WHERE published_at IS NULL
-ORDER BY created_at LIMIT 100 FOR UPDATE SKIP LOCKED;
+ORDER BY seq LIMIT 100 FOR UPDATE SKIP LOCKED;
 ```
 
 Simple and needs no extra infrastructure. It adds polling latency and load on the database, and if it crashes after publishing but before marking a row, the row is published again. That is fine because consumers are idempotent on `eventId` (the row's `id`).
 
-The query hides an ordering trap. Lesson 2 relies on per-key order (fulfilment must never see `OrderCancelled` before `OrderPaid`), and this relay can break it in two ways: with two relay instances, `SKIP LOCKED` lets the second one take and publish later rows while the first still holds earlier ones; and `created_at` is set when a row is inserted, not when its transaction commits, so a row can become visible after a newer one was already sent (a sequence id has the same flaw, because it is also assigned at insert). To keep order, run a single relay (or one per hash of the key), stop the batch at the first failed publish instead of skipping it, and have every transaction lock or update its aggregate row (the order) before it inserts into the outbox, so two transactions for the same key cannot overlap and their rows commit in the order they were inserted. Debezium reads the log in commit order, so it does not have this problem.
+The query hides an ordering trap. Lesson 2 relies on per-key order (fulfilment must never see `OrderCancelled` before `OrderPaid`), and this relay can break it in two ways. With two relay instances, `SKIP LOCKED` lets the second one take and publish later rows while the first still holds earlier ones. And no column follows commit order by itself: `seq` is drawn when the row is inserted, so a transaction that inserts first and commits late becomes visible after a higher `seq` was already sent (`created_at` is worse, because `now()` is the time the transaction started). To keep order per key, run a single relay (or one per hash of the key), stop the batch at the first failed publish instead of skipping it, and have every transaction lock or update its aggregate row (the order) before it inserts into the outbox. Two transactions for the same key then cannot overlap, so for that key `seq` order is commit order. Debezium reads the log in commit order, so it does not have this problem.
 
 ### CDC with Debezium
 

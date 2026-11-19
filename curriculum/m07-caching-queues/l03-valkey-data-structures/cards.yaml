@@ -56,5 +56,5 @@
 - id: valkey-origin
   type: term
   front: Valkey
-  back: "The Linux Foundation's open source fork of Redis 7.2.4 from 2024. Same protocol, so ioredis and BullMQ work unchanged."
+  back: "The Linux Foundation's open source fork of Redis, started in 2024 after Redis changed its licence. Same protocol, so ioredis and BullMQ work unchanged."
   skills: [valkey-data-structures]

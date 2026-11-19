@@ -51,8 +51,3 @@
     DELETE FROM sessions WHERE user_id = $1;
     ```
   skills: [session-auth]
-- id: nest-cookie-maxage
-  type: cloze
-  front: "In NestJS's built-in `httpAdapter.setCookie()`, `maxAge` is in {{seconds}}, unlike Express's `res.cookie()`."
-  back: seconds
-  skills: [session-auth]

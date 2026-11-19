@@ -578,6 +578,10 @@ A lesson's deck is copied into the database when the lesson is completed (D-077:
 
 Reviews were queued on the bridge so that only one Claude process runs at a time. A post-merge review found the flaw: a queued review can wait up to 6 minutes and then run for 6 more, while the API stops waiting after 8 and marks the run failed, so Claude would still run and spend the learner's plan on a result nobody stores. The bridge now answers a review request with 409 while another review is running, and the API shows "Another review is running. Try again in a few minutes, or use copy and paste." Considered: dropping queued jobs whose request has closed and raising the API timeout, which keeps the queue but adds two moving parts for a single-learner tool where two reviews at once is rare. Sandbox checks stay queued, because the worker waits 20 minutes and a pile-up is unlikely.
 
+### D-155 · The API end-to-end tests are one suite split across files — 2026-11-19
+
+The end-to-end spec had grown to almost a thousand lines. Each group of tests (write protection, curriculum, submissions, spaced repetition, plan and statistics, curriculum updates) now lives in its own file under `apps/api/test/e2e/` and is registered by `app.e2e-spec.ts` with a shared context. Considered: separate spec files, each with its own Postgres container. That would isolate the groups, but later groups build on what earlier ones leave behind (finished lessons, graded cards), and six containers would make the run several times slower on a laptop. Keeping one suite keeps the order and the single container; the split is only for reading.
+
 ---
 
 ## Product direction

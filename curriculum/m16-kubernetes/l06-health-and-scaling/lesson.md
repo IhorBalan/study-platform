@@ -139,7 +139,7 @@ spec:
 Notes:
 
 - Resource metrics come from **metrics-server**, an add-on most managed clusters include.
-- **Remove `replicas` from the Deployment manifest** once an HPA owns it. Otherwise every deploy resets the count to the manifest's value and the HPA has to scale up again.
+- **Remove `replicas` from the Deployment manifest** once an HPA owns it. Otherwise every deploy resets the count to the manifest's value and the HPA has to scale up again. On a Deployment that is already running, do not just delete the line: the next `kubectl apply` would then scale it to the default of one Pod, once. First run `kubectl apply edit-last-applied deployment/<name>` and remove `replicas` there, then remove it from the manifest. Server-side apply avoids the problem.
 - CPU is a decent signal for a CPU-bound API. For queue workers, scale on queue depth instead; **KEDA** is the common tool for event-driven scaling from Redis, SQS, Kafka and others.
 - New Pods need somewhere to run. A **cluster autoscaler** (or Karpenter on AWS) adds nodes when Pods are pending for lack of capacity, which takes a minute or more. Keep `minReplicas` high enough to absorb a spike while that happens.
 

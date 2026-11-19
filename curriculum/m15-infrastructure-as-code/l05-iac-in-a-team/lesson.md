@@ -68,6 +68,12 @@ Use at least two roles per account:
 
 A pull request from a branch cannot assume the prod apply role, so it cannot change prod however its workflow file is edited.
 
+"Read-only" is weaker than it sounds for the plan role. It can read the state, and lesson 3 showed that state holds every secret in plain text, so anyone who can open a pull request and edit the workflow can run `tofu state pull`. A plan also runs code: providers and data sources such as `external` execute during it. Treat the plan role as "can read everything the state can", and limit the damage:
+
+- keep secrets out of state where you can (the options in lesson 3);
+- give the plan role read access only to what the plan needs, and keep the list of people who can push branches short;
+- let only pull requests from branches of the same repository assume the role, never forks.
+
 The apply role is powerful, because it creates IAM roles and policies. Keep it out of reach of anything except the apply job, and make the configuration itself follow least privilege: generate policies from references, not wildcards.
 
 ```hcl

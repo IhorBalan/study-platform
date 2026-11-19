@@ -13,11 +13,6 @@
   front: Memory-hard password hash
   back: "A hash that needs a lot of RAM per guess, so GPUs and custom chips lose their advantage. Example: argon2id with 19 MiB per hash."
   skills: [password-storage]
-- id: owasp-argon2id-min
-  type: cloze
-  front: "OWASP's minimum for argon2id: {{19 MiB of memory, 2 iterations, parallelism 1}}."
-  back: "19 MiB of memory, 2 iterations, parallelism 1"
-  skills: [password-storage]
 - id: bcrypt-72
   type: concept
   front: What happens to the part of a password beyond 72 bytes in bcrypt?
